@@ -23,18 +23,18 @@ repositories {
 dependencies {
     compileOnly("org.jetbrains:annotations:26.0.1")
 
-    api("net.dv8tion:JDA:5.2.1") // JDA
-    api("ch.qos.logback:logback-classic:1.5.12") // Log
-    api("com.charleskorn.kaml:kaml:0.66.0") // Yaml
+    api("net.dv8tion:JDA:5.2.2") // JDA
+    api("ch.qos.logback:logback-classic:1.5.15") // Log
+    api("com.charleskorn.kaml:kaml:0.67.0") // Yaml
     api("com.google.code.gson:gson:2.11.0") // Json
     api("commons-io:commons-io:2.18.0") // Commons io
-    api("org.apache.commons:commons-text:1.12.0") // StringSubstitutor
+    api("org.apache.commons:commons-text:1.13.0") // StringSubstitutor
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0") // coroutine
-    implementation("org.jline:jline:3.27.1") // CLI
-    implementation("com.github.ajalt.clikt:clikt:5.0.1") // Run Arg
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1") // coroutine
+    implementation("org.jline:jline:3.28.0") // CLI
+    implementation("com.github.ajalt.clikt:clikt:5.0.2") // Run Arg
     implementation("org.fusesource.jansi:jansi:2.4.1") // AnsiConsole
-    implementation("org.jsoup:jsoup:1.18.2") // Connection
+    implementation("org.jsoup:jsoup:1.18.3") // Connection
     implementation(kotlin("reflect"))
 }
 
