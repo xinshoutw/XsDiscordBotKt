@@ -20,6 +20,7 @@ import tw.xserver.loader.builtin.placeholder.Substitutor
 import tw.xserver.plugin.creator.message.MessageCreator
 import tw.xserver.plugin.logger.chat.Event.COMPONENT_PREFIX
 import tw.xserver.plugin.logger.chat.Event.PLUGIN_DIR_FILE
+import tw.xserver.plugin.logger.chat.Event.config
 import tw.xserver.plugin.logger.chat.JsonManager.dataMap
 import tw.xserver.plugin.logger.chat.lang.PlaceholderLocalizations
 import java.io.File
@@ -27,7 +28,6 @@ import java.util.stream.Collectors
 
 
 internal object ChatLogger {
-    internal const val KEEP_ALL_LOG = true
     private val creator = MessageCreator(File(PLUGIN_DIR_FILE, "lang"), DiscordLocale.CHINESE_TAIWAN, COMPONENT_PREFIX)
 
     fun setting(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
@@ -54,7 +54,6 @@ internal object ChatLogger {
     }
 
     fun onDelete(event: ButtonInteractionEvent) {
-
         // update
         JsonManager.delete(event.guild!!.idLong, event.channel.idLong)
 
@@ -165,7 +164,7 @@ internal object ChatLogger {
                 listenChannelIds,
                 substitutor
             )
-        } catch (e: MessageNotFound) {
+        } catch (_: MessageNotFound) {
             return
         }
     }
@@ -200,7 +199,7 @@ internal object ChatLogger {
                     substitutor
                 )
             }
-        } catch (e: MessageNotFound) {
+        } catch (_: MessageNotFound) {
             return
         } catch (e: ErrorResponseException) {
             when (e.errorCode) {
@@ -219,7 +218,7 @@ internal object ChatLogger {
     }
 
     internal fun onGuildLeave(event: GuildLeaveEvent) {
-        if (KEEP_ALL_LOG) return
+        if (config.logAll) return
         DbManager.deleteDatabase(event.guild.id)
     }
 
@@ -321,7 +320,7 @@ internal object ChatLogger {
     }
 
     private fun isListenable(channelId: Long): Boolean {
-        return KEEP_ALL_LOG ||
+        return config.logAll ||
                 DbManager.isChannelInTableCache(channelId)
     }
 }

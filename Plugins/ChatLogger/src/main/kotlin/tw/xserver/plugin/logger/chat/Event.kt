@@ -1,6 +1,8 @@
 package tw.xserver.plugin.logger.chat
 
 
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.decodeFromStream
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
@@ -8,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionE
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
@@ -24,6 +25,7 @@ import tw.xserver.plugin.logger.chat.lang.CmdFileSerializer
 import tw.xserver.plugin.logger.chat.lang.CmdLocalizations
 import tw.xserver.plugin.logger.chat.lang.PlaceholderLocalizations
 import tw.xserver.plugin.logger.chat.lang.PlaceholderSerializer
+import tw.xserver.plugin.logger.chat.serializer.MainConfigSerializer
 import java.io.File
 
 
@@ -34,6 +36,8 @@ object Event : PluginEvent(true) {
     internal const val COMPONENT_PREFIX = "xs:chat-logger:v2:"
     internal val PLUGIN_DIR_FILE = File("./plugins/ChatLogger/")
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    internal lateinit var config: MainConfigSerializer
+        private set
 
     override fun load() {
         reloadAll()
@@ -46,6 +50,10 @@ object Event : PluginEvent(true) {
 
     override fun reloadConfigFile() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
+
+        fileGetter.readInputStream("./config.yml").use {
+            config = Yaml().decodeFromStream<MainConfigSerializer>(it)
+        }
 
         logger.info("Data file loaded successfully.")
     }
@@ -71,14 +79,6 @@ object Event : PluginEvent(true) {
     }
 
     override fun guildCommands(): Array<CommandData> = getGuildCommands()
-
-    /**
-     * Initializes data handling when the bot is ready.
-     */
-    override fun onReady(event: ReadyEvent) {
-        JsonManager.initAfterReady()
-        DbManager.initAfterReady()
-    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (GlobalUtil.checkCommandName(event, "chat-logger setting")) return
@@ -119,7 +119,8 @@ object Event : PluginEvent(true) {
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
         if (!event.isFromGuild) return
-
+        println("TRIGGER MESSAGE DELETED")
+        println(event.messageId)
         ChatLogger.deleteMessage(event)
     }
 

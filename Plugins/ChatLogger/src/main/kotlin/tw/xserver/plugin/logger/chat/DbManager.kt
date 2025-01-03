@@ -5,8 +5,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.base.BotLoader.jdaBot
 import tw.xserver.plugin.api.sqlite.SQLiteFileManager
-import tw.xserver.plugin.logger.chat.ChatLogger.KEEP_ALL_LOG
 import tw.xserver.plugin.logger.chat.Event.PLUGIN_DIR_FILE
+import tw.xserver.plugin.logger.chat.Event.config
 import tw.xserver.plugin.logger.chat.JsonManager.dataMap
 import java.io.File
 import java.sql.Connection
@@ -21,8 +21,7 @@ internal object DbManager {
     internal fun isChannelInTableCache(channelId: Long): Boolean =
         channelId in channelTableCache
 
-    @Synchronized
-    internal fun initAfterReady() {
+    init {
         val dataFolder = File(PLUGIN_DIR_FILE, "data")
         if (dataFolder.mkdirs()) {
             logger.info("Default data folder created.")
@@ -30,13 +29,14 @@ internal object DbManager {
 
         dataFolder.listFiles()?.filter { it.isFile && it.extension == "db" }?.forEach fileLoop@{ file ->
             val guild: Guild? = jdaBot.getGuildById(file.nameWithoutExtension)
-            if (!KEEP_ALL_LOG && guild == null) {
+            if (!config.logAll && guild == null) {
                 file.delete()
                 return@fileLoop
             }
 
             try {
                 val conn = getConnection(file.nameWithoutExtension)
+                logger.info("Creating database connection.")
                 conn.createStatement().use { stmt ->
                     stmt.executeQuery("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")
                         .use { rs ->
@@ -44,9 +44,12 @@ internal object DbManager {
 
                             while (rs.next()) {
                                 val channelId = rs.getString("name").toLong()
-                                if (jdaBot.getGuildChannelById(channelId) == null && !KEEP_ALL_LOG) {
+                                logger.info("Creating database channel '$channelId'.")
+
+                                if (jdaBot.getGuildChannelById(channelId) == null && !config.logAll) {
                                     notExistsChannelId.add(channelId)
                                 } else {
+                                    logger.info("Channel $channelId already exists.")
                                     channelTableCache.add(channelId)
                                 }
                             }
