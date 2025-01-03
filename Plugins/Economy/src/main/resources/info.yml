@@ -4,6 +4,5 @@ name: Economy
 version: '2.0'
 component_prefix: "xs:economy:v2:"
 depend_plugins:
-  - SQLiteAPI
   - GoogleSheetAPI
   - MessageCreator
