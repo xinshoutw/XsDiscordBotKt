@@ -27,7 +27,7 @@ components:
         style: 3
         label: "設定白名單"
 
-      - uid_or_url: "modify-allow"
+      - uid_or_url: "modify-block"
         style: 2
         label: "設定黑名單"
 
