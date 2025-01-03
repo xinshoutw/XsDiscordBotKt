@@ -2,5 +2,5 @@ author: xinshoutw
 main: tw.xserver.plugin.basiccalculator.Event
 name: BasicCalculator
 version: '1.0'
-depend:
+depend_plugins:
   - MessageCreator

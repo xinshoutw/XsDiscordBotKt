@@ -3,6 +3,8 @@ package tw.xserver.loader.base
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.plugin.PluginEvent
@@ -18,15 +20,17 @@ object PluginLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val dir: File = File("./plugins")
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
+    internal val intents = EnumSet.noneOf(GatewayIntent::class.java)
+    internal val cacheFlags = EnumSet.noneOf(CacheFlag::class.java)
     internal val guildCommands = mutableListOf<CommandData>()
     internal val globalCommands = mutableListOf<CommandData>()
     internal val listenersQueue = ArrayDeque<PluginEvent>()
-    val pluginQueue = LinkedHashMap<String, PluginEvent>()
+    internal val pluginQueue = LinkedHashMap<String, PluginEvent>()
 
     /**
      * Loads all plugins from the plugins directory.
      */
-    fun run() {
+    fun preLoad() {
         var success = 0
         var fail = 0
         logger.info("Start loading plugins...")
@@ -49,10 +53,13 @@ object PluginLoader {
                         loader.addJar(file, config.main)
 
                         loader.getClass(config.main)?.let {
-                            pluginInfos[config.name] = InfoSimple(config.name, it, config.depend, config.softDepend)
+                            pluginInfos[config.name] =
+                                InfoSimple(config.name, it, config.dependPlugins, config.softDependPlugins)
                             success++
                         } ?: run { fail++ }
 
+                        intents.addAll(config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() })
+                        cacheFlags.addAll(config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() })
                         logger.info("==ADD==> {}", config.name)
                     }
                 } catch (e: Exception) {
@@ -72,12 +79,22 @@ object PluginLoader {
         pluginQueue.values.forEach { plugin ->
             plugin.guildCommands()?.let { guildCommands.addAll(it) }
             plugin.globalCommands()?.let { globalCommands.addAll(it) }
-
             if (plugin.listener) listenersQueue.add(plugin)
         }
 
         if (fail > 0) logger.error("{} plugin(s) failed to load.", fail)
         logger.info("{} plugin(s) loaded successfully.", success)
+    }
+
+    /**
+     * Run whole plugins
+     */
+    fun run() {
+        pluginQueue.values.reversed().forEach { plugin ->
+            plugin.load()
+            logger.info("{} load successfully.", plugin.pluginName)
+            if (plugin.listener) listenersQueue.add(plugin)
+        }
     }
 
     /**
@@ -120,18 +137,18 @@ object PluginLoader {
             }
         }
 
-        // All dependencies are satisfied, load the self plugin.
         pluginInfo?.let {
             if (!pluginQueue.containsKey(it.name)) {
                 logger.info("Initializing {}.", it.name)
-                val event: PluginEvent? = it.pluginInstance.getDeclaredField("INSTANCE").get(null) as? PluginEvent
+                val event: PluginEvent? = it.pluginInstance.getDeclaredField("INSTANCE").get(null) as PluginEvent
                 if (event == null) {
                     logger.error("Cannot get object instance of plugin: {}", it.name)
                     return@let
                 }
-                pluginQueue[it.name] = (it.pluginInstance.getDeclaredField("INSTANCE").get(null) as? PluginEvent)!!
-                pluginQueue[it.name]!!.load()
-                logger.info("{} load successfully.", it.name)
+
+                pluginQueue[it.name] = (it.pluginInstance.getDeclaredField("INSTANCE").get(null) as PluginEvent).apply {
+                    pluginName = it.name
+                }
             }
         }
 

@@ -6,6 +6,7 @@ import tw.xserver.loader.util.FileGetter
 
 abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     open lateinit var fileGetter: FileGetter
+    open lateinit var pluginName: String
 
     abstract fun load()
     abstract fun unload()

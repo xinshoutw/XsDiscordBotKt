@@ -35,37 +35,48 @@ object BotLoader {
         }
 
         SettingsLoader.run()
-        PluginLoader.run()
-
         if (Arguments.noBuild) {
             logger.warn("Skip building bot!")
             return
         }
 
+        PluginLoader.preLoad()
+
         jdaBot = JDABuilder.createDefault(Arguments.botToken ?: token)
             .setBulkDeleteSplittingEnabled(false)
-            .setLargeThreshold(250)
-            .setMemberCachePolicy(MemberCachePolicy.DEFAULT)
-            .enableCache(
+            .setMemberCachePolicy(MemberCachePolicy.OWNER)
+            .disableCache(
+                CacheFlag.ACTIVITY,
                 CacheFlag.VOICE_STATE,
+                CacheFlag.CLIENT_STATUS,
+                CacheFlag.ONLINE_STATUS,
             )
-            .enableIntents(
+            .enableCache(PluginLoader.cacheFlags)
+            .setEnabledIntents(
                 GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.GUILD_VOICE_STATES,
-                GatewayIntent.GUILD_MESSAGES,
-                GatewayIntent.MESSAGE_CONTENT,
+                GatewayIntent.SCHEDULED_EVENTS,
+                GatewayIntent.GUILD_EXPRESSIONS,
             )
+            .enableIntents(PluginLoader.intents)
             .build()
             .awaitReady()
-
         bot = jdaBot.selfUser
+
         jdaBot.apply {
-            addEventListener(ListenerManager(PluginLoader.guildCommands))
+            // Register Builtin Tool
             addEventListener(InteractionLogger)
+
+            // Register Plugins' Event Listener
+            addEventListener(ListenerManager(PluginLoader.guildCommands))
+
+            // Register Plugins' Event Listener
             PluginLoader.listenersQueue.forEach { plugin -> addEventListener(plugin) }
+
+            // Register Plugins' Global Commands
             updateCommands().addCommands(PluginLoader.globalCommands).queue()
         }
 
+        PluginLoader.run()
         logger.info("Bot initialized.")
     }
 
