@@ -17,7 +17,7 @@ internal object JsonManager {
     // listen map to setting
     internal val dataMap: MutableMap<Long, ChannelData> = HashMap()
 
-    fun initAfterReady() {
+    init {
         val settingFolder = File(PLUGIN_DIR_FILE, "setting")
         if (settingFolder.mkdirs()) {
             logger.info("Default setting folder created")

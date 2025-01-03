@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
@@ -66,13 +65,6 @@ object Event : PluginEvent(true) {
     }
 
     override fun guildCommands(): Array<CommandData> = getGuildCommands()
-
-    /**
-     * Initializes data handling when the bot is ready.
-     */
-    override fun onReady(event: ReadyEvent) {
-        JsonManager.initAfterReady()
-    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (GlobalUtil.checkCommandName(event, "voice-logger setting")) return
