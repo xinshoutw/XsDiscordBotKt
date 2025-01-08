@@ -46,6 +46,9 @@ object GlobalUtil {
     fun checkCommandName(event: SlashCommandInteractionEvent, fullName: String): Boolean =
         event.fullCommandName != fullName
 
+    fun checkEventPrefix(event: SlashCommandInteractionEvent, allowedList: Set<String>): Boolean =
+        event.name !in allowedList
+
     fun checkPrefix(event: EntitySelectInteractionEvent, prefix: String): Boolean =
         !event.componentId.startsWith(prefix)
 
