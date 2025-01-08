@@ -1,0 +1,11 @@
+create_ticket:
+  name: Create Ticket Button建立客服按鈕
+  description: Create a message with ticket button.
+
+add_ticket:
+  name: Add Ticket Button to Message
+  description: Limit 1 Action, 5 buttons at most.
+  options:
+    message_id:
+      name: message Id
+      description: The message id which button will be added.

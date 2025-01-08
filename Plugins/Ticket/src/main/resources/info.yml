@@ -1,0 +1,7 @@
+author: xinshoutw
+main: tw.xserver.plugin.ticket.Event
+name: Ticket
+version: '2.0'
+component_prefix: "ticket-v2"
+depend_plugins:
+  - MessageCreator
