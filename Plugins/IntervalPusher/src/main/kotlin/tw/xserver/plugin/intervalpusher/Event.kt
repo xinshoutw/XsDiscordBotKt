@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.plugin.PluginEvent
@@ -25,6 +24,12 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         reloadAll()
+
+        for (listener in config.listeners) {
+            val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
+            pusher.start()
+            pushers.add(pusher)
+        }
     }
 
     override fun unload() {
@@ -44,13 +49,5 @@ object Event : PluginEvent(true) {
         }
 
         logger.info("Setting file loaded successfully.")
-    }
-
-    override fun onReady(event: ReadyEvent) {
-        for (listener in config.listeners) {
-            val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
-            pusher.start()
-            pushers.add(pusher)
-        }
     }
 }

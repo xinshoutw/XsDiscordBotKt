@@ -5,11 +5,11 @@ import com.charleskorn.kaml.decodeFromStream
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xserver.loader.base.BotLoader.jdaBot
 import tw.xserver.loader.localizations.LangManager
 import tw.xserver.loader.plugin.PluginEvent
 import tw.xserver.loader.util.FileGetter
@@ -30,6 +30,10 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         reloadAll()
+
+        val guild = jdaBot.getGuildById(config.guildId)!!
+        Feedbacker.guild = guild
+        Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
     }
 
     override fun unload() {}
@@ -67,12 +71,6 @@ object Event : PluginEvent(true) {
         if (GlobalUtil.checkCommandName(event, "feedbacker")) return
 
         Feedbacker.handleCommand(event)
-    }
-
-    override fun onReady(event: ReadyEvent) {
-        val guild = event.jda.getGuildById(config.guildId)!!
-        Feedbacker.guild = guild
-        Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {

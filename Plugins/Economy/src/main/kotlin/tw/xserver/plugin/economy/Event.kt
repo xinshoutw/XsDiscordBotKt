@@ -4,7 +4,6 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
@@ -38,6 +37,10 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         reloadAll()
+
+        storageManager.init()
+        storageManager.sortMoneyBoard()
+        storageManager.sortCostBoard()
     }
 
     override fun unload() {}
@@ -85,15 +88,6 @@ object Event : PluginEvent(true) {
     }
 
     override fun guildCommands(): Array<CommandData> = getGuildCommands()
-
-    /**
-     * Initializes data handling when the bot is ready.
-     */
-    override fun onReady(event: ReadyEvent) {
-        storageManager.init()
-        storageManager.sortMoneyBoard()
-        storageManager.sortCostBoard()
-    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (event.name.startsWith("top-")) {
