@@ -1,11 +1,10 @@
 package tw.xserver.loader.base
 
-import net.dv8tion.jda.api.events.guild.GuildReadyEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xserver.loader.base.BotLoader.jdaBot
 import tw.xserver.loader.builtin.consolelogger.ConsoleLogger
 import tw.xserver.loader.builtin.statuschanger.StatusChanger
 
@@ -15,21 +14,14 @@ import tw.xserver.loader.builtin.statuschanger.StatusChanger
 class ListenerManager(
     private val guildCommands: List<CommandData>,
 ) : ListenerAdapter() {
-
-    /**
-     * Handles the GuildReadyEvent which triggers when a guild becomes available to the bot.
-     * This method registers the commands that are specific to the guild.
-     */
-    override fun onGuildReady(event: GuildReadyEvent) {
-
-        val guild = event.guild
+    init {
         if (guildCommands.isNotEmpty()) {
-            guild.updateCommands().addCommands(guildCommands).queue()
+            jdaBot.guilds.forEach { guild ->
+                guild.updateCommands().addCommands(guildCommands).queue()
+                logger.info("Guild loaded: {} ({})", guild.name, guild.id)
+            }
         }
-        logger.info("Guild loaded: {} ({})", guild.name, guild.id)
-    }
 
-    override fun onReady(event: ReadyEvent) {
         StatusChanger.run()
         ConsoleLogger.run()
 
