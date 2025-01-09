@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
@@ -36,6 +35,7 @@ object Ticket {
             "userId" to FieldType.LONG_HEX,
             "msgId" to FieldType.LONG_HEX,
             "btnIndex" to FieldType.INT_HEX,
+            "colorIndex" to FieldType.INT_HEX,
         )
     )
 
@@ -149,10 +149,6 @@ object Ticket {
 
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
         StepManager.onEntitySelectInteraction(event)
-    }
-
-    fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        StepManager.onStringSelectInteraction(event)
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {

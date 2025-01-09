@@ -8,12 +8,10 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import net.dv8tion.jda.api.interactions.modals.Modal
@@ -70,10 +68,13 @@ object StepManager {
 
             "confirm" -> confirmCreate(event)
 
+            "back" -> backToMainMenu(event)
+
             // inside the color menu
-            "back" -> mainMenu(event)
+            "btnColorSubmit" -> modifyBtnColor(event)
         }
     }
+
 
     private fun previewReason(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
@@ -227,21 +228,37 @@ object StepManager {
 
     private fun btnColorMenu(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
-            // TODO: change from selectmenu to btn
-            val menu = StringSelectMenu.create(
-                componentIdManager.build(
-                    ComponentField("action", "create"),
-                    ComponentField("subAction", "btnColor"),
-                )
-            )
-                .addOption("綠色", "3")
-                .addOption("藍色", "1")
-                .addOption("紅色", "4")
-                .addOption("灰色", "2")
-                .build()
-
             step.hook.editOriginalComponents(
-                ActionRow.of(menu),
+                ActionRow.of(
+                    Button.of(
+                        ButtonStyle.SUCCESS, componentIdManager.build(
+                            ComponentField("action", "create"),
+                            ComponentField("subAction", "btnColorSubmit"),
+                            ComponentField("colorIndex", 3),
+                        ), "綠色"
+                    ),
+                    Button.of(
+                        ButtonStyle.PRIMARY, componentIdManager.build(
+                            ComponentField("action", "create"),
+                            ComponentField("subAction", "btnColorSubmit"),
+                            ComponentField("colorIndex", 1),
+                        ), "藍色"
+                    ),
+                    Button.of(
+                        ButtonStyle.DANGER, componentIdManager.build(
+                            ComponentField("action", "create"),
+                            ComponentField("subAction", "btnColorSubmit"),
+                            ComponentField("colorIndex", 4),
+                        ), "紅色"
+                    ),
+                    Button.of(
+                        ButtonStyle.SECONDARY, componentIdManager.build(
+                            ComponentField("action", "create"),
+                            ComponentField("subAction", "btnColorSubmit"),
+                            ComponentField("colorIndex", 2),
+                        ), "灰色"
+                    ),
+                ),
                 ActionRow.of(
                     Button.of(
                         ButtonStyle.PRIMARY, componentIdManager.build(
@@ -311,10 +328,22 @@ object StepManager {
         }
     }
 
-    private fun mainMenu(event: ButtonInteractionEvent) {
+    private fun backToMainMenu(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.renderEmbed()
         event.deferEdit().queue()
     }
+
+    private fun modifyBtnColor(event: ButtonInteractionEvent) {
+        steps[event.user.idLong]?.let { step ->
+            val idMap = componentIdManager.parse(event.componentId)
+            if (idMap["subAction"] == "btnColorSubmit") {
+                step.setBtnStyle(ButtonStyle.fromKey(idMap["colorIndex"] as Int))
+                step.renderEmbed()
+                event.deferEdit().queue()
+            }
+        }
+    }
+
 
     /* ------------------------------------- */
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
@@ -338,19 +367,6 @@ object StepManager {
 
             step.renderEmbed()
             event.deferEdit().queue()
-        }
-    }
-
-
-    /* ------------------------------------- */
-    fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        steps[event.user.idLong]?.let { step ->
-            val idMap = componentIdManager.parse(event.componentId)
-            if (idMap["subAction"] == "btnColor") {
-                step.setBtnStyle(ButtonStyle.fromKey(event.values[0].toInt()))
-                step.renderEmbed()
-                event.deferEdit().queue()
-            }
         }
     }
 

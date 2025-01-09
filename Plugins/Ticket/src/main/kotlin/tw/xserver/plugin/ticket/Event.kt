@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import tw.xserver.loader.localizations.LangManager
@@ -59,11 +58,6 @@ object Event : PluginEvent(true) {
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
         if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
         Ticket.onEntitySelectInteraction(event)
-    }
-
-    override fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-        Ticket.onStringSelectInteraction(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
