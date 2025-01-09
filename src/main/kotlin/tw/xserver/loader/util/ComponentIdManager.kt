@@ -28,12 +28,12 @@ data class ComponentField(
  * 用於建構/解析 Discord componentId。
  *
  * 最終字串格式示例:
- *   {prefix}@{key1}:{value1};{key2}:{value2};...
+ *   {prefix}{key1}:{value1};{key2}:{value2};...
  *
  * 其中 key1, key2 為由 "(原始名稱, FieldType)" 壓縮成的單字元 (a, b, c...),
  * value1, value2 則可能是原字串 / 十六進位字串，視 type 而定。
  *
- * @param prefix     componentId 前綴，不可包含 '@'
+ * @param prefix     componentId 前綴
  * @param idKeys     可用於辨識的欄位名稱與其型別，舉例:
  *                   mapOf("msgId" to FieldType.INT_HEX, "username" to FieldType.STRING)
  * @param separator  key:value 與 key:value 之間的分隔符號 (預設 ";")
@@ -45,7 +45,7 @@ data class ComponentField(
  *   ...
  */
 class ComponentIdManager(
-    private val prefix: String,                     // 不可包含 '@'
+    private val prefix: String,                     // 辨識該響應的插件
     private val idKeys: Map<String, FieldType>,     // 允許使用的欄位名稱與型別
     private val separator: String = ";",            // key:value 與 key:value 間的分隔符號
     private val maxLength: Int = ID_MAX_LENGTH,
@@ -65,9 +65,6 @@ class ComponentIdManager(
     init {
         require(prefix.isNotBlank()) {
             "prefix must not be blank."
-        }
-        require(!prefix.contains("@")) {
-            "prefix must not contain '@'."
         }
         require(idKeys.isNotEmpty()) {
             "idKeys cannot be empty."
@@ -93,11 +90,11 @@ class ComponentIdManager(
 
     /**
      * 建構一條 componentId 字串，格式:
-     *   {prefix}@{shortKey}:{value};{shortKey}:{value};...
+     *   {prefix}{shortKey}:{value};{shortKey}:{value};...
      *
      * @param fields 多個 ComponentField (vararg)
      *
-     * @return 組裝完成後的 componentId，例如 "ticket@a:3e8;b:John"
+     * @return 組裝完成後的 componentId，例如 "ticket-v2@a:3e8;b:John"
      *
      * @throws IllegalArgumentException 若:
      *   1. 欄位名稱不在 idKeys 裡面
@@ -117,8 +114,8 @@ class ComponentIdManager(
             "$shortKey:$encodedValue"
         }
 
-        // 3) 組合最終字串 => prefix@a:xxx;b:yyy
-        val finalString = "$prefix@${pairs.joinToString(separator)}"
+        // 3) 組合最終字串 => {prefix}a:xxx;b:yyy
+        val finalString = "$prefix${pairs.joinToString(separator)}"
         require(finalString.length <= maxLength) {
             "componentId 超過長度限制: ${finalString.length} (最大 $maxLength)"
         }
@@ -139,11 +136,11 @@ class ComponentIdManager(
         require(componentId.length <= maxLength) {
             "componentId must not exceed $maxLength, actual length: ${componentId.length}."
         }
-        require(componentId.startsWith("$prefix@")) {
-            "componentId must start with '$prefix@'."
+        require(componentId.startsWith(prefix)) {
+            "componentId must start with '$prefix'."
         }
 
-        val body = componentId.removePrefix("$prefix@")
+        val body = componentId.removePrefix(prefix)
         if (body.isBlank()) return emptyMap()
 
         // 拆分成多個 "key:value"
