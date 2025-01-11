@@ -17,9 +17,6 @@ findProject(":Plugins:API:GoogleSheetAPI")?.name = "GoogleSheetAPI"
 include(":Plugins:Economy")
 findProject(":Plugins:Economy")?.name = "Economy"
 
-include("Plugins:MessageCreator")
-findProject(":Plugins:MessageCreator")?.name = "MessageCreator"
-
 include("Plugins:BotInfo")
 findProject(":Plugins:BotInfo")?.name = "BotInfo"
 
