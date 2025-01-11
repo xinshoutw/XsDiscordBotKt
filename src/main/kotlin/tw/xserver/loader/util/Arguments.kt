@@ -8,13 +8,21 @@ import com.github.ajalt.clikt.parameters.options.option
 import tw.xserver.loader.logger.LogBackManager
 
 
-object Arguments : CliktCommand() {
+internal object Arguments : CliktCommand() {
     val forceReplaceLangResources: Boolean
             by option(
                 "-F",
-                "--force-export-resources",
+                "--force-export-lang-resources",
                 help = "Force all plugins export theirs language resources"
             ).flag(default = false)
+
+    val forceRenewLangResources: Boolean
+            by option(
+                "-FF",
+                "--force-renew-lang-resources",
+                help = "Force all plugins delete lang directory, then export theirs language resources"
+            ).flag(default = false)
+
 
     val ignoreVersionCheck: Boolean
             by option(

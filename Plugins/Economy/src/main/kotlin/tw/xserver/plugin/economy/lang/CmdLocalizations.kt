@@ -15,22 +15,22 @@ internal object CmdLocalizations {
     val removeCost = CommandWithMemberValueLd()
     val setCost = CommandWithMemberValueLd()
 
-    class CommandWithMemberLd {
+    internal class CommandWithMemberLd {
         val options = OptionsLd()
         val name = LocaleData()
         val description = LocaleData()
 
-        class OptionsLd {
+        internal class OptionsLd {
             val member = LocalTemplate1.NDLocalData()
         }
     }
 
-    class CommandWithMemberValueLd {
+    internal class CommandWithMemberValueLd {
         val options = OptionsLd()
         val name = LocaleData()
         val description = LocaleData()
 
-        class OptionsLd {
+        internal class OptionsLd {
             val member = LocalTemplate1.NDLocalData()
             val value = LocalTemplate1.NDLocalData()
         }

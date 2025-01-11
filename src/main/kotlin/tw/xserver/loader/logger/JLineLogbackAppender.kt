@@ -5,7 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.AppenderBase
 import tw.xserver.loader.cli.JLineManager.reader
 
-class JLineAppender : AppenderBase<ILoggingEvent>() {
+internal class JLineAppender : AppenderBase<ILoggingEvent>() {
     private var layout: PatternLayout? = null
 
     override fun start() {

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MainConfigSerializer(
+internal data class MainConfigSerializer(
     @SerialName("client_id")
     val clientId: String = "",
 

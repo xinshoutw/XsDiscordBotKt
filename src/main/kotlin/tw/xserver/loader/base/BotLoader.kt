@@ -28,7 +28,7 @@ object BotLoader {
     /**
      * Starts the bot by loading settings, initializing plugins, and setting up JDA.
      */
-    fun start() {
+    internal fun start() {
         if (UpdateChecker.versionCheck()) {
             logger.error("Version check failed, exiting.")
             exitProcess(2)
@@ -83,7 +83,7 @@ object BotLoader {
     /**
      * Reloads plugins and settings, resets status changer.
      */
-    fun reload() {
+    internal fun reload() {
         try {
             PluginLoader.reload()
             SettingsLoader.run()
@@ -97,7 +97,7 @@ object BotLoader {
     /**
      * Stops the bot and cleans up resources, including shutting down JDA and unloading plugins.
      */
-    fun stop() {
+    internal fun stop() {
         try {
             if (::jdaBot.isInitialized) {
                 jdaBot.apply {

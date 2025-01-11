@@ -11,7 +11,7 @@ import tw.xserver.loader.builtin.statuschanger.StatusChanger
 /**
  * This class manages the initialization of all listeners and the registration of guild-specific commands.
  */
-class ListenerManager(
+internal class ListenerManager(
     private val guildCommands: List<CommandData>,
 ) : ListenerAdapter() {
     init {

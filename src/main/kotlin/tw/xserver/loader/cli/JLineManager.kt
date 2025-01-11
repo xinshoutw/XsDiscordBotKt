@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import tw.xserver.loader.base.BotLoader
 import kotlin.coroutines.coroutineContext
 
-class CustomCompleter : Completer {
+internal class CustomCompleter : Completer {
     override fun complete(reader: LineReader, line: ParsedLine, candidates: MutableList<Candidate>) {
         val buffer = line.line()
         val tokens = buffer.split(" ")
@@ -32,7 +32,7 @@ class CustomCompleter : Completer {
 }
 
 
-object JLineManager {
+internal object JLineManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val terminal: Terminal = TerminalBuilder.builder().system(true).build()
     private val completer: Completer = CustomCompleter()
@@ -41,12 +41,20 @@ object JLineManager {
         .completer(completer)
         .build()
 
-
     fun start(scope: CoroutineScope, stopSignal: CompletableDeferred<Unit>) {
         scope.launch {
             mainLoop(stopSignal)
         }
         logger.info("JLineManager started.")
+    }
+
+    fun stop() {
+        try {
+            terminal.close()
+        } catch (e: Exception) {
+            logger.warn("Error closing terminal: ", e)
+        }
+        logger.info("JLineManager stopped.")
     }
 
     private suspend fun mainLoop(stopSignal: CompletableDeferred<Unit>) {
@@ -82,14 +90,5 @@ object JLineManager {
                 logger.error("An error occurred: ", e)
             }
         }
-    }
-
-    fun stop() {
-        try {
-            terminal.close()
-        } catch (e: Exception) {
-            logger.warn("Error closing terminal: ", e)
-        }
-        logger.info("JLineManager stopped.")
     }
 }

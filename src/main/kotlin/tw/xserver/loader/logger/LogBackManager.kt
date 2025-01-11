@@ -6,7 +6,7 @@ import ch.qos.logback.classic.LoggerContext
 import org.fusesource.jansi.AnsiConsole
 import org.slf4j.LoggerFactory
 
-object LogBackManager {
+internal object LogBackManager {
     private val rootLogger =
         (LoggerFactory.getILoggerFactory() as LoggerContext).getLogger(Logger.ROOT_LOGGER_NAME)
 

@@ -11,17 +11,19 @@ import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.LayoutComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.internal.interactions.component.ButtonImpl
 import tw.xserver.loader.util.ComponentField
 import tw.xserver.plugin.ticket.Ticket.componentIdManager
 
-class Step(
-    internal val hook: InteractionHook,
-    internal val message: Message? = null
+internal class Step(
+    val hook: InteractionHook,
+    val message: Message? = null
 ) {
-    internal val data = StepData()
+    val data = StepData()
 
-    internal fun renderEmbed() {
+    fun renderEmbedAction(): WebhookMessageEditAction<Message?> {
         val actions = ArrayList<LayoutComponent>().apply {
             add(ActionRow.of(getPreviewComponent))
 
@@ -31,25 +33,25 @@ class Step(
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("subAction", "author"),
+                                ComponentField("sub_action", "author"),
                             ), "設定作者", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("subAction", "content"),
+                                ComponentField("sub_action", "content"),
                             ), "設定文字", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("subAction", "category"),
+                                ComponentField("sub_action", "category"),
                             ), "設定頻道目錄", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("subAction", "color"),
+                                ComponentField("sub_action", "color"),
                             ), "設定顏色", ButtonStyle.PRIMARY, false, null
                         )
                     )
@@ -61,41 +63,41 @@ class Step(
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("subAction", "btnContent"),
+                            ComponentField("sub_action", "btnContent"),
                         ), "設定按鈕文字", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("subAction", "btnColor"),
+                            ComponentField("sub_action", "btnColor"),
                         ), "設定按鈕顏色", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("subAction", "reason"),
+                            ComponentField("sub_action", "reason"),
                         ), "設定詢問標題", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("subAction", "admin"),
+                            ComponentField("sub_action", "admin"),
                         ), "設定允許身分組", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("subAction", "confirm"),
+                            ComponentField("sub_action", "confirm"),
                         ), "確定建立", ButtonStyle.SUCCESS, false, null
                     )
                 )
             )
         }
 
-        hook.editOriginalEmbeds(previewEmbed).setComponents(actions).queue()
+        return hook.editOriginalEmbeds(previewEmbed).setComponents(actions)
     }
 
-    internal val json: JsonObject
+    val json: JsonObject
         get() {
             val obj = JsonObject()
             val adminIds = JsonArray().apply {
@@ -111,7 +113,7 @@ class Step(
             return obj
         }
 
-    internal fun setAuthor(name: String?, iconURL: String?) {
+    fun setAuthor(name: String?, iconURL: String?) {
         if (name == null) {
             data.author = null
             data.authorIconURL = null
@@ -122,44 +124,44 @@ class Step(
         data.authorIconURL = iconURL
     }
 
-    internal fun setTitle(title: String?) {
+    fun setTitle(title: String?) {
         data.title = title
     }
 
-    internal fun setDesc(desc: String?) {
+    fun setDesc(desc: String?) {
         data.description = desc
     }
 
-    internal fun setReason(reason: String) {
+    fun setReason(reason: String) {
         if (reason.isEmpty()) return
         data.reasonTitle = reason
     }
 
-    internal fun setAdminIds(adminId: List<Long>?) {
+    fun setAdminIds(adminId: List<Long>?) {
         data.adminIds = adminId
     }
 
-    internal fun setCategoryId(categoryId: Long) {
+    fun setCategoryId(categoryId: Long) {
         data.categoryId = categoryId
     }
 
-    internal fun setColor(color: Int) {
+    fun setColor(color: Int) {
         data.color = color
     }
 
-    internal fun setBtnContent(content: String?) {
+    fun setBtnContent(content: String?) {
         data.btnContent = content
     }
 
-    internal fun setBtnEmoji(emoji: Emoji?) {
+    fun setBtnEmoji(emoji: Emoji?) {
         data.btnEmoji = emoji
     }
 
-    internal fun setBtnStyle(style: ButtonStyle?) {
+    fun setBtnStyle(style: ButtonStyle?) {
         data.btnStyle = style
     }
 
-    internal fun confirmCreate(channel: MessageChannelUnion): Long {
+    fun confirmCreateAction(channel: MessageChannelUnion): RestAction<Message> {
         hook.deleteOriginal().queue()
 
         if (message == null) {
@@ -170,7 +172,7 @@ class Step(
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "press"),
-                                ComponentField("btnIndex", 0),
+                                ComponentField("btn_index", 0),
                             ),
                             data.btnContent,
                             data.btnStyle,
@@ -179,7 +181,7 @@ class Step(
                         )
                     )
                 )
-            }.complete().idLong
+            }
         }
 
         // modify the original message
@@ -188,7 +190,7 @@ class Step(
                 ButtonImpl(
                     componentIdManager.build(
                         ComponentField("action", "press"),
-                        ComponentField("btnIndex", size),
+                        ComponentField("btn_index", size),
                     ),
                     data.btnContent,
                     data.btnStyle,
@@ -197,9 +199,7 @@ class Step(
                 )
             )
         }
-        message.editMessageComponents(ActionRow.of(rowData)).queue()
-
-        return message.idLong
+        return message.editMessageComponents(ActionRow.of(rowData))
     }
 
 
@@ -218,7 +218,7 @@ class Step(
         get() = ButtonImpl(
             componentIdManager.build(
                 ComponentField("action", "create"),
-                ComponentField("subAction", "prev"),
+                ComponentField("sub_action", "prev"),
             ), data.btnContent, data.btnStyle, false, data.btnEmoji
         )
 

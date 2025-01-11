@@ -19,8 +19,9 @@ import tw.xserver.loader.util.ComponentField
 import tw.xserver.plugin.ticket.Ticket.componentIdManager
 import tw.xserver.plugin.ticket.Ticket.jsonGuildManager
 
-object StepManager {
+internal object StepManager {
     private val steps: HashMap<Long, Step> = hashMapOf()
+
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         when (event.name) {
             "create-ticket" -> onCreateTicket(event)
@@ -30,30 +31,30 @@ object StepManager {
 
     private fun onCreateTicket(event: SlashCommandInteractionEvent) {
         val step = Step(event.hook)
-        step.renderEmbed()
+        step.renderEmbedAction()
         steps.put(event.user.idLong, step)
     }
 
     private fun onAddTicket(event: SlashCommandInteractionEvent) {
         val messageId = event.getOption("message_id")!!.asLong
-        val message = event.messageChannel.retrieveMessageById(messageId)
+
+        event.messageChannel.retrieveMessageById(messageId)
             .onErrorFlatMap { i -> event.hook.editOriginal("Cannot found the message by id: $messageId") }
-            .complete()
-
-        if (!message.actionRows.isEmpty() && message.actionRows[0].components.size == 5) {
-            event.hook.editOriginal("This message is full of buttons, please recreate a new message").queue()
-            return
-        }
-
-        val step = Step(event.hook, message)
-        step.renderEmbed()
-        steps.put(event.user.idLong, step)
+            .flatMap {
+                if (!it.actionRows.isEmpty() && it.actionRows[0].components.size == 5) {
+                    event.hook.editOriginal("This message is full of buttons, please recreate a new message")
+                } else {
+                    val step = Step(event.hook, it)
+                    steps.put(event.user.idLong, step)
+                    step.renderEmbedAction()
+                }
+            }.queue()
     }
 
 
     /* ------------------------------------- */
     fun onButtonInteraction(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        when (idMap["subAction"]) {
+        when (idMap["sub_action"]) {
             "prev" -> previewReason(event)
 
             "author" -> authorForm(event)
@@ -82,7 +83,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "prev"),
+                        ComponentField("sub_action", "prev"),
                     ), step.data.reasonTitle
                 ).addComponents(
                     ActionRow.of(TextInput.create("reason", "原因", TextInputStyle.PARAGRAPH).build())
@@ -111,7 +112,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "author"),
+                        ComponentField("sub_action", "author"),
                     ), "創建客服單"
                 ).addComponents(
                     ActionRow.of(nameInput), ActionRow.of(imageInput)
@@ -138,7 +139,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "content"),
+                        ComponentField("sub_action", "content"),
                     ), "創建客服單"
                 ).addComponents(
                     ActionRow.of(titleInput), ActionRow.of(descInput)
@@ -153,27 +154,27 @@ object StepManager {
                 EntitySelectMenu.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "category"),
+                        ComponentField("sub_action", "category"),
                     ), EntitySelectMenu.SelectTarget.CHANNEL
                 )
                     .setChannelTypes(ChannelType.CATEGORY)
                     .setRequiredRange(1, 1)
                     .setPlaceholder("未設定則為預設")
                     .build()
-
-            step.hook.editOriginalComponents(
-                ActionRow.of(menu),
-                ActionRow.of(
-                    Button.of(
-                        ButtonStyle.PRIMARY,
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "back"),
-                        ), "返回"
+            event.deferEdit().flatMap {
+                step.hook.editOriginalComponents(
+                    ActionRow.of(menu),
+                    ActionRow.of(
+                        Button.of(
+                            ButtonStyle.PRIMARY,
+                            componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "back"),
+                            ), "返回"
+                        )
                     )
                 )
-            ).queue()
-            event.deferEdit().queue()
+            }.queue()
         }
     }
 
@@ -188,7 +189,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "color"),
+                        ComponentField("sub_action", "color"),
                     ), "創建客服單"
                 ).addComponents(
                     ActionRow.of(colorInput)
@@ -216,7 +217,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "btnContent"),
+                        ComponentField("sub_action", "btnContent"),
                     ), "創建客服單"
                 ).addComponents(
                     ActionRow.of(btnTextInput),
@@ -228,47 +229,48 @@ object StepManager {
 
     private fun btnColorMenu(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
-            step.hook.editOriginalComponents(
-                ActionRow.of(
-                    Button.of(
-                        ButtonStyle.SUCCESS, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "btnColorSubmit"),
-                            ComponentField("colorIndex", 3),
-                        ), "綠色"
+            event.deferEdit().flatMap {
+                step.hook.editOriginalComponents(
+                    ActionRow.of(
+                        Button.of(
+                            ButtonStyle.SUCCESS, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "btnColorSubmit"),
+                                ComponentField("color_index", 3),
+                            ), "綠色"
+                        ),
+                        Button.of(
+                            ButtonStyle.PRIMARY, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "btnColorSubmit"),
+                                ComponentField("color_index", 1),
+                            ), "藍色"
+                        ),
+                        Button.of(
+                            ButtonStyle.DANGER, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "btnColorSubmit"),
+                                ComponentField("color_index", 4),
+                            ), "紅色"
+                        ),
+                        Button.of(
+                            ButtonStyle.SECONDARY, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "btnColorSubmit"),
+                                ComponentField("color_index", 2),
+                            ), "灰色"
+                        ),
                     ),
-                    Button.of(
-                        ButtonStyle.PRIMARY, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "btnColorSubmit"),
-                            ComponentField("colorIndex", 1),
-                        ), "藍色"
-                    ),
-                    Button.of(
-                        ButtonStyle.DANGER, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "btnColorSubmit"),
-                            ComponentField("colorIndex", 4),
-                        ), "紅色"
-                    ),
-                    Button.of(
-                        ButtonStyle.SECONDARY, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "btnColorSubmit"),
-                            ComponentField("colorIndex", 2),
-                        ), "灰色"
-                    ),
-                ),
-                ActionRow.of(
-                    Button.of(
-                        ButtonStyle.PRIMARY, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "back"),
-                        ), "返回"
+                    ActionRow.of(
+                        Button.of(
+                            ButtonStyle.PRIMARY, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "back"),
+                            ), "返回"
+                        )
                     )
                 )
-            ).queue()
-            event.deferEdit().queue()
+            }.queue()
         }
     }
 
@@ -284,7 +286,7 @@ object StepManager {
                 Modal.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "reason"),
+                        ComponentField("sub_action", "reason"),
                     ), "創建客服單"
                 ).addComponents(
                     ActionRow.of(reasonInput)
@@ -299,46 +301,47 @@ object StepManager {
                 EntitySelectMenu.create(
                     componentIdManager.build(
                         ComponentField("action", "create"),
-                        ComponentField("subAction", "admin"),
+                        ComponentField("sub_action", "admin"),
                     ), EntitySelectMenu.SelectTarget.ROLE
                 ).setMaxValues(25).build()
 
-            step.hook.editOriginalComponents(
-                ActionRow.of(menu),
-                ActionRow.of(
-                    Button.of(
-                        ButtonStyle.PRIMARY, componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("subAction", "back"),
-                        ), "返回"
+            event.deferEdit().flatMap {
+                step.hook.editOriginalComponents(
+                    ActionRow.of(menu),
+                    ActionRow.of(
+                        Button.of(
+                            ButtonStyle.PRIMARY, componentIdManager.build(
+                                ComponentField("action", "create"),
+                                ComponentField("sub_action", "back"),
+                            ), "返回"
+                        )
                     )
                 )
-            ).queue()
-            event.deferEdit().queue()
+            }.queue()
         }
     }
 
     private fun confirmCreate(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
-            val messageId = step.confirmCreate(event.channel)
             val manager = jsonGuildManager[event.guild!!.idLong]
-            manager.computeIfAbsent(messageId.toString(), JsonArray()).asJsonArray.add(step.json)
-            manager.save()
-
+            step.confirmCreateAction(event.channel).map {
+                manager.computeIfAbsent(it.id, JsonArray()).asJsonArray.add(step.json)
+                manager.save()
+            }
         }
     }
 
     private fun backToMainMenu(event: ButtonInteractionEvent) {
-        steps[event.user.idLong]?.renderEmbed()
+        steps[event.user.idLong]?.renderEmbedAction()
         event.deferEdit().queue()
     }
 
     private fun modifyBtnColor(event: ButtonInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
             val idMap = componentIdManager.parse(event.componentId)
-            if (idMap["subAction"] == "btnColorSubmit") {
-                step.setBtnStyle(ButtonStyle.fromKey(idMap["colorIndex"] as Int))
-                step.renderEmbed()
+            if (idMap["sub_action"] == "btnColorSubmit") {
+                step.setBtnStyle(ButtonStyle.fromKey(idMap["color_index"] as Int))
+                step.renderEmbedAction()
                 event.deferEdit().queue()
             }
         }
@@ -349,7 +352,7 @@ object StepManager {
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
         steps[event.user.idLong]?.let { step ->
             val idMap = componentIdManager.parse(event.componentId)
-            when (idMap["subAction"]) {
+            when (idMap["sub_action"]) {
                 "admin" -> {
                     step.setAdminIds(event.values.map { it.idLong })
                 }
@@ -365,7 +368,7 @@ object StepManager {
                 }
             }
 
-            step.renderEmbed()
+            step.renderEmbedAction()
             event.deferEdit().queue()
         }
     }
@@ -374,7 +377,7 @@ object StepManager {
     /* ------------------------------------- */
     fun onModalInteraction(event: ModalInteractionEvent, idMap: Map<String, Any>) {
         steps[event.user.idLong]?.let { step ->
-            when (idMap["subAction"]) {
+            when (idMap["sub_action"]) {
                 "author" -> {
                     step.setAuthor(event.getValue("author")?.asString, event.getValue("image")?.asString)
                 }
@@ -413,7 +416,7 @@ object StepManager {
                 }
             }
 
-            step.renderEmbed()
+            step.renderEmbedAction()
             event.deferEdit().queue()
         }
     }

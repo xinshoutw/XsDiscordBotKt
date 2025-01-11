@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.components.selections.EntitySelectIntera
 import tw.xserver.loader.base.BotLoader.jdaBot
 
 object Placeholder {
-    val globalPlaceholder: Substitutor = Substitutor(
+    val globalSubstitutor: Substitutor = Substitutor(
         "bot_id" to jdaBot.selfUser.id,
         "bot_name" to jdaBot.selfUser.name,
     )
@@ -28,7 +28,7 @@ object Placeholder {
         return userPlaceholder.getOrPut(
             user.idLong
         ) {
-            Substitutor(globalPlaceholder, "user_id" to user.id)
+            Substitutor(globalSubstitutor, "user_id" to user.id)
         }.apply { // force update some changeable data
             putAll(
                 "user_mention" to user.asMention,
@@ -41,7 +41,7 @@ object Placeholder {
     fun getSubstitutor(member: Member): Substitutor {
         return memberPlaceholder.getOrPut(
             member.idLong,
-        ) { Substitutor(globalPlaceholder, "user_id" to member.id) }.apply { // force update some changeable data
+        ) { Substitutor(globalSubstitutor, "user_id" to member.id) }.apply { // force update some changeable data
             putAll(
                 "user_mention" to member.asMention,
                 "user_name" to member.user.name,

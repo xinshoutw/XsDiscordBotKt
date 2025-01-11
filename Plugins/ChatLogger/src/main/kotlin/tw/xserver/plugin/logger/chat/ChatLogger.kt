@@ -15,9 +15,11 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
+import tw.xserver.loader.builtin.messagecreator.MessageCreator
 import tw.xserver.loader.builtin.placeholder.Placeholder
 import tw.xserver.loader.builtin.placeholder.Substitutor
-import tw.xserver.plugin.creator.message.MessageCreator
+import tw.xserver.loader.util.ComponentIdManager
+import tw.xserver.loader.util.FieldType
 import tw.xserver.plugin.logger.chat.Event.COMPONENT_PREFIX
 import tw.xserver.plugin.logger.chat.Event.PLUGIN_DIR_FILE
 import tw.xserver.plugin.logger.chat.Event.config
@@ -28,9 +30,28 @@ import java.util.stream.Collectors
 
 
 internal object ChatLogger {
-    private val creator = MessageCreator(File(PLUGIN_DIR_FILE, "lang"), DiscordLocale.CHINESE_TAIWAN, COMPONENT_PREFIX)
+    private val componentIdManager = ComponentIdManager(
+        prefix = COMPONENT_PREFIX,
+        idKeys = mapOf(
+            "action" to FieldType.STRING,
+        )
+    )
 
-    fun setting(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
+    private val creator = MessageCreator(
+        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        messageKeys = listOf(
+            "chat-logger@setting",
+            "delete",
+            "modify-allow",
+            "modify-block",
+            "on-msg-delete",
+            "on-msg-update",
+        ),
+        componentIdManager,
+    )
+
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
         getSettingMenu(
             dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
             event.userLocale,
@@ -38,46 +59,34 @@ internal object ChatLogger {
         )
     ).queue()
 
-    fun onToggle(event: ButtonInteractionEvent) {
-        // update
-        val channelData = JsonManager.toggle(event.guild!!, event.channel.idLong)
-
-        // reply
-        event.hook.editOriginal(
-            getSettingMenu(
-                channelData,
-                event.userLocale,
-                Placeholder.getSubstitutor(event)
+    fun onButtonInteraction(event: ButtonInteractionEvent) {
+        val idMap = componentIdManager.parse(event.componentId)
+        when (idMap["action"]) {
+            "toggle_btn" -> onToggleButton(event)
+            "modify_allow_btn" -> createSelButton(
+                event = event,
+                key = "modify-allow",
             )
-        ).queue()
-        event.deferEdit().queue()
+
+            "modify_block_btn" -> createSelButton(
+                event = event,
+                key = "modify-block",
+            )
+
+            "delete_btn" -> onDeleteButton(event)
+        }
     }
 
-    fun onDelete(event: ButtonInteractionEvent) {
-        // update
-        JsonManager.delete(event.guild!!.idLong, event.channel.idLong)
-
-        // reply
-        event.editMessage(
-            MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
-                    "delete",
-                    event.userLocale,
-                    Placeholder.getSubstitutor(event)
-                ).build()
-            )
-        ).queue()
-    }
-
-    fun onSelect(event: EntitySelectInteractionEvent) {
+    fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
         // update
         val guild = event.guild!!
         val channelIds = event.values
             .stream()
             .map { obj: IMentionable -> obj.idLong }
             .collect(Collectors.toList())
-        val channelData = when (event.componentId.removePrefix(COMPONENT_PREFIX)) {
-            "modify_allow" -> {
+        val idMap = componentIdManager.parse(event.componentId)
+        val channelData = when (idMap["action"]) {
+            "modify_allow_menu" -> {
                 JsonManager.addAllowChannels(
                     guild = guild,
                     listenChannelId = event.channelIdLong,
@@ -85,7 +94,7 @@ internal object ChatLogger {
                 )
             }
 
-            "modify_block" -> {
+            "modify_block_menu" -> {
                 JsonManager.addBlockChannels(
                     guild = guild,
                     listenChannelId = event.channelIdLong,
@@ -97,28 +106,18 @@ internal object ChatLogger {
         }
 
         // reply
-        event.hook.editOriginal(
-            getSettingMenu(
-                channelData,
-                event.userLocale,
-                Placeholder.getSubstitutor(event)
+        event.deferEdit().flatMap {
+            event.hook.editOriginal(
+                getSettingMenu(
+                    channelData,
+                    event.userLocale,
+                    Placeholder.getSubstitutor(event)
+                )
             )
-        ).queue()
-        event.deferEdit().queue()
+        }.queue()
     }
 
-    fun createSel(event: ButtonInteractionEvent, componentId: String) {
-        event.editMessage(
-            MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
-                    componentId,
-                    event.userLocale, Placeholder.getSubstitutor(event)
-                ).build()
-            )
-        ).queue()
-    }
-
-    fun receiveMessage(event: MessageReceivedEvent) {
+    fun onMessageReceived(event: MessageReceivedEvent) {
         if (!isListenable(event.channel.idLong)) return
 
         val messageContent = getMessageContent(event.message)
@@ -131,7 +130,7 @@ internal object ChatLogger {
         )
     }
 
-    fun updateMessage(event: MessageUpdateEvent) {
+    fun onMessageUpdate(event: MessageUpdateEvent) {
         val channel = event.guildChannel
         if (!isListenable(channel.idLong)) return
         val listenChannelIds: List<Long> = dataMap.entries
@@ -148,7 +147,6 @@ internal object ChatLogger {
             )
 
             if (listenChannelIds.isEmpty()) return
-
             val substitutor = Placeholder.getSubstitutor(event.member!!).putAll(
                 "cl_msg_after_url" to event.message.jumpUrl,
                 "cl_category_mention" to channel.asTextChannel().parentCategory!!.asMention,
@@ -169,7 +167,7 @@ internal object ChatLogger {
         }
     }
 
-    fun deleteMessage(event: MessageDeleteEvent) {
+    fun onMessageDelete(event: MessageDeleteEvent) {
         val channel = event.guildChannel
         if (!isListenable(channel.idLong)) return
         val listenChannelIds: List<Long> = dataMap.entries
@@ -209,7 +207,7 @@ internal object ChatLogger {
                         "on-msg-delete",
                         event.guild,
                         listenChannelIds,
-                        Placeholder.globalPlaceholder
+                        Placeholder.globalSubstitutor
                     )
                     return
                 }
@@ -217,9 +215,55 @@ internal object ChatLogger {
         }
     }
 
-    internal fun onGuildLeave(event: GuildLeaveEvent) {
+
+    fun createSelButton(event: ButtonInteractionEvent, key: String) {
+        event.editMessage(
+            MessageEditData.fromCreateData(
+                creator.getCreateBuilder(
+                    key,
+                    event.userLocale,
+                    Placeholder.getSubstitutor(event)
+                ).build()
+            )
+        ).queue()
+    }
+
+    fun onGuildLeave(event: GuildLeaveEvent) {
         if (config.logAll) return
         DbManager.deleteDatabase(event.guild.id)
+    }
+
+
+    private fun onToggleButton(event: ButtonInteractionEvent) {
+        // update
+        val channelData = JsonManager.toggle(event.guild!!, event.channel.idLong)
+
+        // reply
+        event.deferEdit().flatMap {
+            event.hook.editOriginal(
+                getSettingMenu(
+                    channelData,
+                    event.userLocale,
+                    Placeholder.getSubstitutor(event)
+                )
+            )
+        }.queue()
+    }
+
+    private fun onDeleteButton(event: ButtonInteractionEvent) {
+        // update
+        JsonManager.delete(event.guild!!.idLong, event.channel.idLong)
+
+        // reply
+        event.editMessage(
+            MessageEditData.fromCreateData(
+                creator.getCreateBuilder(
+                    "delete",
+                    event.userLocale,
+                    Placeholder.getSubstitutor(event)
+                ).build()
+            )
+        ).queue()
     }
 
     private fun sendListenChannel(key: String, guild: Guild, listenChannelId: List<Long>, substitutor: Substitutor) {
@@ -272,32 +316,34 @@ internal object ChatLogger {
         val blockListFormat = PlaceholderLocalizations.blockListFormat[locale]
 
         val allowString = StringBuilder().apply {
-            if (!channelData.getAllowArray().isEmpty) channelData.getAllowArray().map { it.asString }
-                .forEach { detectedChannelId ->
-                    append(
+            if (channelData.getAllowArray().isEmpty) {
+                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+            } else {
+                channelData.getAllowArray()
+                    .map { it.asString }
+                    .map {
                         substitutor.parse(
                             allowListFormat
-                                .replace("%allowlist_channel_mention%", "<#${detectedChannelId}>")
-                                .replace("%allowlist_channel_id%", detectedChannelId)
+                                .replace("%allowlist_channel_mention%", "<#${it}>")
+                                .replace("%allowlist_channel_id%", it)
                         )
-                    )
-                } else {
-                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+                    }.forEach { append(it) }
             }
         }.toString()
 
         val blockString = StringBuilder().apply {
-            if (!channelData.getBlockArray().isEmpty) channelData.getBlockArray().map { it.asString }
-                .forEach { detectedChannelId ->
-                    append(
+            if (channelData.getBlockArray().isEmpty) {
+                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+            } else {
+                channelData.getBlockArray()
+                    .map { it.asString }
+                    .map {
                         substitutor.parse(
                             blockListFormat
-                                .replace("%blocklist_channel_mention%", "<#${detectedChannelId}>")
-                                .replace("%blocklist_channel_id%", detectedChannelId)
+                                .replace("%blocklist_channel_mention%", "<#${it}>")
+                                .replace("%blocklist_channel_id%", it)
                         )
-                    )
-                } else {
-                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+                    }.forEach { append(it) }
             }
         }.toString()
 
@@ -309,7 +355,6 @@ internal object ChatLogger {
             )
         }
 
-
         return MessageEditData.fromCreateData(
             creator.getCreateBuilder(
                 "chat-logger@setting",
@@ -318,6 +363,7 @@ internal object ChatLogger {
             ).build()
         )
     }
+
 
     private fun isListenable(channelId: Long): Boolean {
         return config.logAll ||

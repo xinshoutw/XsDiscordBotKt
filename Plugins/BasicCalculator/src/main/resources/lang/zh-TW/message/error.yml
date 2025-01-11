@@ -8,7 +8,7 @@ embeds:
 
     fields:
       - name: "算式"
-        value: "`%bc_question%`"
+        value: "```%bc_question%```"
 
       - name: "結果"
-        value: "`%bc_error%`"
+        value: "```%bc_error%```"

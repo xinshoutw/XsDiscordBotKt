@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MainConfigSerializer(
+internal data class MainConfigSerializer(
     val language: String = "zh-TW",
 
     @SerialName("guild_id")

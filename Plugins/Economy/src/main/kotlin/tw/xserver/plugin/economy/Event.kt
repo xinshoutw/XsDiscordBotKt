@@ -13,7 +13,8 @@ import tw.xserver.loader.localizations.LangManager
 import tw.xserver.loader.plugin.PluginEvent
 import tw.xserver.loader.util.FileGetter
 import tw.xserver.loader.util.GlobalUtil
-import tw.xserver.plugin.economy.command.getGuildCommands
+import tw.xserver.plugin.economy.command.commandStringSet
+import tw.xserver.plugin.economy.command.guildCommands
 import tw.xserver.plugin.economy.lang.CmdFileSerializer
 import tw.xserver.plugin.economy.lang.CmdLocalizations
 import tw.xserver.plugin.economy.serializer.MainConfigSerializer
@@ -27,33 +28,36 @@ import java.io.IOException
  * Main class for the Economy plugin managing configurations, commands, and data handling.
  */
 object Event : PluginEvent(true) {
-    internal val PLUGIN_DIR_FILE = File("./plugins/Economy/")
-    internal const val COMPONENT_PREFIX = "xs:economy:v2:"
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val MODE = Mode.Json
+    internal const val COMPONENT_PREFIX = "economy@"
+    internal val PLUGIN_DIR_FILE = File("plugins/Economy")
     internal lateinit var config: MainConfigSerializer
     internal lateinit var storageManager: StorageInterface
 
 
     override fun load() {
+        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
         reloadAll()
 
         storageManager.init()
         storageManager.sortMoneyBoard()
         storageManager.sortCostBoard()
+
+        logger.info("Economy loaded.")
     }
 
-    override fun unload() {}
+    override fun unload() {
+        logger.info("Economy unloaded.")
+    }
 
     override fun reloadConfigFile() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-
         try {
-            fileGetter.readInputStream("./config.yml").use {
+            fileGetter.readInputStream("config.yml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
             }
         } catch (e: IOException) {
-            logger.error("Please configure {}./config.yml.", PLUGIN_DIR_FILE.canonicalPath, e)
+            logger.error("Please configure {}./config.yml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
         logger.info("Setting file loaded successfully.")
@@ -76,7 +80,7 @@ object Event : PluginEvent(true) {
     }
 
     override fun reloadLang() {
-        fileGetter.exportDefaultDirectory("./lang")
+        fileGetter.exportDefaultDirectory("lang")
 
         LangManager(
             pluginDirFile = PLUGIN_DIR_FILE,
@@ -87,24 +91,16 @@ object Event : PluginEvent(true) {
         )
     }
 
-    override fun guildCommands(): Array<CommandData> = getGuildCommands()
+    override fun guildCommands(): Array<CommandData> = guildCommands
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (event.name.startsWith("top-")) {
-            Economy.handleTopCommands(event)
-            return
-        }
-
-        when (event.name) {
-            "balance" -> Economy.handleBalance(event)
-            "add-money", "remove-money", "set-money", "add-cost", "remove-cost", "set-cost" ->
-                Economy.handleMoneyAndCostCommands(event)
-        }
+        if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
+        Economy.onSlashCommandInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-        ButtonReplier.onQuery(event)
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        Economy.onButtonInteraction(event)
     }
 
     private enum class Mode {

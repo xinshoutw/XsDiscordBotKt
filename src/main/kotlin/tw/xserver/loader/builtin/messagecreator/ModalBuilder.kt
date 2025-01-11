@@ -1,44 +1,29 @@
-package tw.xserver.plugin.creator.message
+package tw.xserver.loader.builtin.messagecreator
 
-import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.text.TextInput
 import net.dv8tion.jda.api.interactions.modals.Modal
+import tw.xserver.loader.builtin.messagecreator.serializer.ModalDataSerializer
 import tw.xserver.loader.builtin.placeholder.Placeholder
 import tw.xserver.loader.builtin.placeholder.Substitutor
-import tw.xserver.plugin.creator.message.serializer.ModalDataSerializer
-import java.util.*
+import tw.xserver.loader.util.ComponentIdManager
 
-open class ModalBuilder(private val componentPrefix: String, private val defaultLocale: DiscordLocale) {
-    protected val modalLocaleMapper: MutableMap<DiscordLocale, MutableMap<String, ModalDataSerializer>> =
-        EnumMap(DiscordLocale::class.java)
-
-    fun getModalBuilder(
-        key: String,
-        locale: DiscordLocale,
-        substitutor: Substitutor = Placeholder.globalPlaceholder,
-    ): Modal.Builder {
-        return getModalBuilder(getModalData(key, locale), substitutor)
-    }
-
-    fun getModalData(key: String, locale: DiscordLocale): ModalDataSerializer =
-        modalLocaleMapper.getOrDefault(locale, modalLocaleMapper[defaultLocale])
-            ?.get(key.removePrefix(componentPrefix))
-            ?: throw IllegalStateException("Message data not found for command: $key")
-
+open class ModalBuilder(
+    private val componentIdManager: ComponentIdManager,
+) {
     protected fun getModalBuilder(
         modalData: ModalDataSerializer,
-        substitutor: Substitutor = Placeholder.globalPlaceholder,
+        substitutor: Substitutor = Placeholder.globalSubstitutor,
     ): Modal.Builder {
         val builder = Modal.create(
-            substitutor.parse("$componentPrefix${substitutor.parse(modalData.customId)}"),
+            substitutor.parse(componentIdManager.build(modalData.uid)),
             substitutor.parse(substitutor.parse(modalData.title))
         ).apply {
             modalData.textInputs.forEach { textInput ->
                 components.add(
                     ActionRow.of(
                         TextInput.create(
-                            substitutor.parse(textInput.uid),
+                            substitutor.parse(componentIdManager.build(textInput.uid)),
                             substitutor.parse(textInput.label),
                             textInput.style
                         ).apply {

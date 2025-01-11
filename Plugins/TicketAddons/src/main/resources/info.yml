@@ -1,9 +1,7 @@
 author: xinshoutw
 main: tw.xserver.plugin.addons.ticket.Event
 name: TicketAddons
-version: '1.0'
-depend_plugins:
-  - MessageCreator
+version: '0.1.0'
 
 require_cache_flags:
   - ONLINE_STATUS

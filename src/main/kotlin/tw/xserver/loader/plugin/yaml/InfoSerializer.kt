@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class InfoSerializer(
+internal data class InfoSerializer(
     val author: String? = null,
     val main: String,
     val name: String,

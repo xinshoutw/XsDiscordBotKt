@@ -1,4 +1,4 @@
-package tw.xserver.plugin.creator.message.serializer
+package tw.xserver.loader.builtin.messagecreator.serializer
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -9,7 +9,7 @@ import java.awt.Color
 data class MessageDataSerializer(
     val content: String = "", // 2000 length limit
     val embeds: List<EmbedSetting> = emptyList(), // 10 size limit
-    val components: List<Component> = emptyList(), // 5 size limit, allowed format: [ "buttons", "string_select_menu", "entity_select_menu" ]
+    val components: List<ComponentSetting> = emptyList(), // 5 size limit, allowed format: [ "buttons", "string_select_menu", "entity_select_menu" ]
 ) {
     @Serializable
     data class EmbedSetting(
@@ -62,18 +62,17 @@ data class MessageDataSerializer(
         )
     }
 
-
     @Serializable
-    sealed class Component {
+    sealed class ComponentSetting {
         @Serializable
         @SerialName("!ButtonsComponent")
         data class ButtonsComponent(
             val buttons: List<Button>
-        ) : Component() {
+        ) : ComponentSetting() {
             @Serializable
             data class Button(
-                @SerialName("uid_or_url")
-                val uidOrUrl: String,
+                val uid: Map<String, String>? = null,
+                val url: String? = null,
                 val style: Int,
                 val label: String? = null,
                 val disabled: Boolean = false,
@@ -90,12 +89,12 @@ data class MessageDataSerializer(
         @Serializable
         @SerialName("!StringSelectMenu")
         data class StringSelectMenuSetting(
-            val uid: String,
+            val uid: Map<String, String>,
             val placeholder: String? = null,
             val min: Int = 1,
             val max: Int = 1,
             val options: List<Option>
-        ) : Component() {
+        ) : ComponentSetting() {
             @Serializable
             data class Option(
                 val label: String,
@@ -115,7 +114,7 @@ data class MessageDataSerializer(
         @Serializable
         @SerialName("!EntitySelectMenu")
         data class EntitySelectMenuSetting(
-            val uid: String,
+            val uid: Map<String, String>,
             val placeholder: String? = null,
             val min: Int = 1,
             val max: Int = 1,
@@ -125,6 +124,6 @@ data class MessageDataSerializer(
 
             @SerialName("channel_types")
             val channelTypes: List<String> = emptyList(),
-        ) : Component()
+        ) : ComponentSetting()
     }
 }

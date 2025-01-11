@@ -15,14 +15,14 @@ import java.io.File
 import java.io.IOException
 
 object Event : PluginEvent(true) {
-    private val PLUGIN_DIR_FILE = File("./plugins/IntervalPusher/")
+    private val PLUGIN_DIR_FILE = File("plugins/IntervalPusher")
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var config: MainConfigSerializer
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pushers = mutableListOf<IntervalPusher>()
 
-
     override fun load() {
+        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
         reloadAll()
 
         for (listener in config.listeners) {
@@ -30,22 +30,24 @@ object Event : PluginEvent(true) {
             pusher.start()
             pushers.add(pusher)
         }
+
+        logger.info("IntervalPusher loaded.")
     }
 
     override fun unload() {
         pushers.forEach { it.stop() }
         coroutineScope.cancel()
+
+        logger.info("IntervalPusher unloaded.")
     }
 
     override fun reloadConfigFile() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-
         try {
-            fileGetter.readInputStream("./config.yml").use {
+            fileGetter.readInputStream("config.yml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
             }
         } catch (e: IOException) {
-            logger.error("Please configure {}./config.yml.", PLUGIN_DIR_FILE.canonicalPath, e)
+            logger.error("Please configure {}./config.yml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
         logger.info("Setting file loaded successfully.")

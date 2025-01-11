@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SettingSerializer(
+internal data class SettingSerializer(
     @SerialName("general_settings")
     val generalSettings: GeneralSettings,
 
@@ -12,13 +12,13 @@ data class SettingSerializer(
     val builtinSettings: BuiltinSettings? = null,
 ) {
     @Serializable
-    data class GeneralSettings(
+    internal data class GeneralSettings(
         @SerialName("bot_token")
         val botToken: String, // required
     )
 
     @Serializable
-    data class BuiltinSettings(
+    internal data class BuiltinSettings(
         @SerialName("status_changer_settings")
         val statusChangerSetting: StatusChangerSetting = StatusChangerSetting(),
 
@@ -26,13 +26,13 @@ data class SettingSerializer(
         val consoleLoggerSetting: List<ConsoleLoggerSetting> = emptyList(),
     ) {
         @Serializable
-        data class StatusChangerSetting(
+        internal data class StatusChangerSetting(
             @SerialName("activity_messages")
             val activityMessages: List<String> = emptyList(),
         )
 
         @Serializable
-        data class ConsoleLoggerSetting(
+        internal data class ConsoleLoggerSetting(
             @SerialName("guild_id")
             val guildId: Long,
 

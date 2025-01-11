@@ -18,9 +18,6 @@ internal object DbManager {
     // Long may be too small but for efficiency performance. Watchful waiting
     private val channelTableCache: MutableSet<Long> = mutableSetOf() // Avoid multiple database exist query
 
-    internal fun isChannelInTableCache(channelId: Long): Boolean =
-        channelId in channelTableCache
-
     init {
         val dataFolder = File(PLUGIN_DIR_FILE, "data")
         if (dataFolder.mkdirs()) {
@@ -36,7 +33,7 @@ internal object DbManager {
 
             try {
                 val conn = getConnection(file.nameWithoutExtension)
-                logger.info("Creating database connection.")
+                logger.info("Processing database file: {}...", file.name)
                 conn.createStatement().use { stmt ->
                     stmt.executeQuery("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")
                         .use { rs ->
@@ -44,12 +41,12 @@ internal object DbManager {
 
                             while (rs.next()) {
                                 val channelId = rs.getString("name").toLong()
-                                logger.info("Creating database channel '$channelId'.")
+                                logger.debug("Creating database channel '$channelId'...")
 
                                 if (jdaBot.getGuildChannelById(channelId) == null && !config.logAll) {
                                     notExistsChannelId.add(channelId)
                                 } else {
-                                    logger.info("Channel $channelId already exists.")
+                                    logger.debug("Channel $channelId already exists.")
                                     channelTableCache.add(channelId)
                                 }
                             }
@@ -65,12 +62,15 @@ internal object DbManager {
                         }
                 }
             } catch (e: Exception) {
-                logger.error("Error processing database file: {}", file.name, e)
+                logger.error("Error processing database file: {}!", file.name, e)
             }
         }
     }
 
-    internal fun receiveMessage(guildId: String, channelId: Long, messageId: Long, userId: Long, msg: String) {
+    fun isChannelInTableCache(channelId: Long): Boolean =
+        channelId in channelTableCache
+
+    fun receiveMessage(guildId: String, channelId: Long, messageId: Long, userId: Long, msg: String) {
         val conn = getConnection(guildId)
         initChannelTable(conn, channelId)
 
@@ -85,7 +85,16 @@ internal object DbManager {
         }
     }
 
-    internal fun updateMessage(guildId: String, channelId: Long, messageId: Long, newMsg: String): QueriedMessageData {
+
+    data class QueriedMessageData(
+        val message: String,
+        val userId: Long,
+        var updateCount: Int,
+    ) {
+        fun updateCounter() = updateCount++
+    }
+
+    fun updateMessage(guildId: String, channelId: Long, messageId: Long, newMsg: String): QueriedMessageData {
         val conn = getConnection(guildId)
         initChannelTable(conn, channelId)
 
@@ -103,7 +112,7 @@ internal object DbManager {
         }
     }
 
-    internal fun deleteMessage(
+    fun deleteMessage(
         guildId: String,
         channelId: Long,
         messageId: Long
@@ -114,23 +123,16 @@ internal object DbManager {
         return queryMessage(conn, channelId, messageId)
     }
 
-    internal fun deleteDatabase(guildId: String) {
+    fun deleteDatabase(guildId: String) {
         SQLiteFileManager.deleteDatabase(guildId)
     }
 
-    internal fun markChannelAsUnavailable(channelId: Long) {
+    fun markChannelAsUnavailable(channelId: Long) {
         channelTableCache.remove(channelId)
     }
 
-    internal data class QueriedMessageData(
-        val message: String,
-        val userId: Long,
-        var updateCount: Int,
-    ) {
-        internal fun updateCounter() = updateCount++
-    }
 
-    internal fun disconnect() {
+    fun disconnect() {
         dataMap.keys.forEach { channelId ->
             SQLiteFileManager.tryDisconnect("CL:$channelId")
         }

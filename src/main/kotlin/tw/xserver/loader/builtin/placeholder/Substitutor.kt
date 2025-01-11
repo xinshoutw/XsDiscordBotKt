@@ -20,6 +20,9 @@ class Substitutor(
         addAll(parent) // refresh
     }
 
+    // Replace placeholders in the content string using the current substitutor
+    fun parse(content: String): String = substitutor.replace(content)
+
     // Retrieve the value for a key or return the key itself if not found
     fun get(key: String): String = mapper[key] ?: key
 
@@ -60,7 +63,4 @@ class Substitutor(
     // Create a new StringSubstitutor with current settings
     private fun createSubstitutor() =
         StringSubstitutor(mapper, delimiterStart, delimiterEnd, escape)
-
-    // Replace placeholders in the content string using the current substitutor
-    fun parse(content: String): String = substitutor.replace(content)
 }

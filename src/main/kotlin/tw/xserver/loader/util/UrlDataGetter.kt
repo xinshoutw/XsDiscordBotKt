@@ -58,7 +58,7 @@ object UrlDataGetter {
      * @param authorization Optional authorization header.
      * @return The response body as a string if successful, null otherwise.
      */
-    private fun getData(urlStr: String, authorization: String? = null): String? {
+    fun getData(urlStr: String, authorization: String? = null): String? {
         return try {
             val request = Request.Builder().apply {
                 url(urlStr)

@@ -12,11 +12,11 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
 
-object SettingsLoader {
+internal object SettingsLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private const val CONFIG_NAME: String = "config.yml"
-    internal lateinit var config: SettingSerializer
-    internal lateinit var token: String
+    lateinit var config: SettingSerializer
+    lateinit var token: String
 
     @Throws(IOException::class)
     fun run() {

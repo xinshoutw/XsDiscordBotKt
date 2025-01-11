@@ -20,7 +20,7 @@ import tw.xserver.loader.plugin.PluginEvent
 import tw.xserver.loader.util.FileGetter
 import tw.xserver.loader.util.GlobalUtil
 import tw.xserver.plugin.logger.chat.JsonManager.dataMap
-import tw.xserver.plugin.logger.chat.command.getGuildCommands
+import tw.xserver.plugin.logger.chat.command.guildCommands
 import tw.xserver.plugin.logger.chat.lang.CmdFileSerializer
 import tw.xserver.plugin.logger.chat.lang.CmdLocalizations
 import tw.xserver.plugin.logger.chat.lang.PlaceholderLocalizations
@@ -33,25 +33,28 @@ import java.io.File
  * Main class for the Economy plugin managing configurations, commands, and data handling.
  */
 object Event : PluginEvent(true) {
-    internal const val COMPONENT_PREFIX = "xs:chat-logger:v2:"
-    internal val PLUGIN_DIR_FILE = File("./plugins/ChatLogger/")
+    internal const val COMPONENT_PREFIX = "chat-logger@"
+    internal val PLUGIN_DIR_FILE = File("plugins/ChatLogger")
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     internal lateinit var config: MainConfigSerializer
         private set
 
     override fun load() {
+        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
         reloadAll()
+
+        logger.info("ChatLogger loaded.")
     }
 
     override fun unload() {
         DbManager.disconnect()
         dataMap.clear()
+
+        logger.info("ChatLogger unloaded.")
     }
 
     override fun reloadConfigFile() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-
-        fileGetter.readInputStream("./config.yml").use {
+        fileGetter.readInputStream("config.yml").use {
             config = Yaml().decodeFromStream<MainConfigSerializer>(it)
         }
 
@@ -59,7 +62,7 @@ object Event : PluginEvent(true) {
     }
 
     override fun reloadLang() {
-        fileGetter.exportDefaultDirectory("./lang")
+        fileGetter.exportDefaultDirectory("lang")
 
         LangManager(
             PLUGIN_DIR_FILE,
@@ -78,50 +81,36 @@ object Event : PluginEvent(true) {
         )
     }
 
-    override fun guildCommands(): Array<CommandData> = getGuildCommands()
+    override fun guildCommands(): Array<CommandData> = guildCommands
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (GlobalUtil.checkCommandName(event, "chat-logger setting")) return
-
-        ChatLogger.setting(event)
+        if (GlobalUtil.checkCommandString(event, "chat-logger setting")) return
+        ChatLogger.onSlashCommandInteraction(event)
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-
-        ChatLogger.onSelect(event)
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        ChatLogger.onEntitySelectInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-        when (val componentId = event.componentId.removePrefix(COMPONENT_PREFIX)) {
-            "toggle" -> ChatLogger.onToggle(event)
-            "modify-allow", "modify-block" -> ChatLogger.createSel(
-                event,
-                componentId
-            )
-
-            "delete" -> ChatLogger.onDelete(event)
-        }
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        ChatLogger.onButtonInteraction(event)
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if (!event.isFromGuild || event.author == jdaBot.selfUser) return
-
-        ChatLogger.receiveMessage(event)
+        ChatLogger.onMessageReceived(event)
     }
 
     override fun onMessageUpdate(event: MessageUpdateEvent) {
         if (!event.isFromGuild || event.author == jdaBot.selfUser) return
-
-        ChatLogger.updateMessage(event)
+        ChatLogger.onMessageUpdate(event)
     }
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
         if (!event.isFromGuild) return
-        println("TRIGGER MESSAGE DELETED")
-        println(event.messageId)
-        ChatLogger.deleteMessage(event)
+        ChatLogger.onMessageDelete(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {

@@ -5,15 +5,15 @@ import tw.xserver.loader.localizations.LocaleData
 internal object CmdLocalizations {
     val chatLogger = CommandWithMemberLd()
 
-    class CommandWithMemberLd {
+    internal class CommandWithMemberLd {
         val name = LocaleData()
         val description = LocaleData()
         val subcommands = SubCommandsLd()
 
-        class SubCommandsLd {
+        internal class SubCommandsLd {
             val setting = SimpleCommandLd()
 
-            class SimpleCommandLd {
+            internal class SimpleCommandLd {
                 val name = LocaleData()
                 val description = LocaleData()
             }

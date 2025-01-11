@@ -1,4 +1,4 @@
 author: xinshoutw
 main: tw.xserver.plugin.api.google.sheet.Event
 name: GoogleSheetAPI
-version: '2.0'
+version: '0.2.0'

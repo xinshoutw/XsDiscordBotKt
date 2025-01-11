@@ -6,12 +6,12 @@ import tw.xserver.loader.localizations.LocaleData
 internal object CmdLocalizations {
     val feedbacker = CommandWithMemberLd()
 
-    class CommandWithMemberLd {
+    internal class CommandWithMemberLd {
         val options = OptionsLd()
         val name = LocaleData()
         val description = LocaleData()
 
-        class OptionsLd {
+        internal class OptionsLd {
             val member = LocalTemplate.NDLocalData()
         }
     }

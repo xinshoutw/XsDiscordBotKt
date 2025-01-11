@@ -9,7 +9,7 @@ import tw.xserver.loader.base.BotLoader.jdaBot
 import java.io.IOException
 import kotlin.coroutines.resumeWithException
 
-class IntervalPusher(
+internal class IntervalPusher(
     private val originUrl: String,
     private val intervalSeconds: Int,
     private val scope: CoroutineScope
@@ -36,7 +36,7 @@ class IntervalPusher(
         jdaBot.restPing.queue({ ping ->
             if (cont.isActive) {
                 cont.resume(ping) { cause, _, _ ->
-                    logger.warn("Coroutine was cancelled while waiting for restPing. Cause: $cause")
+                    logger.warn("Coroutine was cancelled while waiting for restPing! Cause: $cause!")
                 }
             }
         }, { throwable ->
@@ -49,7 +49,7 @@ class IntervalPusher(
     // 開始 IntervalPusher
     fun start() {
         if (job?.isActive == true) {
-            logger.warn("IntervalPusher is already running.")
+            logger.warn("IntervalPusher is already running!")
             return
         }
 
@@ -67,22 +67,22 @@ class IntervalPusher(
                         if (!response.isSuccessful) {
                             when (response.code) {
                                 404 -> {
-                                    logger.warn("Status Monitor refused the connection! (Code: 404)")
+                                    logger.warn("Status Monitor refused the connection! (Code: 404)!")
                                     logger.warn("Breaking the heartbeat loop!")
                                     stop()
                                 }
 
-                                521 -> logger.warn("Status Monitor is OFFLINE! (Code: 521)") // Response from Cloudflare
-                                else -> logger.error("Query URL $updatedUrl failed, code: ${response.code}")
+                                521 -> logger.warn("Status Monitor is OFFLINE! (Code: 521)!") // Response from Cloudflare
+                                else -> logger.error("Query URL $updatedUrl failed, code: ${response.code}!")
                             }
                         } else {
-                            logger.info("Successfully queried URL: $updatedUrl")
+                            logger.info("Successfully queried URL: $updatedUrl.")
                         }
                     }
                 } catch (e: IOException) {
-                    logger.error("Query URL $originUrl internet error: ${e.message}")
+                    logger.error("Query URL $originUrl internet error: ${e.message}!")
                 } catch (e: Exception) {
-                    logger.error("Query URL $originUrl failed: ${e.message}")
+                    logger.error("Query URL $originUrl failed: ${e.message}!")
                 }
                 delay(intervalSeconds * 1000L)
             }

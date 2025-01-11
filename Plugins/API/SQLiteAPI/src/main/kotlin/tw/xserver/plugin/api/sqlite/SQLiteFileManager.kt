@@ -8,10 +8,6 @@ import javax.management.openmbean.KeyAlreadyExistsException
 object SQLiteFileManager {
     private val dbConn: MutableMap<String, PathConnection> = HashMap()
 
-    init {
-        Class.forName("org.sqlite.JDBC")
-    }
-
     fun getConnection(uniqueKey: String): Connection? = dbConn[uniqueKey]?.connection
 
     @Synchronized

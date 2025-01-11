@@ -43,21 +43,21 @@ object GlobalUtil {
      * @param fullName The name to compare with the event's command name.
      * @return True if the names do not match, false otherwise.
      */
-    fun checkCommandName(event: SlashCommandInteractionEvent, fullName: String): Boolean =
+    fun checkCommandString(event: SlashCommandInteractionEvent, fullName: String): Boolean =
         event.fullCommandName != fullName
 
-    fun checkEventPrefix(event: SlashCommandInteractionEvent, allowedList: Set<String>): Boolean =
+    fun checkSlashCommand(event: SlashCommandInteractionEvent, allowedList: Set<String>): Boolean =
         event.name !in allowedList
 
-    fun checkPrefix(event: EntitySelectInteractionEvent, prefix: String): Boolean =
+    fun checkComponentIdPrefix(event: EntitySelectInteractionEvent, prefix: String): Boolean =
         !event.componentId.startsWith(prefix)
 
-    fun checkPrefix(event: StringSelectInteractionEvent, prefix: String): Boolean =
+    fun checkComponentIdPrefix(event: StringSelectInteractionEvent, prefix: String): Boolean =
         !event.componentId.startsWith(prefix)
 
-    fun checkPrefix(event: ButtonInteractionEvent, prefix: String): Boolean =
+    fun checkComponentIdPrefix(event: ButtonInteractionEvent, prefix: String): Boolean =
         !event.componentId.startsWith(prefix)
 
-    fun checkPrefix(event: ModalInteractionEvent, prefix: String): Boolean =
+    fun checkModalIdPrefix(event: ModalInteractionEvent, prefix: String): Boolean =
         !event.modalId.startsWith(prefix)
 }

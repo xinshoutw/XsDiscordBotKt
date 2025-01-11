@@ -14,7 +14,7 @@ import tw.xserver.loader.localizations.LangManager
 import tw.xserver.loader.plugin.PluginEvent
 import tw.xserver.loader.util.FileGetter
 import tw.xserver.loader.util.GlobalUtil
-import tw.xserver.plugin.feedbacker.command.getGuildCommands
+import tw.xserver.plugin.feedbacker.command.guildCommands
 import tw.xserver.plugin.feedbacker.lang.CmdFileSerializer
 import tw.xserver.plugin.feedbacker.lang.CmdLocalizations
 import tw.xserver.plugin.feedbacker.serializer.MainConfigSerializer
@@ -22,39 +22,43 @@ import java.io.File
 import java.io.IOException
 
 object Event : PluginEvent(true) {
-    internal val PLUGIN_DIR_FILE = File("./plugins/Feedbacker/")
-    internal const val COMPONENT_PREFIX = "xs:feedbacker:v1:"
+    internal val PLUGIN_DIR_FILE = File("plugins/Feedbacker")
+    internal const val COMPONENT_PREFIX = "feedbacker@"
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     internal lateinit var config: MainConfigSerializer
     internal lateinit var globalLocale: DiscordLocale
 
     override fun load() {
+        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
         reloadAll()
 
-        val guild = jdaBot.getGuildById(config.guildId)!!
-        Feedbacker.guild = guild
-        Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
+        logger.info("Feedbacker loaded.")
     }
 
-    override fun unload() {}
+    override fun unload() {
+        logger.info("Feedbacker unloaded.")
+    }
 
     override fun reloadConfigFile() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-
         try {
             fileGetter.readInputStream("config.yml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
             }
         } catch (e: IOException) {
-            logger.error("Please configure {}./config.yml.", PLUGIN_DIR_FILE.canonicalPath, e)
+            logger.error("Please configure {}./config.yml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
         globalLocale = DiscordLocale.from(config.language)
         logger.info("Setting file loaded successfully.")
+
+        jdaBot.getGuildById(config.guildId)?.let { guild ->
+            Feedbacker.guild = guild
+            Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
+        }
     }
 
     override fun reloadLang() {
-        fileGetter.exportDefaultDirectory("./lang")
+        fileGetter.exportDefaultDirectory("lang")
 
         LangManager(
             PLUGIN_DIR_FILE,
@@ -65,26 +69,20 @@ object Event : PluginEvent(true) {
         )
     }
 
-    override fun guildCommands(): Array<CommandData> = getGuildCommands()
+    override fun guildCommands(): Array<CommandData> = guildCommands
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (GlobalUtil.checkCommandName(event, "feedbacker")) return
-
-        Feedbacker.handleCommand(event)
+        if (GlobalUtil.checkCommandString(event, "feedbacker")) return
+        Feedbacker.onSlashCommandInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-
-        if (event.componentId.removePrefix(COMPONENT_PREFIX).startsWith("star"))
-            Feedbacker.handleStarBtn(event)
-        else
-            Feedbacker.handleFormBtn(event)
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        Feedbacker.onButtonInteraction(event)
     }
 
     override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-
-        Feedbacker.handleSubmit(event)
+        if (GlobalUtil.checkModalIdPrefix(event, COMPONENT_PREFIX)) return
+        Feedbacker.onModalInteraction(event)
     }
 }

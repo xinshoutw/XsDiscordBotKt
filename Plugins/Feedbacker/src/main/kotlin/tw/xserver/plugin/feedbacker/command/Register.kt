@@ -12,14 +12,15 @@ import tw.xserver.plugin.feedbacker.lang.CmdLocalizations
  *
  * @return Array<CommandData> Collection of guild commands configured with localizations and permissions.
  */
-fun getGuildCommands(): Array<CommandData> = arrayOf(
-    // Command to retrieve current money balance of a member.
-    Commands.slash("feedbacker", "Create a feedback form for a member")
-        .setNameLocalizations(CmdLocalizations.feedbacker.name)
-        .setDescriptionLocalizations(CmdLocalizations.feedbacker.description)
-        .addOptions(
-            OptionData(OptionType.USER, "member", "Specify the member", true)
-                .setNameLocalizations(CmdLocalizations.feedbacker.options.member.name)
-                .setDescriptionLocalizations(CmdLocalizations.feedbacker.options.member.description)
-        ),
-)
+internal val guildCommands: Array<CommandData>
+    get() = arrayOf(
+        // Command to retrieve the current money balance of a member.
+        Commands.slash("feedbacker", "Create a feedback form for a member")
+            .setNameLocalizations(CmdLocalizations.feedbacker.name)
+            .setDescriptionLocalizations(CmdLocalizations.feedbacker.description)
+            .addOptions(
+                OptionData(OptionType.USER, "member", "Specify the member", true)
+                    .setNameLocalizations(CmdLocalizations.feedbacker.options.member.name)
+                    .setDescriptionLocalizations(CmdLocalizations.feedbacker.options.member.description)
+            ),
+    )

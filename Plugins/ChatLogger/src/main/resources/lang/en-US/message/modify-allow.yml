@@ -1,6 +1,7 @@
 components:
   - !EntitySelectMenu
-    uid: "modify_allow"
+    uid:
+      action: "modify_allow_menu"
     placeholder: "choose channels, categories or search here"
     min: 1
     max: 25

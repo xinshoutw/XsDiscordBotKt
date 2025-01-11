@@ -9,36 +9,57 @@ import tw.xserver.loader.builtin.placeholder.Substitutor
 import tw.xserver.plugin.economy.Event.config
 import tw.xserver.plugin.economy.Event.storageManager
 
-object Economy {
-    internal fun handleTopCommands(event: SlashCommandInteractionEvent) {
+internal object Economy {
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        if (event.name.startsWith("top-")) {
+            handleTopCommands(event)
+            return
+        }
+
+        when (event.name) {
+            "balance" -> handleBalance(event)
+            "add-money", "remove-money", "set-money", "add-cost", "remove-cost", "set-cost" ->
+                handleMoneyAndCostCommands(event)
+        }
+    }
+
+    fun onButtonInteraction(event: ButtonInteractionEvent) {
+        event.deferReply(true).queue {
+            handleButtonBalance(event, it)
+        }
+    }
+
+
+    private fun handleTopCommands(event: SlashCommandInteractionEvent) {
         if (checkPermission(event)) return
 
         event.hook.editOriginal(
             MessageReplier.replyBoard(
-                event,
-                if (event.name == "top-money") Type.Money else Type.Cost,
+                key = event.name,
+                user = event.user,
+                userLocale = event.userLocale
             )
         ).queue()
     }
 
-    internal fun handleButtonBalance(event: ButtonInteractionEvent, hook: InteractionHook) {
+    private fun handleButtonBalance(event: ButtonInteractionEvent, hook: InteractionHook) {
         updatePapi(event.user)
         hook.editOriginal(
-            MessageReplier.getMessageEditData(event, event.userLocale, Placeholder.getSubstitutor(event.user))
+            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.getSubstitutor(event.user))
         ).queue()
     }
 
-    internal fun handleBalance(
+    private fun handleBalance(
         event: SlashCommandInteractionEvent
     ) {
         val targetUser = getTargetUser(event)
         updatePapi(targetUser)
         event.hook.editOriginal(
-            MessageReplier.getMessageEditData(event, event.userLocale, Placeholder.getSubstitutor(targetUser))
+            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.getSubstitutor(targetUser))
         ).queue()
     }
 
-    internal fun handleMoneyAndCostCommands(
+    private fun handleMoneyAndCostCommands(
         event: SlashCommandInteractionEvent
     ) {
         if (checkPermission(event)) return
@@ -114,9 +135,10 @@ object Economy {
     }
 
     private fun updatePapi(user: User, data: UserData, map: Map<String, String> = emptyMap()) {
-        Placeholder.update(user, hashMapOf(
-            "economy_money" to "${data.money}", "economy_cost" to "${data.cost}"
-        ).apply { putAll(map) })
+        Placeholder.update(
+            user, hashMapOf(
+                "economy_money" to "${data.money}", "economy_cost" to "${data.cost}"
+            ).apply { putAll(map) })
     }
 
 
@@ -127,12 +149,11 @@ object Economy {
     ) {
         saveData(data)
         updatePapi(user, data, placeholders.toMap())
-
     }
 
     private fun reply(event: SlashCommandInteractionEvent, substitutor: Substitutor) {
         event.hook.editOriginal(
-            MessageReplier.getMessageEditData(event, event.userLocale, substitutor)
+            MessageReplier.getMessageEditData(event.name, event.userLocale, substitutor)
         ).queue()
     }
 
@@ -162,7 +183,7 @@ object Economy {
         return false
     }
 
-    internal enum class Type {
+    enum class Type {
         Money, Cost
     }
 }

@@ -1,4 +1,4 @@
-package tw.xserver.plugin.creator.message.serializer
+package tw.xserver.loader.builtin.messagecreator.serializer
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import java.awt.Color
 
-object ColorSerializer : KSerializer<Color> {
+internal object ColorSerializer : KSerializer<Color> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Color", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Color) {
@@ -21,7 +21,7 @@ object ColorSerializer : KSerializer<Color> {
     }
 }
 
-object TextInputStyleSerializer : KSerializer<TextInputStyle> {
+internal object TextInputStyleSerializer : KSerializer<TextInputStyle> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TextInputStyle", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: TextInputStyle) {

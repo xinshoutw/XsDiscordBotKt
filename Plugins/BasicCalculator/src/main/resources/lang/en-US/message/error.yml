@@ -8,7 +8,7 @@ embeds:
 
     fields:
       - name: "Formula"
-        value: "`%bc_question%`"
+        value: "```%bc_question%```"
 
       - name: "Result"
-        value: "`%bc_error%`"
+        value: "```%bc_error%```"

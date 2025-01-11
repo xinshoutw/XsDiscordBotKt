@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
  * This class handles logging of different types of interaction events on Discord.
  * It extends ListenerAdapter to respond to various interaction events such as commands and button presses.
  */
-object InteractionLogger : ListenerAdapter() {
+internal object InteractionLogger : ListenerAdapter() {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**

@@ -26,16 +26,17 @@ import tw.xserver.plugin.ticket.Event.PLUGIN_DIR_FILE
 import tw.xserver.plugin.ticket.create.StepManager
 import java.io.File
 
-object Ticket {
-    internal val jsonGuildManager = JsonObjGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
-    internal val componentIdManager = ComponentIdManager(
-        "ticket-v2", mapOf(
+internal object Ticket {
+    val jsonGuildManager = JsonObjGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
+    val componentIdManager = ComponentIdManager(
+        prefix = COMPONENT_PREFIX,
+        idKeys = mapOf(
             "action" to FieldType.STRING,
-            "subAction" to FieldType.STRING,
-            "userId" to FieldType.LONG_HEX,
-            "msgId" to FieldType.LONG_HEX,
-            "btnIndex" to FieldType.INT_HEX,
-            "colorIndex" to FieldType.INT_HEX,
+            "sub_action" to FieldType.STRING,
+            "user_id" to FieldType.LONG_HEX,
+            "msg_id" to FieldType.LONG_HEX,
+            "btn_index" to FieldType.INT_HEX,
+            "color_index" to FieldType.INT_HEX,
         )
     )
 
@@ -44,7 +45,7 @@ object Ticket {
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
-        GlobalUtil.checkPrefix(event, COMPONENT_PREFIX) // TODO: add '@' check
+        GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)
         val idMap = componentIdManager.parse(event.componentId)
         val guild = event.guild!!
 
@@ -56,7 +57,7 @@ object Ticket {
             "press" -> {
                 val jsonManager = jsonGuildManager[guild.idLong]
                 val jsonData =
-                    jsonManager.getAsJsonArray(event.messageId)[idMap["btnIndex"] as Int].asJsonObject
+                    jsonManager.getAsJsonArray(event.messageId)[idMap["btn_index"] as Int].asJsonObject
                 val reason = jsonData.asJsonObject.get("reasonTitle").asString
                 val reasonInput = TextInput.create("reason", "原因", TextInputStyle.PARAGRAPH).build()
 
@@ -64,8 +65,8 @@ object Ticket {
                     Modal.create(
                         componentIdManager.build(
                             ComponentField("action", "submit"),
-                            ComponentField("msgId", event.messageIdLong),
-                            ComponentField("btnIndex", idMap["btnIndex"] as Int),
+                            ComponentField("msg_id", event.messageIdLong),
+                            ComponentField("btn_index", idMap["btn_index"] as Int),
                         ), reason
                     ).addComponents(ActionRow.of(reasonInput)).build()
                 ).queue()
@@ -73,75 +74,80 @@ object Ticket {
 
             "lock" -> {
                 val channel = event.guildChannel.asTextChannel()
-                guild.retrieveMemberById(idMap["userId"] as Long)
+                guild.retrieveMemberById(idMap["user_id"] as Long)
                     .flatMap { channel.upsertPermissionOverride(it).deny(VIEW_CHANNEL) }
-                    .queue()
-
-                event.editComponents(
-                    ActionRow.of(
-                        Button.of(
-                            ButtonStyle.SUCCESS,
-                            componentIdManager.build(
-                                ComponentField("action", "unlock"),
-                                ComponentField("userId", idMap["userId"] as Long),
-                                ComponentField("msgId", idMap["msgId"] as Long),
-                                ComponentField("btnIndex", idMap["btnIndex"] as Int),
-                            ), "開啟", Emoji.fromUnicode("🔓")
-                        ),
-                        Button.of(
-                            ButtonStyle.DANGER,
-                            componentIdManager.build(
-                                ComponentField("action", "delete"),
-                                ComponentField("userId", idMap["userId"] as Long),
-                                ComponentField("msgId", idMap["msgId"] as Long),
-                                ComponentField("btnIndex", idMap["btnIndex"] as Int),
-                            ), "刪除", Emoji.fromUnicode("🗑")
+                    .flatMap {
+                        event.editComponents(
+                            ActionRow.of(
+                                Button.of(
+                                    ButtonStyle.SUCCESS,
+                                    componentIdManager.build(
+                                        ComponentField("action", "unlock"),
+                                        ComponentField("user_id", idMap["user_id"] as Long),
+                                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                    ), "開啟", Emoji.fromUnicode("🔓")
+                                ),
+                                Button.of(
+                                    ButtonStyle.DANGER,
+                                    componentIdManager.build(
+                                        ComponentField("action", "delete"),
+                                        ComponentField("user_id", idMap["user_id"] as Long),
+                                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                    ), "刪除", Emoji.fromUnicode("🗑")
+                                )
+                            )
                         )
-                    )
-                ).queue()
+                    }
+                    .queue()
             }
 
             "unlock" -> {
                 val channel = event.guildChannel.asTextChannel()
 
-                guild.retrieveMemberById(idMap["userId"] as Long)
+                guild.retrieveMemberById(idMap["user_id"] as Long)
                     .flatMap { channel.upsertPermissionOverride(it).grant(VIEW_CHANNEL) }
-                    .queue()
-
-                event.editComponents(
-                    ActionRow.of(
-                        Button.of(
-                            ButtonStyle.SUCCESS,
-                            componentIdManager.build(
-                                ComponentField("action", "lock"),
-                                ComponentField("userId", idMap["userId"] as Long),
-                                ComponentField("msgId", idMap["msgId"] as Long),
-                                ComponentField("btnIndex", idMap["btnIndex"] as Int),
-                            ), "關閉", Emoji.fromUnicode("🔒")
-                        ),
-                        Button.of(
-                            ButtonStyle.DANGER,
-                            componentIdManager.build(
-                                ComponentField("action", "delete"),
-                                ComponentField("userId", idMap["userId"] as Long),
-                                ComponentField("msgId", idMap["msgId"] as Long),
-                                ComponentField("btnIndex", idMap["btnIndex"] as Int),
-                            ), "刪除", Emoji.fromUnicode("🗑")
+                    .flatMap {
+                        event.editComponents(
+                            ActionRow.of(
+                                Button.of(
+                                    ButtonStyle.SUCCESS,
+                                    componentIdManager.build(
+                                        ComponentField("action", "lock"),
+                                        ComponentField("user_id", idMap["user_id"] as Long),
+                                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                    ), "關閉", Emoji.fromUnicode("🔒")
+                                ),
+                                Button.of(
+                                    ButtonStyle.DANGER,
+                                    componentIdManager.build(
+                                        ComponentField("action", "delete"),
+                                        ComponentField("user_id", idMap["user_id"] as Long),
+                                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                    ), "刪除", Emoji.fromUnicode("🗑")
+                                )
+                            )
                         )
-                    )
-                ).queue()
+                    }
+                    .queue()
             }
 
             "delete" -> {
                 val member = event.member!!
                 val jsonData =
-                    jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msgId"] as Long).toString())[idMap["btnIndex"] as Int].asJsonObject
+                    jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msg_id"] as Long).toString())[idMap["btn_index"] as Int].asJsonObject
                 val roleIds = jsonData.getAsJsonArray("adminIds").map { it.asLong }
                 val isAdmin = member.roles.any { roleIds.contains(it.idLong) }
 
-                event.deferEdit().queue()
                 if (isAdmin || member.hasPermission(ADMINISTRATOR)) {
-                    event.guildChannel.asTextChannel().delete().queue()
+                    event.deferEdit().flatMap {
+                        event.guildChannel.asTextChannel().delete()
+                    }.queue()
+                } else {
+                    event.deferEdit().queue()
                 }
             }
         }
@@ -168,7 +174,7 @@ object Ticket {
 
         val guild = event.guild!!
         val jsonData =
-            jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msgId"] as Long).toString())[idMap["btnIndex"] as Int].asJsonObject
+            jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msg_id"] as Long).toString())[idMap["btn_index"] as Int].asJsonObject
         val reason = event.getValue("reason")!!.asString
         val roleIds = jsonData.getAsJsonArray("adminIds").toList().map { it.asLong }
         val categoryId = jsonData.get("categoryId").asLong
@@ -209,18 +215,18 @@ object Ticket {
                     ButtonStyle.SUCCESS,
                     componentIdManager.build(
                         ComponentField("action", "lock"),
-                        ComponentField("userId", event.user.idLong),
-                        ComponentField("msgId", idMap["msgId"] as Long),
-                        ComponentField("btnIndex", idMap["btnIndex"] as Int),
+                        ComponentField("user_id", event.user.idLong),
+                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                        ComponentField("btn_index", idMap["btn_index"] as Int),
                     ), "關閉", Emoji.fromUnicode("🔒")
                 ),
                 Button.of(
                     ButtonStyle.DANGER,
                     componentIdManager.build(
                         ComponentField("action", "delete"),
-                        ComponentField("userId", event.user.idLong),
-                        ComponentField("msgId", idMap["msgId"] as Long),
-                        ComponentField("btnIndex", idMap["btnIndex"] as Int),
+                        ComponentField("user_id", event.user.idLong),
+                        ComponentField("msg_id", idMap["msg_id"] as Long),
+                        ComponentField("btn_index", idMap["btn_index"] as Int),
                     ), "刪除", Emoji.fromUnicode("🗑")
                 )
             )

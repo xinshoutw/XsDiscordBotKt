@@ -15,7 +15,7 @@ internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     // listen map to setting
-    internal val dataMap: MutableMap<Long, ChannelData> = HashMap()
+    val dataMap: MutableMap<Long, ChannelData> = HashMap()
 
     init {
         val settingFolder = File(PLUGIN_DIR_FILE, "setting")
@@ -66,16 +66,7 @@ internal object JsonManager {
         }
     }
 
-    private fun getOrPut(guild: Guild, listenChannelId: Long): Pair<JsonObjFileManager, JsonObject> {
-        val fileManager = fileManagers
-            .getOrPut(guild.idLong) { JsonObjFileManager(File(PLUGIN_DIR_FILE, "setting/${guild.id}.json")) }
-        val obj: JsonObject =
-            fileManager.computeIfAbsent(listenChannelId.toString(), ChannelData(guild).getJsonObject()).asJsonObject
-
-        return Pair(fileManager, obj)
-    }
-
-    internal fun toggle(guild: Guild, listenChannelId: Long): ChannelData {
+    fun toggle(guild: Guild, listenChannelId: Long): ChannelData {
         // update map
         val setting = getChannelData(listenChannelId, guild).toggle()
 
@@ -87,7 +78,7 @@ internal object JsonManager {
         return setting
     }
 
-    internal fun addAllowChannels(
+    fun addAllowChannels(
         guild: Guild,
         listenChannelId: Long,
         detectedChannelIds: List<Long>,
@@ -103,7 +94,7 @@ internal object JsonManager {
         return setting
     }
 
-    internal fun addBlockChannels(
+    fun addBlockChannels(
         guild: Guild,
         listenChannelId: Long,
         detectedChannelIds: List<Long>,
@@ -125,6 +116,15 @@ internal object JsonManager {
 
         // remove json file
         fileManagers[guildId]?.remove(channelId.toString())?.save()
+    }
+
+    private fun getOrPut(guild: Guild, listenChannelId: Long): Pair<JsonObjFileManager, JsonObject> {
+        val fileManager = fileManagers
+            .getOrPut(guild.idLong) { JsonObjFileManager(File(PLUGIN_DIR_FILE, "setting/${guild.id}.json")) }
+        val obj: JsonObject =
+            fileManager.computeIfAbsent(listenChannelId.toString(), ChannelData(guild).getJsonObject()).asJsonObject
+
+        return Pair(fileManager, obj)
     }
 
     // getOrDefault

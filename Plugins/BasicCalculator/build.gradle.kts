@@ -1,14 +1,9 @@
 val pluginName = "BasicCalculator"
 group = "tw.xserver.plugin"
-version = "v1.0"
+version = "0.1.0"
 
 plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
-}
-
-
-dependencies {
-    compileOnly(project(":Plugins:MessageCreator"))
 }
 
 tasks.named<Jar>("jar") {

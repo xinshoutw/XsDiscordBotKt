@@ -1,7 +1,9 @@
 uid: form # Nonnull, 100 length limit
 title: emm # Nonnull, 45 length limit
 text_inputs:
-  - uid: "template:input1" # Nonnull, 100 length limit
+  - uid: # Nonnull
+      - action: "template"
+      - sub_action: "input1"
     label: "Input Your Name!" # Nonnull, 45 length limit
     value: "Terry" # Ignorable, 4000 length limit
     placeholder: "YOUR NAME" # Ignorable, 100 length limit
@@ -10,6 +12,8 @@ text_inputs:
     style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
     required: false # Ignorable, default: true
 
-  - uid: "template:input2"
+  - uid:
+      - action: "template"
+      - sub_action: "input2"
     label: "Input Your Name Again!"
     style: "SHORT"

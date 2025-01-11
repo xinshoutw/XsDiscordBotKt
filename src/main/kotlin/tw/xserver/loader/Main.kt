@@ -10,7 +10,7 @@ import tw.xserver.loader.logger.LogBackManager
 import tw.xserver.loader.util.Arguments
 
 
-fun main(args: Array<String>) = runBlocking {
+internal fun main(args: Array<String>) = runBlocking {
     val logger = LoggerFactory.getLogger(this::class.java)
     val stopSignal = CompletableDeferred<Unit>()
 

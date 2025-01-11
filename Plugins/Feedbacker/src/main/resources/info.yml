@@ -1,7 +1,5 @@
 author: xinshoutw
 main: tw.xserver.plugin.feedbacker.Event
 name: Feedbacker
-version: '1.0'
-component_prefix: "xs:feedbacker:v1:"
-depend_plugins:
-  - MessageCreator
+version: '0.1.0'
+component_prefix: "feedbacker@"

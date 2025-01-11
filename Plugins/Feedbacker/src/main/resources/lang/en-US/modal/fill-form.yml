@@ -1,7 +1,11 @@
 title: "How was today's service? :D" # Nonnull, 100 length limit
-uid: "submit:%stars%" # Nonnull, 45 length limit
+uid:
+  action: "submit"
+  star_count: "%fb_star_count%"
+
 text_inputs:
-  - uid: "form" # Nonnull, 100 length limit
+  - uid:
+      action: "submit_form"
     label: "Please briefly describe your feedback" # Nonnull, 45 length limit
     placeholder: "Awesome!" # Ignorable, 100 length limit
     min_length: -1 # Ignorable, default: -1

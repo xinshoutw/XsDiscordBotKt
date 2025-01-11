@@ -7,32 +7,36 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import tw.xserver.loader.localizations.LangManager
 import tw.xserver.loader.plugin.PluginEvent
 import tw.xserver.loader.util.FileGetter
 import tw.xserver.loader.util.GlobalUtil
-import tw.xserver.plugin.ticket.command.getCommandNameSet
-import tw.xserver.plugin.ticket.command.getGuildCommands
+import tw.xserver.plugin.ticket.command.commandNameSet
+import tw.xserver.plugin.ticket.command.guildCommands
 import tw.xserver.plugin.ticket.lang.CmdFileSerializer
 import tw.xserver.plugin.ticket.lang.CmdLocalizations
 import java.io.File
 
 object Event : PluginEvent(true) {
-    internal const val COMPONENT_PREFIX = "ticket-v2"
-    internal val PLUGIN_DIR_FILE = File("./plugins/Ticket/")
-
-    init {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-    }
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    internal const val COMPONENT_PREFIX = "ticket@"
+    internal val PLUGIN_DIR_FILE = File("plugins/Ticket")
 
     override fun load() {
+        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
         reloadLang()
+
+        logger.info("Ticket loaded.")
     }
 
-    override fun unload() {}
+    override fun unload() {
+        logger.info("Ticket unloaded.")
+    }
 
     override fun reloadLang() {
-        fileGetter.exportDefaultDirectory("./lang")
+        fileGetter.exportDefaultDirectory("lang")
 
         LangManager(
             pluginDirFile = PLUGIN_DIR_FILE,
@@ -43,29 +47,29 @@ object Event : PluginEvent(true) {
         )
     }
 
-    override fun guildCommands(): Array<CommandData> = getGuildCommands()
+    override fun guildCommands(): Array<CommandData> = guildCommands
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (GlobalUtil.checkEventPrefix(event, getCommandNameSet())) return
+        if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
         Ticket.onSlashCommandInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
         Ticket.onButtonInteraction(event)
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
         Ticket.onEntitySelectInteraction(event)
+    }
+
+    override fun onModalInteraction(event: ModalInteractionEvent) {
+        if (GlobalUtil.checkModalIdPrefix(event, COMPONENT_PREFIX)) return
+        Ticket.onModalInteraction(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
         Ticket.onGuildLeave(event)
-    }
-
-    override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (GlobalUtil.checkPrefix(event, COMPONENT_PREFIX)) return
-        Ticket.onModalInteraction(event)
     }
 }

@@ -26,8 +26,10 @@ embeds: # Ignorable, 10 size limit
 
 components: # 5 size limit, allowed values: [ "buttons", "string_select_menu", "entity_select_menu" ]
   - !ButtonsComponent
-    buttons: # 5 size limit
-      - uid_or_url: "template:btn1" # Nonnull, 512 length limit
+    buttons: # 5 size limits
+      - uid: # Nonnull
+          action: "submitBtn"
+          sub_action: "cute!"
         style: 1 # Nonnull, allowed values [ 1 (BLUE), 2 (GREY), 3 (GREEN), 4 (RED), 5 (LINK) ]
         label: "CUTE" # Ignorable, 80 length limit
         disabled: false # Ignorable, default: false
@@ -35,31 +37,35 @@ components: # 5 size limit, allowed values: [ "buttons", "string_select_menu", "
           name: "🐳" # Nonnull
           animated: false # Ignorable, default: false
 
-      - uid_or_url: "https://xinshou.tw/"
+      - url: "https://xinshou.tw/"
         style: 5
         label: "My Blog"
 
   - !StringSelectMenu
     string_select_menu:
-      uid: "template:selectmenu1" # Nonnull
+      uid: # Nonnull
+        action: "template"
+        sub_action: "zzz1!"
       placeholder: "Choose one:" # Ignorable
       min: 1 # Ignorable, default: 1, allowed range: [ 1-25 ]
       max: 1 # Ignorable, default: 1, allowed range: [ 1-25 ]
       options: # 1-25 size limit
-        - label: option1 # Nonnull, 100 length limit
-          value: value1 # Nonnull, 100 length limit
-          description: desc1 # Ignorable
+        - label: "option1" # Nonnull, 100 length limit
+          value: "value1" # Nonnull, 100 length limit
+          description: "desc1" # Ignorable
           default: false # Ignorable, default: false
           emoji: # Ignorable
             name: "🐳" # Nonnull
             animated: false # Ignorable, default: false
 
-        - label: option2
-          value: value2
+        - label: "option2"
+          value: "value2"
 
   - !EntitySelectMenu
     entity_select_menu:
-      uid: "template:selectmenu2" # Nonnull
+      uid: # Nonnull
+        action: "template"
+        sub_action: "zzz2!"
       placeholder: "Choose one:" # Ignorable
       min: 1 # Ignorable, default: 1, allowed range: [ 1-25 ]
       max: 1 # Ignorable, default: 1, allowed range: [ 1-25 ]

@@ -19,18 +19,22 @@ embeds:
 components:
   - !ButtonsComponent
     buttons:
-      - uid_or_url: "toggle"
+      - uid:
+          action: "toggle_btn"
         style: 1
         label: "Toggle Mode"
 
-      - uid_or_url: "modify-allow"
+      - uid:
+          action: "modify_allow_btn"
         style: 3
         label: "Modify Allowlist"
 
-      - uid_or_url: "modify-block"
+      - uid:
+          action: "modify_block_btn"
         style: 2
         label: "Modify Blocklist"
 
-      - uid_or_url: "delete"
+      - uid:
+          action: "delete_btn"
         style: 4
         label: "Delete"

@@ -8,7 +8,7 @@ import tw.xserver.loader.base.SettingsLoader
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-object StatusChanger {
+internal object StatusChanger {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private var threadPool = Executors.newSingleThreadScheduledExecutor()
     private val botStatusList = SettingsLoader.config.builtinSettings?.statusChangerSetting?.activityMessages

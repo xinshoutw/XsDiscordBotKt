@@ -1,8 +1,7 @@
 author: xinshoutw
 main: tw.xserver.plugin.economy.Event
 name: Economy
-version: '2.0'
-component_prefix: "xs:economy:v2:"
+version: '0.2.0'
+component_prefix: "economy@"
 depend_plugins:
   - GoogleSheetAPI
-  - MessageCreator

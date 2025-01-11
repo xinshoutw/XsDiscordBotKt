@@ -35,17 +35,17 @@ data class ComponentField(
  *
  * @param prefix     componentId 前綴
  * @param idKeys     可用於辨識的欄位名稱與其型別，舉例:
- *                   mapOf("msgId" to FieldType.INT_HEX, "username" to FieldType.STRING)
+ *                   mapOf("msg_id" to FieldType.INT_HEX, "username" to FieldType.STRING)
  * @param separator  key:value 與 key:value 之間的分隔符號 (預設 ";")
  * @param maxLength  componentId 最大長度限制，預設使用 JDA Button 的限制
  *
  * 初始化後會建立一個 keyMapper (Map<Any, Any>):
- *   Pair("msgId", FieldType.INT_HEX) -> "a"
- *   "a" -> Pair("msgId", FieldType.INT_HEX)
+ *   Pair("msg_id", FieldType.INT_HEX) -> "a"
+ *   "a" -> Pair("msg_id", FieldType.INT_HEX)
  *   ...
  */
 class ComponentIdManager(
-    private val prefix: String,                     // 辨識該響應的插件
+    val prefix: String,                             // 辨識該響應的插件
     private val idKeys: Map<String, FieldType>,     // 允許使用的欄位名稱與型別
     private val separator: String = ";",            // key:value 與 key:value 間的分隔符號
     private val maxLength: Int = ID_MAX_LENGTH,
@@ -88,6 +88,12 @@ class ComponentIdManager(
     // Public API
     // --------------------------------------------------
 
+    fun build(fieldMap: Map<String, Any>): String = build(
+        *fieldMap.entries.map { (key, value) ->
+            ComponentField(key, value)
+        }.toTypedArray()
+    )
+
     /**
      * 建構一條 componentId 字串，格式:
      *   {prefix}{shortKey}:{value};{shortKey}:{value};...
@@ -127,7 +133,7 @@ class ComponentIdManager(
      * 其中 key 為「原始欄位名稱」，value 為還原後的資料 (String / Int / Long)。
      *
      * @param componentId 形如 "ticket@a:3e8;b:John;..." 的字串
-     * @return 解析後的 Map，例如 { "msgId"=1000, "username"="John", ... }
+     * @return 解析後的 Map，例如 { "msg_id"=1000, "username"="John", ... }
      *
      * @throws IllegalArgumentException 若前綴不符、短字元無法對應、字串格式錯誤、或超過長度
      */

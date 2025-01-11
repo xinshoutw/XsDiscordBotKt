@@ -16,16 +16,16 @@ import java.util.jar.JarFile
 /**
  * Manages the lifecycle of all plugins, loading and unloading them as required.
  */
-object PluginLoader {
+internal object PluginLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val dir: File = File("./plugins")
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
-    internal val intents = EnumSet.noneOf(GatewayIntent::class.java)
-    internal val cacheFlags = EnumSet.noneOf(CacheFlag::class.java)
-    internal val guildCommands = mutableListOf<CommandData>()
-    internal val globalCommands = mutableListOf<CommandData>()
-    internal val listenersQueue = ArrayDeque<PluginEvent>()
-    internal val pluginQueue = LinkedHashMap<String, PluginEvent>()
+    val intents: EnumSet<GatewayIntent> = EnumSet.noneOf(GatewayIntent::class.java)
+    val cacheFlags: EnumSet<CacheFlag> = EnumSet.noneOf(CacheFlag::class.java)
+    val guildCommands = mutableListOf<CommandData>()
+    val globalCommands = mutableListOf<CommandData>()
+    val listenersQueue = ArrayDeque<PluginEvent>()
+    val pluginQueue = LinkedHashMap<String, PluginEvent>()
 
     /**
      * Loads all plugins from the plugins directory.

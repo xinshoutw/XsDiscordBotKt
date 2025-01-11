@@ -30,6 +30,7 @@ dependencies {
     api("commons-io:commons-io:2.18.0") // Commons io
     api("org.apache.commons:commons-text:1.13.0") // StringSubstitutor
 
+    implementation("com.google.protobuf:protobuf-java:4.29.3") // CVE fix
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1") // coroutine
     implementation("org.jline:jline:3.28.0") // CLI
     implementation("com.github.ajalt.clikt:clikt:5.0.2") // Run Arg

@@ -8,12 +8,12 @@ internal object CmdLocalizations {
     val createTicket = LocalTemplate.NDLocalData()
     val addTicket = CommandWithMessageIdLd()
 
-    class CommandWithMessageIdLd {
+    internal class CommandWithMessageIdLd {
         val name = LocaleData()
         val description = LocaleData()
         val options = OptionsLd()
 
-        class OptionsLd {
+        internal class OptionsLd {
             val messageId = LocalTemplate1.NDLocalData()
         }
     }

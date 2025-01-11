@@ -11,12 +11,11 @@ import tw.xserver.plugin.botinfo.lang.CmdLocalizations
  *
  * @return Array<CommandData> Collection of guild commands configured with localizations and permissions.
  */
-
-
-fun getGuildCommands(): Array<CommandData> = arrayOf(
-    // Command to display bot info message
-    Commands.slash("bot-info", "show about the bot data")
-        .setNameLocalizations(CmdLocalizations.botInfo.name)
-        .setDescriptionLocalizations(CmdLocalizations.botInfo.description)
-        .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
-)
+internal val guildCommands: Array<CommandData>
+    get() = arrayOf(
+        // Command to display bot info message
+        Commands.slash("bot-info", "show about the bot data")
+            .setNameLocalizations(CmdLocalizations.botInfo.name)
+            .setDescriptionLocalizations(CmdLocalizations.botInfo.description)
+            .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
+    )

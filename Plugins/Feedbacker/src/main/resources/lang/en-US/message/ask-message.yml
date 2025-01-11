@@ -1,6 +1,6 @@
 embeds:
   - title:
-      text: "請給予星等與評價"
+      text: "Please provide a rating and review"
     footer:
       text: "❖ ORDERLY SERVER ❖"
 
@@ -13,30 +13,47 @@ embeds:
 components:
   - !ButtonsComponent
     buttons:
-      - uid_or_url: "star1:%user_id%"
+      - uid:
+          action: "submit_star"
+          user_id: "%user_id%"
+          star_count: 1
         style: 2
         label: "★"
 
-      - uid_or_url: "star2:%user_id%"
+      - uid:
+          action: "submit_star"
+          user_id: "%user_id%"
+          star_count: 2
         style: 2
         label: "★★"
 
-      - uid_or_url: "star3:%user_id%"
+      - uid:
+          action: "submit_star"
+          user_id: "%user_id%"
+          star_count: 3
         style: 2
         label: "★★★"
 
-      - uid_or_url: "star4:%user_id%"
+      - uid:
+          action: "submit_star"
+          user_id: "%user_id%"
+          star_count: 4
         style: 2
         label: "★★★★"
 
-      - uid_or_url: "star5:%user_id%"
+      - uid:
+          action: "submit_star"
+          user_id: "%user_id%"
+          star_count: 5
         style: 2
         label: "★★★★★"
 
   - !ButtonsComponent
     buttons: # 5 size limit
-      - uid_or_url: "form_btn:%user_id%" # Nonnull, 512 length limit
+      - uid:
+          action: "fill_form"
+          user_id: "%user_id%"
         style: 2 # Nonnull, allowed values [ 1 (BLUE), 2 (GREY), 3 (GREEN), 4 (RED), 5 (LINK) ]
-        label: "評價留言" # Ignorable, 80 length limit
+        label: "Leave a Review" # Ignorable, 80 length limit
         emoji: # Ignorable
           name: "✉️" # Nonnull

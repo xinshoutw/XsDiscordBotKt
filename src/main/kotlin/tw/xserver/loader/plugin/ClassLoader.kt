@@ -15,7 +15,7 @@ import java.nio.file.Files
  * A custom URLClassLoader to load classes and resources from JAR files dynamically.
  * This allows plugins or modules to be loaded into the application at runtime.
  */
-object ClassLoader : URLClassLoader(arrayOfNulls(0), BotLoader::class.java.classLoader) {
+internal object ClassLoader : URLClassLoader(arrayOfNulls(0), BotLoader::class.java.classLoader) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val resourcePath: MutableMap<String, URL> = HashMap()
 

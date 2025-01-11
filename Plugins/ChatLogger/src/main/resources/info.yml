@@ -1,10 +1,9 @@
 author: xinshoutw
 main: tw.xserver.plugin.logger.chat.Event
 name: ChatLogger
-version: '2.0'
-component_prefix: "xs:chat-logger:v2:"
+version: '0.2.0'
+component_prefix: "chat-logger@"
 depend_plugins:
-  - MessageCreator
   - SQLiteAPI
 
 require_intents:

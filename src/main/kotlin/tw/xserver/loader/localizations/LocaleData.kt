@@ -15,7 +15,7 @@ class LocaleData : HashMap<DiscordLocale, String>() {
      *
      * @param defaultLocale The default DiscordLocale to be used when the requested locale's text is not found.
      */
-    fun setDefaultLocale(defaultLocale: DiscordLocale) {
+    internal fun setDefaultLocale(defaultLocale: DiscordLocale) {
         this.defaultLocale = defaultLocale
     }
 

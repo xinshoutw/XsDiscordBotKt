@@ -12,9 +12,9 @@ abstract class JsonFileManager<T : JsonElement>(
     private val file: File,
     private val dataType: Class<T>
 ) : AutoCloseable {
+    private var isDeleted: Boolean = false
     protected lateinit var data: T
     protected abstract fun defaultFileAndData(): T
-    private var isDeleted: Boolean = false
 
     init {
         initData()

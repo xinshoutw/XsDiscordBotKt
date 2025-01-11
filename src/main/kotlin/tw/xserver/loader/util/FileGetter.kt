@@ -10,6 +10,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import kotlin.Throws
 
 /**
  * Provides functionalities to interact with files and resources, supporting operations
@@ -58,7 +59,7 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     fun exportResource(resourceFilePath: String, outputFile: File = File(resourceFilePath)): File {
         val inputStream: InputStream = clazz.getResourceAsStream(resourceFilePath.removePrefix("/"))
             ?: throw FileNotFoundException("Resource not found: $resourceFilePath")
-
+        logger.info("Output file: {}.", outputFile.canonicalPath)
         inputStream.use { fileInJar ->
             outputFile.parentFile.mkdirs() // init directories
             Files.copy(fileInJar, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
@@ -85,7 +86,7 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
                 while (zip.nextEntry.also { entry = it } != null) {
                     val entryName = entry!!.name
                     if (entryName.startsWith(adjustedPath) && !entryName.endsWith("/")) {
-                        filenames.add(entry!!)
+                        filenames.add(entry)
                     }
                 }
             }
@@ -97,16 +98,30 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
 
     /**
      * Exports default language files from the resources to the language folder.
+     *
      * @throws IOException if default language files are not found or cannot be exported.
      */
     @Throws(IOException::class)
-    fun exportDefaultDirectory(path: String, forceReplace: Boolean = Arguments.forceReplaceLangResources) {
-        val filenames = getResourceList(path)
-        if (filenames.isEmpty()) throw FileNotFoundException("No default files found in $path.")
+    fun exportDefaultDirectory(
+        resourcePath: String,
+        destDirectory: File = File(pluginDirFile, resourcePath),
+        forceReplace: Boolean = Arguments.forceReplaceLangResources
+    ) {
+        if (Arguments.forceRenewLangResources) {
+            val success = destDirectory.deleteRecursively()
+            if (success) {
+                destDirectory.mkdirs()
+            } else {
+                logger.warn("Failed to delete directory: {}.", destDirectory.canonicalPath)
+            }
+            logger.info("Directory modified: {}.", success)
+        }
+
+        val filenames = getResourceList(resourcePath)
+        require(filenames.isNotEmpty()) { "No default resource files found in $resourcePath." }
 
         filenames.forEach { zipEntry ->
-            val outputFile = File(pluginDirFile, zipEntry.name)
-
+            val outputFile = File(destDirectory, zipEntry.name.removePrefix(resourcePath).removePrefix("/"))
             if (forceReplace || !outputFile.exists())
                 exportResource(zipEntry.name, outputFile)
         }

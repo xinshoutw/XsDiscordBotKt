@@ -1,4 +1,4 @@
-package tw.xserver.plugin.creator.message.serializer
+package tw.xserver.loader.builtin.messagecreator.serializer
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -6,9 +6,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
 @Serializable
 data class ModalDataSerializer(
-    @SerialName("uid")
-    val customId: String,
-
+    val uid: Map<String, String>,
     val title: String,
 
     @SerialName("text_inputs")
@@ -16,7 +14,7 @@ data class ModalDataSerializer(
 ) {
     @Serializable
     data class TextInputSetting(
-        val uid: String,
+        val uid: Map<String, String>,
         val label: String,
         val value: String? = null,
         val placeholder: String? = null,

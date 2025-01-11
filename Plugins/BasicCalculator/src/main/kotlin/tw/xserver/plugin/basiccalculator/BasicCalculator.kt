@@ -3,9 +3,9 @@ package tw.xserver.plugin.basiccalculator
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
+import tw.xserver.loader.builtin.messagecreator.MessageCreator
 import tw.xserver.loader.builtin.placeholder.Placeholder
 import tw.xserver.plugin.basiccalculator.Event.PLUGIN_DIR_FILE
-import tw.xserver.plugin.creator.message.MessageCreator
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -13,9 +13,16 @@ import java.util.*
 
 
 internal object BasicCalculator {
-    private val creator = MessageCreator(File(PLUGIN_DIR_FILE, "lang"), DiscordLocale.CHINESE_TAIWAN)
+    private val creator = MessageCreator(
+        File(PLUGIN_DIR_FILE, "lang"),
+        DiscordLocale.CHINESE_TAIWAN,
+        listOf(
+            "basic-calculate",
+            "error"
+        )
+    )
 
-    fun calculate(event: SlashCommandInteractionEvent) {
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val formula: String = event.getOption("formula")!!.asString.trim().trimEnd('?', '=', ' ')
         val ans: String
         try {
@@ -36,23 +43,23 @@ internal object BasicCalculator {
             return
         }
 
-
         event.channel.sendMessage(
             creator.getCreateBuilder(
-                event,
+                "basic-calculate",
+                event.userLocale,
                 Placeholder.getSubstitutor(event.member!!).putAll(
                     "bc_question" to formula,
                     "bc_answer" to ans,
                     "bc_answer_round" to ans.split('.', limit = 1)[0],
                 )
             ).build()
-        ).queue()
-
-        event.hook.deleteOriginal().queue()
+        ).flatMap {
+            event.hook.deleteOriginal()
+        }.queue()
     }
 
 
-    enum class TokenType {
+    private enum class TokenType {
         NUMBER, OPERATOR, LEFT_PAREN, RIGHT_PAREN
     }
 
