@@ -31,7 +31,7 @@ internal object StepManager {
 
     private fun onCreateTicket(event: SlashCommandInteractionEvent) {
         val step = Step(event.hook)
-        step.renderEmbedAction()
+        step.renderEmbedAction().queue()
         steps.put(event.user.idLong, step)
     }
 
@@ -332,8 +332,9 @@ internal object StepManager {
     }
 
     private fun backToMainMenu(event: ButtonInteractionEvent) {
-        steps[event.user.idLong]?.renderEmbedAction()
-        event.deferEdit().queue()
+        event.deferEdit().flatMap {
+            steps[event.user.idLong]?.renderEmbedAction()
+        }.queue()
     }
 
     private fun modifyBtnColor(event: ButtonInteractionEvent) {
@@ -341,8 +342,9 @@ internal object StepManager {
             val idMap = componentIdManager.parse(event.componentId)
             if (idMap["sub_action"] == "btnColorSubmit") {
                 step.setBtnStyle(ButtonStyle.fromKey(idMap["color_index"] as Int))
-                step.renderEmbedAction()
-                event.deferEdit().queue()
+                event.deferEdit().flatMap {
+                    step.renderEmbedAction()
+                }.queue()
             }
         }
     }
@@ -368,8 +370,9 @@ internal object StepManager {
                 }
             }
 
-            step.renderEmbedAction()
-            event.deferEdit().queue()
+            event.deferEdit().flatMap {
+                step.renderEmbedAction()
+            }.queue()
         }
     }
 
@@ -416,8 +419,9 @@ internal object StepManager {
                 }
             }
 
-            step.renderEmbedAction()
-            event.deferEdit().queue()
+            event.deferEdit().flatMap {
+                step.renderEmbedAction()
+            }.queue()
         }
     }
 

@@ -4,7 +4,7 @@ create_ticket:
 
 add_ticket:
   name: 從已有訊息添加客服按鈕
-  description: 限制第一行 ActionRow 至多 5 個按鈕
+  description: 第一行 ActionRow 至多 5 個按鈕
   options:
     message_id:
       name: 訊息Id
