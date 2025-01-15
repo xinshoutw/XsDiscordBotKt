@@ -1,5 +1,5 @@
 create_ticket:
-  name: Create Ticket Button建立客服按鈕
+  name: Create Ticket Button
   description: Create a message with ticket button.
 
 add_ticket:
