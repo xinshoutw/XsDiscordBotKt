@@ -128,7 +128,6 @@ internal object JsonManager {
     }
 
     // getOrDefault
-    private fun getChannelData(listenChannelId: Long, guild: Guild): ChannelData {
-        return dataMap.computeIfAbsent(listenChannelId) { ChannelData(guild) }
-    }
+    private fun getChannelData(listenChannelId: Long, guild: Guild): ChannelData =
+        dataMap.computeIfAbsent(listenChannelId) { ChannelData(guild) }
 }
