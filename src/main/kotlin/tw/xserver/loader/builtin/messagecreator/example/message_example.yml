@@ -11,7 +11,7 @@ embeds: # Ignorable, 10 size limit
     description: "This is a embed description" # Ignorable, 4096 length limit
     thumbnail_url: "https://blog.xinshou.tw/favicon.ico" # Ignorable, 2000 length limit
     image_url: "https://blog.xinshou.tw/favicon.ico" # Ignorable, 20000 length limit
-    color_code: "#FFFF00" # Ignorable, default: "#FFFFFF", allowed values: [ "0xFFFFFF", "#FFFFFF", "FFFFFFh" ]
+    color_code: "#FFFF00" # Ignorable, default: "null", allowed values: [ "0xFFFFFF", "#FFFFFF", "FFFFFFh" ]
     footer: # Ignorable
       text: "I'm footer" # Nonnull, 2048 length limit
       icon_url: "https://blog.xinshou.tw/favicon.ico" # Ignorable, 2000 length limit

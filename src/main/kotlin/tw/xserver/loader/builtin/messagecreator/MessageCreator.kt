@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xserver.loader.builtin.messagecreator.builder.MessageBuilder
 import tw.xserver.loader.builtin.messagecreator.serializer.ColorSerializer
 import tw.xserver.loader.builtin.messagecreator.serializer.MessageDataSerializer
 import tw.xserver.loader.builtin.placeholder.Placeholder
@@ -22,9 +23,8 @@ class MessageCreator(
     langDirFile: File,
     private val defaultLocale: DiscordLocale,
     private val messageKeys: List<String>,
-    componentIdManager: ComponentIdManager? = null,
-) : MessageBuilder(componentIdManager) {
-
+    private val componentIdManager: ComponentIdManager? = null,
+) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     }
@@ -37,10 +37,10 @@ class MessageCreator(
             serializersModule = SerializersModule {
                 contextual(ColorSerializer)
                 include(SerializersModule {
-                    polymorphic(MessageDataSerializer.ComponentSetting::class) {
-                        subclass(MessageDataSerializer.ComponentSetting.ButtonsComponent::class)
-                        subclass(MessageDataSerializer.ComponentSetting.StringSelectMenuSetting::class)
-                        subclass(MessageDataSerializer.ComponentSetting.EntitySelectMenuSetting::class)
+                    polymorphic(MessageDataSerializer.ActionRowSetting::class) {
+                        subclass(MessageDataSerializer.ActionRowSetting.ButtonsSetting::class)
+                        subclass(MessageDataSerializer.ActionRowSetting.StringSelectMenuSetting::class)
+                        subclass(MessageDataSerializer.ActionRowSetting.EntitySelectMenuSetting::class)
                     }
                 })
             }
@@ -68,9 +68,14 @@ class MessageCreator(
         key: String,
         locale: DiscordLocale = defaultLocale,
         substitutor: Substitutor = Placeholder.globalSubstitutor,
-    ): MessageCreateBuilder {
-        return getCreateBuilder(getMessageData(key, locale), substitutor)
-    }
+        messageModel: Map<String, Any>? = null,
+    ): MessageCreateBuilder =
+        MessageBuilder(
+            getMessageData(key, locale),
+            substitutor,
+            componentIdManager,
+            messageModel
+        ).getBuilder()
 
     fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {
         if (key !in messageKeys) {

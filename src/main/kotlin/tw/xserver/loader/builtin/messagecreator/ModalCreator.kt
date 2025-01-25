@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.modals.Modal
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xserver.loader.builtin.messagecreator.builder.ModalBuilder
 import tw.xserver.loader.builtin.messagecreator.serializer.ModalDataSerializer
 import tw.xserver.loader.builtin.messagecreator.serializer.TextInputStyleSerializer
 import tw.xserver.loader.builtin.placeholder.Placeholder
