@@ -19,10 +19,10 @@ import java.util.*
 
 class ModalCreator(
     langDirFile: File,
-    componentIdManager: ComponentIdManager,
+    private val componentIdManager: ComponentIdManager,
     private val defaultLocale: DiscordLocale,
     private val modalKeys: List<String>,
-) : ModalBuilder(componentIdManager) {
+) {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -60,8 +60,9 @@ class ModalCreator(
         key: String,
         locale: DiscordLocale,
         substitutor: Substitutor = Placeholder.globalSubstitutor,
+        modelMapper: Map<String, Any>? = null,
     ): Modal.Builder {
-        return getModalBuilder(getModalData(key, locale), substitutor)
+        return ModalBuilder(getModalData(key, locale), substitutor, componentIdManager, modelMapper).getBuilder()
     }
 
     fun getModalData(key: String, locale: DiscordLocale): ModalDataSerializer {

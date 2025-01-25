@@ -13,7 +13,7 @@ internal object TicketAddons {
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
         DiscordLocale.CHINESE_TAIWAN,
-        listOf(
+        messageKeys = listOf(
             "not-online"
         )
     )

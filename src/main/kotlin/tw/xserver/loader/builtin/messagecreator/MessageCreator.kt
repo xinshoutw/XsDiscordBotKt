@@ -22,8 +22,8 @@ import java.util.*
 class MessageCreator(
     langDirFile: File,
     private val defaultLocale: DiscordLocale,
-    private val messageKeys: List<String>,
     private val componentIdManager: ComponentIdManager? = null,
+    private val messageKeys: List<String>,
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -68,13 +68,13 @@ class MessageCreator(
         key: String,
         locale: DiscordLocale = defaultLocale,
         substitutor: Substitutor = Placeholder.globalSubstitutor,
-        messageModel: Map<String, Any>? = null,
+        modelMapper: Map<String, Any>? = null,
     ): MessageCreateBuilder =
         MessageBuilder(
             getMessageData(key, locale),
             substitutor,
             componentIdManager,
-            messageModel
+            modelMapper
         ).getBuilder()
 
     fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {

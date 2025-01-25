@@ -7,7 +7,7 @@ import tw.xserver.loader.builtin.placeholder.Placeholder
 import tw.xserver.loader.builtin.placeholder.Substitutor
 import tw.xserver.loader.util.ComponentIdManager
 
-internal class ModalBuilder(
+class ModalBuilder(
     private val modalData: ModalDataSerializer,
     private val substitutor: Substitutor? = Placeholder.globalSubstitutor,
     private val componentIdManager: ComponentIdManager,

@@ -29,29 +29,29 @@ internal class Step(
 
             if (message == null) {
                 add(
-                    ActionRow.of(
+                    ActionRow.of( // TODO: change suffix to btn
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("sub_action", "author"),
+                                ComponentField("sub_action", "author_btn"),
                             ), "設定作者", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("sub_action", "content"),
+                                ComponentField("sub_action", "content_btn"),
                             ), "設定文字", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("sub_action", "category"),
+                                ComponentField("sub_action", "category_btn"),
                             ), "設定頻道目錄", ButtonStyle.PRIMARY, false, null
                         ),
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "create"),
-                                ComponentField("sub_action", "color"),
+                                ComponentField("sub_action", "color_btn"),
                             ), "設定顏色", ButtonStyle.PRIMARY, false, null
                         )
                     )
@@ -59,35 +59,35 @@ internal class Step(
             }
 
             add(
-                ActionRow.of(
+                ActionRow.of( // TODO: change suffix to btn
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("sub_action", "btnContent"),
+                            ComponentField("sub_action", "btn_content_btn"),
                         ), "設定按鈕文字", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("sub_action", "btnColor"),
+                            ComponentField("sub_action", "btn_color_btn"),
                         ), "設定按鈕顏色", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("sub_action", "reason"),
+                            ComponentField("sub_action", "reason_btn"),
                         ), "設定詢問標題", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("sub_action", "admin"),
+                            ComponentField("sub_action", "admin_btn"),
                         ), "設定允許身分組", ButtonStyle.PRIMARY, false, null
                     ),
                     ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "create"),
-                            ComponentField("sub_action", "confirm"),
+                            ComponentField("sub_action", "confirm_btn"),
                         ), "確定建立", ButtonStyle.SUCCESS, false, null
                     )
                 )

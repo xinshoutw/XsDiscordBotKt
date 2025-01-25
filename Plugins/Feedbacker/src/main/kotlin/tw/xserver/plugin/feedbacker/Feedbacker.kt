@@ -43,8 +43,8 @@ internal object Feedbacker {
 
     private val modalCreator = ModalCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
-        componentIdManager = componentIdManager,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        componentIdManager = componentIdManager,
         modalKeys = listOf(
             "fill-form",
         ),

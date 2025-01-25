@@ -15,7 +15,7 @@ internal object MessageReplier {
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
         DiscordLocale.CHINESE_TAIWAN,
-        listOf(
+        messageKeys = listOf(
             "no-permission",
             "balance",
 

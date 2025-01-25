@@ -40,6 +40,7 @@ internal object ChatLogger {
     private val creator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        componentIdManager = componentIdManager,
         messageKeys = listOf(
             "chat-logger@setting",
             "delete",
@@ -48,7 +49,6 @@ internal object ChatLogger {
             "on-msg-delete",
             "on-msg-update",
         ),
-        componentIdManager,
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
