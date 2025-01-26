@@ -8,6 +8,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.builtin.messagecreator.builder.MessageBuilder
@@ -76,6 +77,21 @@ class MessageCreator(
             componentIdManager,
             modelMapper
         ).getBuilder()
+
+    fun getEditBuilder(
+        key: String,
+        locale: DiscordLocale = defaultLocale,
+        substitutor: Substitutor = Placeholder.globalSubstitutor,
+        modelMapper: Map<String, Any>? = null,
+    ): MessageEditBuilder =
+        MessageEditBuilder.fromCreateData(
+            MessageBuilder(
+                getMessageData(key, locale),
+                substitutor,
+                componentIdManager,
+                modelMapper
+            ).getBuilder().build()
+        )
 
     fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {
         if (key !in messageKeys) {
