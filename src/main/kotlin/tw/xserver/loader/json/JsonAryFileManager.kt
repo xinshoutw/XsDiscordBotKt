@@ -1,9 +1,6 @@
 package tw.xserver.loader.json
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
+import com.google.gson.*
 import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -63,4 +60,7 @@ class JsonAryFileManager(file: File) : JsonFileManager<JsonArray>(file, JsonArra
         } else {
             false
         }
+
+    fun <T> toClass(clazz: Class<T>): T =
+        Gson().fromJson(data, clazz)
 }
