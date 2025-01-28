@@ -6,7 +6,7 @@ import tw.xserver.loader.builtin.placeholder.Substitutor
 import tw.xserver.plugin.economy.Economy.Type
 import tw.xserver.plugin.economy.UserData
 
-internal interface StorageInterface {
+internal interface IStorage {
     fun init()
     fun query(user: User): UserData
     fun update(data: UserData)

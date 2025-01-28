@@ -15,7 +15,7 @@ import kotlin.math.min
 /**
  * Manages interactions with a Google Sheets spreadsheet for economy-related data operations.
  */
-internal object SheetImpl : StorageInterface {
+internal object SheetImpl : IStorage {
     private val spreadsheet = SheetsService(
         AuthConfigSerializer(config.clientId, config.clientSecret, config.port), PLUGIN_DIR_FILE
     ).sheets.spreadsheets().values()
@@ -140,14 +140,14 @@ internal object SheetImpl : StorageInterface {
     private fun parseRange(range: String): String = "${config.sheetLabel}!${range}"
 
     private fun getRange(range: String): List<Long> =
-        (spreadsheet.get(config.sheetId, parseRange(range)).execute().getValues() ?: listOf())
+        (spreadsheet.get(config.sheetId, parseRange(range)).execute().values ?: listOf())
             .flatten()
             .map { it.toString().toLong() }
 
     private fun getBatchRange(ranges: List<String>): List<List<Long>> {
         val valueRanges = spreadsheet.batchGet(config.sheetId).setRanges(ranges).execute().valueRanges
         return valueRanges.map { range ->
-            range.getValues()?.flatten()?.map { it.toString().toLong() } ?: emptyList()
+            range.values?.flatten()?.map { it.toString().toLong() } ?: emptyList()
         }
     }
 }

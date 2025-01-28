@@ -18,9 +18,9 @@ import tw.xserver.plugin.economy.command.guildCommands
 import tw.xserver.plugin.economy.lang.CmdFileSerializer
 import tw.xserver.plugin.economy.lang.CmdLocalizations
 import tw.xserver.plugin.economy.serializer.MainConfigSerializer
+import tw.xserver.plugin.economy.storage.IStorage
 import tw.xserver.plugin.economy.storage.JsonImpl
 import tw.xserver.plugin.economy.storage.SheetImpl
-import tw.xserver.plugin.economy.storage.StorageInterface
 import java.io.File
 import java.io.IOException
 
@@ -33,7 +33,7 @@ object Event : PluginEvent(true) {
     internal const val COMPONENT_PREFIX = "economy@"
     internal val PLUGIN_DIR_FILE = File("plugins/Economy")
     internal lateinit var config: MainConfigSerializer
-    internal lateinit var storageManager: StorageInterface
+    internal lateinit var storageManager: IStorage
 
 
     override fun load() {

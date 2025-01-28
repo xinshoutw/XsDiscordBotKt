@@ -13,7 +13,7 @@ import kotlin.math.min
 /**
  * Manages user data and rankings via a JSON file system.
  */
-internal object JsonImpl : StorageInterface {
+internal object JsonImpl : IStorage {
     private val userData: MutableMap<Long, UserData> = HashMap()
     private val moneyBoard: MutableList<UserData> = ArrayList()
     private val costBoard: MutableList<UserData> = ArrayList()
