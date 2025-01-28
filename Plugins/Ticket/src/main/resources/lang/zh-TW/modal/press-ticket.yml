@@ -1,0 +1,9 @@
+uid:
+  action: "submit"
+  msg_id: "%tt@msg-id%"
+  btn_index: "%tt@btn-index%"
+title: "Create Ticket"
+text_inputs:
+  - uid: "reason"
+    label: "%tt@reason%" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]

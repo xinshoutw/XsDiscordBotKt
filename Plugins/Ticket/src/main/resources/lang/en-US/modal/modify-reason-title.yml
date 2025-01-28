@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "reason"
+title: "Create Ticket"
+text_inputs:
+  - uid: "reason"
+    label: "Modify reason" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@reason-title%"
+    placeholder: "Do you have any questions we can help with?"
+    max_length: 45

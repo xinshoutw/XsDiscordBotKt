@@ -1,0 +1,20 @@
+uid:
+  action: "create"
+  sub_action: "content"
+title: "創建客服單"
+text_inputs:
+  - uid: "title"
+    label: "設定標題" # Nonnull, 45 length limit
+    style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@title%"
+    placeholder: "🛠 聯絡我們"
+    max_length: 256
+    required: false
+
+  - uid: "desc"
+    label: "設定內文" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@description%"
+    placeholder: "🛠 聯絡我們"
+    max_length: 4000
+    required: false

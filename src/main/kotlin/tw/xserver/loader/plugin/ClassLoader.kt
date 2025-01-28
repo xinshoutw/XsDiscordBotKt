@@ -92,27 +92,31 @@ internal object ClassLoader : URLClassLoader(arrayOfNulls(0), BotLoader::class.j
      * @return The URL of the resource, or null if the resource cannot be found.
      */
     override fun findResource(name: String): URL? {
+        // Check the parent class loader for the resource
         super.findResource(name)?.let { return it }
 
+        // Validate resource path format
         val index = name.lastIndexOf('/')
         if (index == -1) return null
 
-        resourcePath.forEach { (key, value) ->
-            if (name.startsWith("$key/")) {
-                try {
-                    val uri = URI("jar:file:${value.path}!/${name.substring(key.length + 1)}")
-                    FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem ->
-                        val path = fileSystem.getPath(name.substring(key.length + 1))
-                        if (Files.exists(path)) {
-                            return path.toUri().toURL()
-                        }
+        // Iterate through resourcePath map to find the resource
+        for ((key, value) in resourcePath) {
+            if (!name.startsWith("$key/")) continue
+
+            // Attempt to locate the resource within the JAR file
+            try {
+                val resourcePath = name.substring(key.length + 1)
+                val uri = URI("jar:file:${value.path}!/$resourcePath")
+                FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { fileSystem ->
+                    val path = fileSystem.getPath(resourcePath)
+                    if (Files.exists(path)) {
+                        return path.toUri().toURL()
                     }
-                } catch (e: Exception) {
-                    logger.error("Error accessing resource: '{}'", name, e)
                 }
+            } catch (e: Exception) {
+                logger.error("Error accessing resource: '{}'", name, e)
             }
         }
         return null
     }
-
 }

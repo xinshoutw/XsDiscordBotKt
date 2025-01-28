@@ -7,15 +7,15 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.LayoutComponent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.internal.interactions.component.ButtonImpl
 import tw.xserver.loader.util.ComponentField
 import tw.xserver.plugin.ticket.Ticket.componentIdManager
+import tw.xserver.plugin.ticket.Ticket.messageCreator
 
 internal class Step(
     val hook: InteractionHook,
@@ -23,78 +23,28 @@ internal class Step(
 ) {
     val data = StepData()
 
-    fun renderEmbedAction(): WebhookMessageEditAction<Message?> {
-        val actions = ArrayList<LayoutComponent>().apply {
-            add(ActionRow.of(getPreviewComponent))
-
-            if (message == null) {
-                add(
-                    ActionRow.of( // TODO: change suffix to btn
-                        ButtonImpl(
-                            componentIdManager.build(
-                                ComponentField("action", "create"),
-                                ComponentField("sub_action", "author_btn"),
-                            ), "設定作者", ButtonStyle.PRIMARY, false, null
-                        ),
-                        ButtonImpl(
-                            componentIdManager.build(
-                                ComponentField("action", "create"),
-                                ComponentField("sub_action", "content_btn"),
-                            ), "設定文字", ButtonStyle.PRIMARY, false, null
-                        ),
-                        ButtonImpl(
-                            componentIdManager.build(
-                                ComponentField("action", "create"),
-                                ComponentField("sub_action", "category_btn"),
-                            ), "設定頻道目錄", ButtonStyle.PRIMARY, false, null
-                        ),
-                        ButtonImpl(
-                            componentIdManager.build(
-                                ComponentField("action", "create"),
-                                ComponentField("sub_action", "color_btn"),
-                            ), "設定顏色", ButtonStyle.PRIMARY, false, null
-                        )
-                    )
+    fun renderEmbedAction(locale: DiscordLocale): WebhookMessageEditAction<Message?> {
+        val messageEditData = if (message == null) {
+            messageCreator.getEditBuilder(
+                "create-ticket",
+                locale,
+                modelMapper = mapOf(
+                    "tt@embed-demo" to previewEmbed,
+                    "tt@btn-demo" to previewComponent,
                 )
-            }
-
-            add(
-                ActionRow.of( // TODO: change suffix to btn
-                    ButtonImpl(
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("sub_action", "btn_content_btn"),
-                        ), "設定按鈕文字", ButtonStyle.PRIMARY, false, null
-                    ),
-                    ButtonImpl(
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("sub_action", "btn_color_btn"),
-                        ), "設定按鈕顏色", ButtonStyle.PRIMARY, false, null
-                    ),
-                    ButtonImpl(
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("sub_action", "reason_btn"),
-                        ), "設定詢問標題", ButtonStyle.PRIMARY, false, null
-                    ),
-                    ButtonImpl(
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("sub_action", "admin_btn"),
-                        ), "設定允許身分組", ButtonStyle.PRIMARY, false, null
-                    ),
-                    ButtonImpl(
-                        componentIdManager.build(
-                            ComponentField("action", "create"),
-                            ComponentField("sub_action", "confirm_btn"),
-                        ), "確定建立", ButtonStyle.SUCCESS, false, null
-                    )
+            ).build()
+        } else {
+            messageCreator.getEditBuilder(
+                "add-ticket",
+                locale,
+                modelMapper = mapOf(
+                    "tt@embed-demo" to previewEmbed,
+                    "tt@btn-demo" to previewComponent,
                 )
-            )
+            ).build()
         }
 
-        return hook.editOriginalEmbeds(previewEmbed).setComponents(actions)
+        return hook.editOriginal(messageEditData)
     }
 
     val json: JsonObject
@@ -116,12 +66,12 @@ internal class Step(
     fun setAuthor(name: String?, iconURL: String?) {
         if (name == null) {
             data.author = null
-            data.authorIconURL = null
+            data.authorIconUrl = null
             return
         }
 
         data.author = name
-        data.authorIconURL = iconURL
+        data.authorIconUrl = iconURL
     }
 
     fun setTitle(title: String?) {
@@ -150,7 +100,7 @@ internal class Step(
     }
 
     fun setBtnContent(content: String?) {
-        data.btnContent = content
+        data.btnText = content
     }
 
     fun setBtnEmoji(emoji: Emoji?) {
@@ -161,52 +111,64 @@ internal class Step(
         data.btnStyle = style
     }
 
-    fun confirmCreateAction(channel: MessageChannelUnion): RestAction<Message> {
+    fun confirmCreateAction(locale: DiscordLocale, channel: MessageChannelUnion): RestAction<Message> {
         hook.deleteOriginal().queue()
 
         if (message == null) {
             // send a new message
-            return channel.sendMessageEmbeds(this.previewEmbed).flatMap {
-                it.editMessageComponents(
-                    ActionRow.of(
+            val createMessageData = messageCreator.getCreateBuilder(
+                "confirm-create",
+                locale,
+                modelMapper = mapOf(
+                    "tt@embed" to previewEmbed,
+                    "tt@btn" to ButtonImpl(
+                        componentIdManager.build(
+                            ComponentField("action", "press"),
+                            ComponentField("btn_index", 0),
+                        ),
+                        data.btnText,
+                        data.btnStyle,
+                        false,
+                        data.btnEmoji
+                    ),
+                )
+            ).build()
+
+            return channel.sendMessage(createMessageData)
+        }
+
+        // modify the original message
+        // TODO: currently, we only support modifying the message components
+        //       we should also support modifying the message content soon
+        val messageEditData = messageCreator.getEditBuilder(
+            "confirm-add",
+            locale,
+            modelMapper = mapOf(
+                "tt@btn" to message.actionRows[0].components.apply {
+                    add(
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "press"),
-                                ComponentField("btn_index", 0),
+                                ComponentField("btn_index", size),
                             ),
-                            data.btnContent,
+                            data.btnText,
                             data.btnStyle,
                             false,
                             data.btnEmoji
                         )
                     )
-                )
-            }
-        }
-
-        // modify the original message
-        val rowData = message.actionRows[0].components.apply {
-            add(
-                ButtonImpl(
-                    componentIdManager.build(
-                        ComponentField("action", "press"),
-                        ComponentField("btn_index", size),
-                    ),
-                    data.btnContent,
-                    data.btnStyle,
-                    false,
-                    data.btnEmoji
-                )
+                }
             )
-        }
-        return message.editMessageComponents(ActionRow.of(rowData))
+        ).build()
+
+        return message.editMessageComponents(messageEditData.components)
     }
 
 
-    private val previewEmbed: MessageEmbed
+    val previewEmbed: MessageEmbed
         get() {
             if (message == null) return EmbedBuilder()
-                .setAuthor(data.author, null, data.authorIconURL)
+                .setAuthor(data.author, null, data.authorIconUrl)
                 .setTitle(data.title)
                 .setDescription(data.description)
                 .setColor(data.color).build()
@@ -214,26 +176,26 @@ internal class Step(
             return message.embeds[0]
         }
 
-    private val getPreviewComponent: ButtonImpl
+    val previewComponent: ButtonImpl
         get() = ButtonImpl(
             componentIdManager.build(
                 ComponentField("action", "create"),
                 ComponentField("sub_action", "prev"),
-            ), data.btnContent, data.btnStyle, false, data.btnEmoji
+            ), data.btnText, data.btnStyle, false, data.btnEmoji
         )
 
 }
 
 internal data class StepData(
     var author: String? = "Ticket 服務",
-    var authorIconURL: String? =
+    var authorIconUrl: String? =
         "https://img.lovepik.com/free-png/20211116/lovepik-customer-service-personnel-icon-png-image_400960955_wh1200.png",
     var title: String? = "\uD83D\uDEE0 聯絡我們",
     var description: String? = "✨ 點擊下方 **[按鈕]**，並提供所遭遇的問題，我們盡快給予答覆！ ✨",
     var color: Int = 0x00FFFF,
     var reasonTitle: String = "有任何可以幫助的問題嗎~",
     var adminIds: List<Long>? = listOf(),
-    var btnContent: String? = "聯絡我們",
+    var btnText: String? = "聯絡我們",
     var btnEmoji: Emoji? = Emoji.fromUnicode("✉"),
     var btnStyle: ButtonStyle? = ButtonStyle.SUCCESS,
     var categoryId: Long = 0,

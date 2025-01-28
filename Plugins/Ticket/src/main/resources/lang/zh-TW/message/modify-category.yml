@@ -1,0 +1,34 @@
+embeds:
+  - model_key: "tt@embed-demo"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn-demo"
+
+  - !EntitySelectMenu
+    entity_select_menu:
+      uid: # Nonnull
+        action: "create"
+        sub_action: "category"
+      placeholder: "未設定則為預設" # Ignorable
+      min: 1
+      max: 1
+      select_target_type: "CHANNEL" # allowed values [ "ROLE", "USER", "CHANNEL" ]
+      channel_types:
+        # Nonnull whether select_target_type is "CHANNEL"
+        # allowed values
+        # [
+        #   "TEXT", "VOICE", "CATEGORY", "NEWS", "STAGE", "FORUM", "MEDIA"
+        #   "GUILD_NEWS_THREAD", "GUILD_PUBLIC_THREAD", "GUILD_PRIVATE_THREAD"
+        #   "PRIVATE", "GROUP"
+        # ]
+        - "CATEGORY"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "back"
+        style: 2 # Nonnull, allowed values [ 1 (BLUE), 2 (GRAY), 3 (GREEN), 4 (RED), 5 (LINK) ]
+        label: "返回"

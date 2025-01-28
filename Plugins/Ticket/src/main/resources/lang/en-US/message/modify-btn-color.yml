@@ -1,0 +1,45 @@
+embeds:
+  - model_key: "tt@embed-demo"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn-demo"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "btn_color"
+          color_index: 1
+        style: 1
+        label: "BLUE"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_color"
+          color_index: 2
+        style: 2
+        label: "GRAY"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_color"
+          color_index: 3
+        style: 3
+        label: "GREEN"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_color"
+          color_index: 4
+        style: 4
+        label: "RED"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "back"
+        style: 2 # Nonnull, allowed values [ 1 (BLUE), 2 (GRAY), 3 (GREEN), 4 (RED), 5 (LINK) ]
+        label: "Back"

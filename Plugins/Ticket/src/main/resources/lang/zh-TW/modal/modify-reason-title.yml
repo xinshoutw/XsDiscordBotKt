@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "reason"
+title: "創建客服單"
+text_inputs:
+  - uid: "reason"
+    label: "設定原因" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@reason-title%"
+    placeholder: "有任何可以幫助的問題嗎~"
+    max_length: 45

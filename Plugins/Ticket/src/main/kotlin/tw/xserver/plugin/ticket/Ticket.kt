@@ -10,12 +10,14 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
+import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import tw.xserver.loader.base.BotLoader.jdaBot
+import tw.xserver.loader.builtin.messagecreator.MessageCreator
+import tw.xserver.loader.builtin.messagecreator.ModalCreator
+import tw.xserver.loader.builtin.placeholder.Placeholder
 import tw.xserver.loader.json.guild.JsonObjGuildFileManager
 import tw.xserver.loader.util.ComponentField
 import tw.xserver.loader.util.ComponentIdManager
@@ -24,6 +26,7 @@ import tw.xserver.loader.util.GlobalUtil
 import tw.xserver.plugin.ticket.Event.COMPONENT_PREFIX
 import tw.xserver.plugin.ticket.Event.PLUGIN_DIR_FILE
 import tw.xserver.plugin.ticket.create.StepManager
+import tw.xserver.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 
 internal object Ticket {
@@ -39,36 +42,77 @@ internal object Ticket {
             "color_index" to FieldType.INT_HEX,
         )
     )
+    val messageCreator = MessageCreator(
+        langDirFile = File(PLUGIN_DIR_FILE, "message"),
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        componentIdManager = componentIdManager,
+        messageKeys = listOf(
+            "add-ticket",
+            "confirm-add",
+            "confirm-create",
+            "create-ticket",
+            "modify-admin-role",
+            "modify-category",
+            "modify-btn-color",
+        )
+    )
+    val modalCreator = ModalCreator(
+        langDirFile = File(PLUGIN_DIR_FILE, "message"),
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        componentIdManager = componentIdManager,
+        modalKeys = listOf(
+            "author-form",
+            "content",
+            "modify-btn-text",
+            "modify-embed-color",
+            "modify-reason-title",
+            "preview-reason",
+        )
+    )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         StepManager.onSlashCommandInteraction(event)
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
+
+        jdaBot.openPrivateChannelById(
+            810824254210965554
+        )
+
+
         GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)
         val idMap = componentIdManager.parse(event.componentId)
         val guild = event.guild!!
 
         when (idMap["action"]) {
+            // Trying to create or add ticket buttons
             "create" -> {
                 StepManager.onButtonInteraction(event, idMap)
             }
 
+            // Run ticket action
             "press" -> {
-                val jsonManager = jsonGuildManager[guild.idLong]
-                val jsonData =
-                    jsonManager.getAsJsonArray(event.messageId)[idMap["btn_index"] as Int].asJsonObject
-                val reason = jsonData.asJsonObject.get("reasonTitle").asString
-                val reasonInput = TextInput.create("reason", "原因", TextInputStyle.PARAGRAPH).build()
+                val reason = jsonGuildManager
+                    .get(guild.idLong)
+                    .toClass(JsonDataClass::class.java)
+                    .get(event.messageId)
+                    ?.get(idMap["btn_index"] as Int)
+                    ?.reasonTitle
+                    ?: { throw IllegalStateException("Cannot find data.") }()
 
                 event.replyModal(
-                    Modal.create(
-                        componentIdManager.build(
-                            ComponentField("action", "submit"),
-                            ComponentField("msg_id", event.messageIdLong),
-                            ComponentField("btn_index", idMap["btn_index"] as Int),
-                        ), reason
-                    ).addComponents(ActionRow.of(reasonInput)).build()
+                    modalCreator.getModalBuilder(
+                        "press-ticket",
+                        event.userLocale,
+                        substitutor = Placeholder.getSubstitutor(event).putAll(
+                            mapOf(
+                                "tt@msg-id" to event.messageId,
+                                "tt@btn-index" to (idMap["btn_index"] as Int).toString(),
+                                "tt@reason" to reason
+                            )
+                        )
+                    ).build()
                 ).queue()
             }
 
@@ -99,8 +143,7 @@ internal object Ticket {
                                 )
                             )
                         )
-                    }
-                    .queue()
+                    }.queue()
             }
 
             "unlock" -> {
@@ -112,7 +155,7 @@ internal object Ticket {
                         event.editComponents(
                             ActionRow.of(
                                 Button.of(
-                                    ButtonStyle.SUCCESS,
+                                    ButtonStyle.SECONDARY,
                                     componentIdManager.build(
                                         ComponentField("action", "lock"),
                                         ComponentField("user_id", idMap["user_id"] as Long),
@@ -131,8 +174,7 @@ internal object Ticket {
                                 )
                             )
                         )
-                    }
-                    .queue()
+                    }.queue()
             }
 
             "delete" -> {

@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "embed-color"
+title: "創建客服單"
+text_inputs:
+  - uid: "color"
+    label: "設定顏色" # Nonnull, 45 length limit
+    style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@hex-color%"
+    placeholder: "0x00FFFF"
+    max_length: 8

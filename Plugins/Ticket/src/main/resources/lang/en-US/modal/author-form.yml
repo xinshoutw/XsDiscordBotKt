@@ -1,0 +1,20 @@
+uid:
+  action: "create"
+  sub_action: "author"
+title: "Create Ticket"
+text_inputs:
+  - uid: "author"
+    label: "Modify author name" # Nonnull, 45 length limit
+    style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@author%"
+    placeholder: "Ticket Service"
+    max_length: 256
+    required: false
+
+  - uid: "image"
+    label: "Modify Author Image" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@author-icon-url%"
+    placeholder: "https://img .... 5_wh1200.png"
+    max_length: 4000
+    required: false

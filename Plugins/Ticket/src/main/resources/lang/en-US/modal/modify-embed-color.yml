@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "embed-color"
+title: "Create Ticket"
+text_inputs:
+  - uid: "color"
+    label: "Modify color" # Nonnull, 45 length limit
+    style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@hex-color%"
+    placeholder: "0x00FFFF"
+    max_length: 8

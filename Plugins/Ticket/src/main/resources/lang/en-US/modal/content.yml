@@ -1,0 +1,20 @@
+uid:
+  action: "create"
+  sub_action: "content"
+title: "Create Ticket"
+text_inputs:
+  - uid: "title"
+    label: "Modify title" # Nonnull, 45 length limit
+    style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@title%"
+    placeholder: "🛠 Contact Us"
+    max_length: 256
+    required: false
+
+  - uid: "desc"
+    label: "Modify description" # Nonnull, 45 length limit
+    style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
+    value: "%tt@description%"
+    placeholder: "🛠 Contact Us"
+    max_length: 4000
+    required: false

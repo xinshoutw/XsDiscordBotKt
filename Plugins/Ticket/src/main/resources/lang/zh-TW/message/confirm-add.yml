@@ -1,0 +1,4 @@
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn"

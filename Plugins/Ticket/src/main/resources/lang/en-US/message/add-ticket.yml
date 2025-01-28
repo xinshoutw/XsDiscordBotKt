@@ -1,0 +1,47 @@
+embeds:
+  - model_key: "tt@embed-demo"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn-demo"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "btn_category"
+        style: 1
+        label: "set category"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "btn_btn-text"
+        style: 1
+        label: "set btn text"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_btn-color"
+        style: 1
+        label: "set btn color"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_reason"
+        style: 1
+        label: "set ask title"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_admin"
+        style: 1
+        label: "set allow role"
+
+      - uid:
+          action: "create"
+          sub_action: "btn_confirm"
+        style: 3
+        label: "confirm create"
