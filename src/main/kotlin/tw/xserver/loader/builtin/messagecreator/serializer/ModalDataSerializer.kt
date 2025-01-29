@@ -20,7 +20,7 @@ data class ModalDataSerializer(
         @SerialName("model_key")
         override val modelKey: String? = null,
 
-        val uid: Map<String, String>,
+        val uid: String, // String only
         val label: String,
         val value: String? = null,
         val placeholder: String? = null,

@@ -59,7 +59,7 @@ class ModalBuilder(
         }
 
         return TextInput.create(
-            parsePlaceholder(componentIdManager.build(textInput.uid)),
+            parsePlaceholder(textInput.uid),
             parsePlaceholder(textInput.label),
             textInput.style
         ).apply {
