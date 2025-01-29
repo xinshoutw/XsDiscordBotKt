@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import tw.xserver.loader.base.BotLoader.jdaBot
 import tw.xserver.loader.builtin.messagecreator.MessageCreator
 import tw.xserver.loader.builtin.messagecreator.ModalCreator
 import tw.xserver.loader.builtin.placeholder.Placeholder
@@ -75,12 +74,6 @@ internal object Ticket {
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
-
-        jdaBot.openPrivateChannelById(
-            810824254210965554
-        )
-
-
         GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)
         val idMap = componentIdManager.parse(event.componentId)
         val guild = event.guild!!
