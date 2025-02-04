@@ -4,8 +4,7 @@ uid:
   star_count: "%fb_star_count%"
 
 text_inputs:
-  - uid:
-      action: "submit_form"
+  - uid: "submit_form"
     label: "Please briefly describe your feedback" # Nonnull, 45 length limit
     placeholder: "Awesome!" # Ignorable, 100 length limit
     min_length: -1 # Ignorable, default: -1

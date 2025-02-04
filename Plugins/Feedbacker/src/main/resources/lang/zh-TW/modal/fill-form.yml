@@ -4,8 +4,7 @@ uid:
   star_count: "%fb_star_count%"
 
 text_inputs:
-  - uid:
-      action: "submit_form"
+  - uid: "submit_form"
     label: "請簡述評價內容" # Nonnull, 45 length limit
     placeholder: "超讚" # Ignorable, 100 length limit
     min_length: -1 # Ignorable, default: -1
