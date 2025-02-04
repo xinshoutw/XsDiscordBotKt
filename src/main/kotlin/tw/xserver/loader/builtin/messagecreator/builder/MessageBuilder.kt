@@ -87,6 +87,7 @@ internal class MessageBuilder(
                     is MessageEmbed -> finalEmbeds.add(model)
                     else -> throw IllegalArgumentException("Unknown embed model: $model")
                 }
+                return@forEach
             }
 
             buildEmbed(embedSetting)?.let { finalEmbeds.add(it) }
@@ -206,6 +207,7 @@ internal class MessageBuilder(
                     is LayoutComponent -> finalActionRows.add(model)
                     else -> throw IllegalArgumentException("Unknown component model: $model")
                 }
+                return@forEach
             }
 
             buildActionRow(actionRowSetting).let { finalActionRows.add(it) }
@@ -247,6 +249,7 @@ internal class MessageBuilder(
                     is Button -> finalButtons.add(model)
                     else -> throw IllegalArgumentException("Unknown component model: $model")
                 }
+                return@forEach
             }
 
             finalButtons.add(
