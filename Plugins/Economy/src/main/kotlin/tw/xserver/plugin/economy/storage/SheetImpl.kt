@@ -140,14 +140,13 @@ internal object SheetImpl : IStorage {
     private fun parseRange(range: String): String = "${config.sheetLabel}!${range}"
 
     private fun getRange(range: String): List<Long> =
-        (spreadsheet.get(config.sheetId, parseRange(range)).execute().values ?: listOf())
-            .flatten()
+        spreadsheet.get(config.sheetId, parseRange(range)).execute().values
             .map { it.toString().toLong() }
 
     private fun getBatchRange(ranges: List<String>): List<List<Long>> {
         val valueRanges = spreadsheet.batchGet(config.sheetId).setRanges(ranges).execute().valueRanges
         return valueRanges.map { range ->
-            range.values?.flatten()?.map { it.toString().toLong() } ?: emptyList()
+            range.values.map { it.toString().toLong() }
         }
     }
 }
