@@ -1,7 +1,7 @@
 uid:
   action: "create"
   sub_action: "prev"
-title: %tt@reason-title% # Nonnull, 45 length limit
+title: "%tt@reason-title%" # Nonnull, 45 length limit
 text_inputs:
   - uid: "reason"
     label: "原因" # Nonnull, 45 length limit
