@@ -42,7 +42,7 @@ internal object Ticket {
         )
     )
     val messageCreator = MessageCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "message"),
+        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
         messageKeys = listOf(
@@ -56,7 +56,7 @@ internal object Ticket {
         )
     )
     val modalCreator = ModalCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "message"),
+        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
         modalKeys = listOf(
