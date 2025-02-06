@@ -1,9 +1,7 @@
 uid: form # Nonnull, 100 length limit
 title: emm # Nonnull, 45 length limit
 text_inputs:
-  - uid: # Nonnull
-      - action: "template"
-      - sub_action: "input1"
+  - uid: "template" # Nonnull
     label: "Input Your Name!" # Nonnull, 45 length limit
     value: "Terry" # Ignorable, 4000 length limit
     placeholder: "YOUR NAME" # Ignorable, 100 length limit
