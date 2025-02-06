@@ -10,7 +10,6 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import kotlin.Throws
 
 /**
  * Provides functionalities to interact with files and resources, supporting operations
@@ -59,7 +58,7 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     fun exportResource(resourceFilePath: String, outputFile: File = File(resourceFilePath)): File {
         val inputStream: InputStream = clazz.getResourceAsStream(resourceFilePath.removePrefix("/"))
             ?: throw FileNotFoundException("Resource not found: $resourceFilePath")
-        logger.info("Output file: {}.", outputFile.canonicalPath)
+        logger.debug("Output file: {}.", outputFile.canonicalPath)
         inputStream.use { fileInJar ->
             outputFile.parentFile.mkdirs() // init directories
             Files.copy(fileInJar, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
