@@ -1,5 +1,7 @@
 package tw.xserver.plugin.ticket
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.Permission.ADMINISTRATOR
 import net.dv8tion.jda.api.Permission.VIEW_CHANNEL
@@ -29,16 +31,17 @@ import tw.xserver.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 
 internal object Ticket {
+    val gson = Gson()
     val jsonGuildManager = JsonObjGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
     val componentIdManager = ComponentIdManager(
         prefix = COMPONENT_PREFIX,
         idKeys = mapOf(
             "action" to FieldType.STRING,
             "sub_action" to FieldType.STRING,
-            "user_id" to FieldType.LONG_HEX,
-            "msg_id" to FieldType.LONG_HEX,
-            "btn_index" to FieldType.INT_HEX,
-            "color_index" to FieldType.INT_HEX,
+            "color_index" to FieldType.STRING,
+            "user_id" to FieldType.LONG_HEX, // lock / unlock
+            "msg_id" to FieldType.STRING,
+            "btn_index" to FieldType.STRING,
         )
     )
     val messageCreator = MessageCreator(
@@ -60,12 +63,13 @@ internal object Ticket {
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
         modalKeys = listOf(
-            "author-form",
-            "content",
+            "modify-author",
+            "modify-content",
             "modify-btn-text",
             "modify-embed-color",
             "modify-reason-title",
             "preview-reason",
+            "press-ticket",
         )
     )
 
@@ -88,9 +92,9 @@ internal object Ticket {
             "press" -> {
                 val reason = jsonGuildManager
                     .get(guild.idLong)
-                    .toClass(JsonDataClass::class.java)
+                    .toClass<JsonDataClass>(object : TypeToken<JsonDataClass>() {}.type)
                     .get(event.messageId)
-                    ?.get(idMap["btn_index"] as Int)
+                    ?.get((idMap["btn_index"] as String).toInt())
                     ?.reasonTitle
                     ?: { throw IllegalStateException("Cannot find data.") }()
 
@@ -101,7 +105,7 @@ internal object Ticket {
                         substitutor = Placeholder.getSubstitutor(event).putAll(
                             mapOf(
                                 "tt@msg-id" to event.messageId,
-                                "tt@btn-index" to (idMap["btn_index"] as Int).toString(),
+                                "tt@btn-index" to idMap["btn_index"] as String,
                                 "tt@reason" to reason
                             )
                         )
@@ -121,8 +125,8 @@ internal object Ticket {
                                     componentIdManager.build(
                                         ComponentField("action", "unlock"),
                                         ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                        ComponentField("msg_id", idMap["msg_id"] as String),
+                                        ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "開啟", Emoji.fromUnicode("🔓")
                                 ),
                                 Button.of(
@@ -130,8 +134,8 @@ internal object Ticket {
                                     componentIdManager.build(
                                         ComponentField("action", "delete"),
                                         ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                        ComponentField("msg_id", idMap["msg_id"] as String),
+                                        ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
                             )
@@ -152,8 +156,8 @@ internal object Ticket {
                                     componentIdManager.build(
                                         ComponentField("action", "lock"),
                                         ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                        ComponentField("msg_id", idMap["msg_id"] as String),
+                                        ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "關閉", Emoji.fromUnicode("🔒")
                                 ),
                                 Button.of(
@@ -161,8 +165,8 @@ internal object Ticket {
                                     componentIdManager.build(
                                         ComponentField("action", "delete"),
                                         ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                                        ComponentField("msg_id", idMap["msg_id"] as String),
+                                        ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
                             )
@@ -173,7 +177,7 @@ internal object Ticket {
             "delete" -> {
                 val member = event.member!!
                 val jsonData =
-                    jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msg_id"] as Long).toString())[idMap["btn_index"] as Int].asJsonObject
+                    jsonGuildManager[guild.idLong].getAsJsonArray(idMap["msg_id"] as String)[(idMap["btn_index"] as String).toInt()].asJsonObject
                 val roleIds = jsonData.getAsJsonArray("adminIds").map { it.asLong }
                 val isAdmin = member.roles.any { roleIds.contains(it.idLong) }
 
@@ -209,7 +213,7 @@ internal object Ticket {
 
         val guild = event.guild!!
         val jsonData =
-            jsonGuildManager[guild.idLong].getAsJsonArray((idMap["msg_id"] as Long).toString())[idMap["btn_index"] as Int].asJsonObject
+            jsonGuildManager[guild.idLong].getAsJsonArray(idMap["msg_id"] as String)[(idMap["btn_index"] as String).toInt()].asJsonObject
         val reason = event.getValue("reason")!!.asString
         val roleIds = jsonData.getAsJsonArray("adminIds").toList().map { it.asLong }
         val categoryId = jsonData.get("categoryId").asLong
@@ -247,12 +251,12 @@ internal object Ticket {
 
             it.sendMessage(builder.toString()).addActionRow(
                 Button.of(
-                    ButtonStyle.SUCCESS,
+                    ButtonStyle.SECONDARY,
                     componentIdManager.build(
                         ComponentField("action", "lock"),
                         ComponentField("user_id", event.user.idLong),
-                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                        ComponentField("msg_id", idMap["msg_id"] as String),
+                        ComponentField("btn_index", idMap["btn_index"] as String),
                     ), "關閉", Emoji.fromUnicode("🔒")
                 ),
                 Button.of(
@@ -260,8 +264,8 @@ internal object Ticket {
                     componentIdManager.build(
                         ComponentField("action", "delete"),
                         ComponentField("user_id", event.user.idLong),
-                        ComponentField("msg_id", idMap["msg_id"] as Long),
-                        ComponentField("btn_index", idMap["btn_index"] as Int),
+                        ComponentField("msg_id", idMap["msg_id"] as String),
+                        ComponentField("btn_index", idMap["btn_index"] as String),
                     ), "刪除", Emoji.fromUnicode("🗑")
                 )
             )

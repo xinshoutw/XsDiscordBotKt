@@ -52,39 +52,38 @@ internal object StepManager {
         when (idMap["sub_action"]) { // TODO: replace to new key
             "prev" -> previewReason(event)
 
-            "author" -> authorForm(event)
-            "content" -> content(event)
-            "category" -> categoryMenu(event)
-            "color" -> colorForm(event)
+            "modify-author" -> authorForm(event)
+            "modify-content" -> content(event)
+            "modify-category" -> categoryMenu(event)
+            "modify-color" -> colorForm(event)
 
-            "btnContent" -> btnTextForm(event)
-            "btnColor" -> btnColorMenu(event)
-            "reason" -> reasonForm(event)
-            "admin" -> adminMenu(event)
+            "modify-btn-text" -> btnTextForm(event)
+            "modify-btn-color" -> btnColorMenu(event)
+            "modify-reason" -> reasonForm(event)
+            "modify-admin" -> adminMenu(event)
 
-            "confirm" -> confirmCreate(event)
+            "confirm-create" -> confirmCreate(event)
 
             "back" -> backToMainMenu(event)
 
             // inside the color menu
-            "btnColorSubmit" -> modifyBtnColor(event)
+            "modify-btn-color-submit" -> modifyBtnColor(event, idMap)
         }
     }
 
 
     private fun previewReason(event: ButtonInteractionEvent) {
         val step = steps[event.user.idLong] ?: return
-        event.deferEdit().flatMap {
-            event.replyModal(
-                modalCreator.getModalBuilder(
-                    "preview-reason",
-                    event.userLocale,
-                    substitutor = Placeholder.getSubstitutor(event).put(
-                        "tt@reason-title", step.data.reasonTitle
-                    )
-                ).build()
-            )
-        }.queue()
+
+        event.replyModal(
+            modalCreator.getModalBuilder(
+                "preview-reason",
+                event.userLocale,
+                substitutor = Placeholder.getSubstitutor(event).put(
+                    "tt@reason-title", step.data.reasonTitle
+                )
+            ).build()
+        ).queue()
     }
 
     private fun authorForm(event: ButtonInteractionEvent) {
@@ -92,11 +91,11 @@ internal object StepManager {
 
         event.replyModal(
             modalCreator.getModalBuilder(
-                "author-form",
+                "modify-author",
                 event.userLocale,
                 substitutor = Placeholder.getSubstitutor(event).putAll(
                     "tt@author" to (step.data.author ?: ""),
-                    "tt@image" to (step.data.authorIconUrl ?: "")
+                    "tt@author-icon-url" to (step.data.authorIconUrl ?: "")
                 )
             ).build()
         ).queue()
@@ -107,7 +106,7 @@ internal object StepManager {
 
         event.replyModal(
             modalCreator.getModalBuilder(
-                "content-form",
+                "modify-content",
                 event.userLocale,
                 substitutor = Placeholder.getSubstitutor(event).putAll(
                     "tt@title" to (step.data.title ?: ""),
@@ -185,10 +184,12 @@ internal object StepManager {
 
         event.replyModal(
             modalCreator.getModalBuilder(
-                "reason-form",
+                "modify-reason-title",
                 event.userLocale,
-                modelMapper = mapOf(
-                    "tt@reason-title" to step.data.reasonTitle
+                substitutor = Placeholder.getSubstitutor(event).putAll(
+                    mapOf(
+                        "tt@reason-title" to step.data.reasonTitle
+                    )
                 )
             ).build()
         ).queue()
@@ -218,7 +219,7 @@ internal object StepManager {
         step.confirmCreateAction(event.userLocale, event.channel).map {
             manager.computeIfAbsent(it.id, JsonArray()).asJsonArray.add(step.json)
             manager.save()
-        }
+        }.queue()
     }
 
     private fun backToMainMenu(event: ButtonInteractionEvent) {
@@ -229,16 +230,13 @@ internal object StepManager {
         }.queue()
     }
 
-    private fun modifyBtnColor(event: ButtonInteractionEvent) {
+    private fun modifyBtnColor(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
         val step = steps[event.user.idLong] ?: return event.deferEdit().queue()
 
-        val idMap = componentIdManager.parse(event.componentId)
-        if (idMap["sub_action"] == "btnColorSubmit") {
-            step.setBtnStyle(ButtonStyle.fromKey(idMap["color_index"] as Int))
-            event.deferEdit().flatMap {
-                step.renderEmbedAction(event.userLocale)
-            }.queue()
-        }
+        step.setBtnStyle(ButtonStyle.fromKey((idMap["color_index"] as String).toInt()))
+        event.deferEdit().flatMap {
+            step.renderEmbedAction(event.userLocale)
+        }.queue()
     }
 
 
@@ -248,11 +246,11 @@ internal object StepManager {
 
         val idMap = componentIdManager.parse(event.componentId)
         when (idMap["sub_action"]) {
-            "admin" -> {
+            "modify-admin" -> {
                 step.setAdminIds(event.values.map { it.idLong })
             }
 
-            "category" -> {
+            "modify-category" -> {
                 val categoryId = event.values[0].idLong
                 if (categoryId != 0L && event.guild!!.getCategoryById(categoryId) == null) {
                     event.reply("Cannot find a category with the id ${categoryId}!").setEphemeral(true).queue()
@@ -274,28 +272,28 @@ internal object StepManager {
         val step = steps[event.user.idLong] ?: return event.deferEdit().queue()
 
         when (idMap["sub_action"]) {
-            "author" -> {
+            "modify-author" -> {
                 step.setAuthor(event.getValue("author")?.asString, event.getValue("image")?.asString)
             }
 
-            "content" -> {
+            "modify-content" -> {
                 step.setTitle(event.getValue("title")?.asString)
                 step.setDesc(event.getValue("desc")?.asString)
             }
 
-            "reason" -> {
+            "modify-reason" -> {
                 step.setReason(event.getValue("reason")!!.asString)
             }
 
-            "color" -> {
+            "modify-embed-color" -> {
                 step.setColor(
                     Integer.parseInt(event.getValue("color")!!.asString.substring(1), 16)
                 )
             }
 
-            "btnContent" -> {
-                val btnText = event.getValue("btnText")
-                val btnEmoji = event.getValue("btnEmoji")
+            "modify-btn-text" -> {
+                val btnText = event.getValue("btn-text")
+                val btnEmoji = event.getValue("btn-emoji")
 
                 if (btnText == null && btnEmoji == null) {
                     event.reply("Either ButtonText or ButtonEmoji must be provided!").setEphemeral(true).queue()

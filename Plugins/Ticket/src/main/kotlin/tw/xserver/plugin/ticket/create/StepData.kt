@@ -124,7 +124,7 @@ internal class Step(
                     "tt@btn" to ButtonImpl(
                         componentIdManager.build(
                             ComponentField("action", "press"),
-                            ComponentField("btn_index", 0),
+                            ComponentField("btn_index", "0"),
                         ),
                         data.btnText,
                         data.btnStyle,
@@ -144,12 +144,13 @@ internal class Step(
             "confirm-add",
             locale,
             modelMapper = mapOf(
+                "tt@embed" to previewEmbed,
                 "tt@btn" to message.actionRows[0].components.apply {
                     add(
                         ButtonImpl(
                             componentIdManager.build(
                                 ComponentField("action", "press"),
-                                ComponentField("btn_index", size),
+                                ComponentField("btn_index", size.toString()),
                             ),
                             data.btnText,
                             data.btnStyle,
@@ -161,7 +162,7 @@ internal class Step(
             )
         ).build()
 
-        return message.editMessageComponents(messageEditData.components)
+        return message.editMessage(messageEditData)
     }
 
 

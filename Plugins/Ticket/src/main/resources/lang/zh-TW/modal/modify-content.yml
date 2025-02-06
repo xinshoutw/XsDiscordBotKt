@@ -1,6 +1,6 @@
 uid:
   action: "create"
-  sub_action: "content"
+  sub_action: "modify-content"
 title: "創建客服單"
 text_inputs:
   - uid: "title"

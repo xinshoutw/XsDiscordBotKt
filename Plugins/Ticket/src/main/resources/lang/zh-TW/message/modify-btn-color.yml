@@ -10,25 +10,29 @@ components:
     buttons:
       - uid:
           action: "create"
-          sub_action: "btn_color-primary"
+          sub_action: "modify-btn-color-submit"
+          color_index: 1
         style: 1
         label: "藍色"
 
       - uid:
           action: "create"
-          sub_action: "btn_color-secondary"
+          sub_action: "modify-btn-color-submit"
+          color_index: 2
         style: 2
         label: "灰色"
 
       - uid:
           action: "create"
-          sub_action: "btn_color-success"
+          sub_action: "modify-btn-color-submit"
+          color_index: 3
         style: 3
         label: "綠色"
 
       - uid:
           action: "create"
-          sub_action: "btn_color-danger"
+          sub_action: "modify-btn-color-submit"
+          color_index: 4
         style: 4
         label: "紅色"
 

@@ -1,3 +1,6 @@
+embeds:
+  - model_key: "tt@embed"
+
 components:
   - !ButtonsComponent
     buttons:

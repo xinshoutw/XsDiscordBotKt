@@ -10,31 +10,32 @@ components:
     buttons:
       - uid:
           action: "create"
-          sub_action: "btn_color"
+          sub_action: "modify-btn-color-submit"
           color_index: 1
         style: 1
         label: "BLUE"
 
       - uid:
           action: "create"
-          sub_action: "btn_color"
+          sub_action: "modify-btn-color-submit"
           color_index: 2
         style: 2
         label: "GRAY"
 
       - uid:
           action: "create"
-          sub_action: "btn_color"
+          sub_action: "modify-btn-color-submit"
           color_index: 3
         style: 3
         label: "GREEN"
 
       - uid:
           action: "create"
-          sub_action: "btn_color"
+          sub_action: "modify-btn-color-submit"
           color_index: 4
         style: 4
         label: "RED"
+
 
   - !ButtonsComponent
     buttons:

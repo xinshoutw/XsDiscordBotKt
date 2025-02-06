@@ -1,9 +1,9 @@
 uid:
   action: "create"
-  sub_action: "btnContent"
+  sub_action: "modify-btn-content"
 title: "創建客服單"
 text_inputs:
-  - uid: "btnText"
+  - uid: "btn-text"
     label: "設定按鈕文字" # Nonnull, 45 length limit
     style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
     value: "%tt@btn-text%"
@@ -11,7 +11,7 @@ text_inputs:
     max_length: 80
     required: false
 
-  - uid: "btnEmoji"
+  - uid: "btn-emoji"
     label: "設定按鈕符號" # Nonnull, 45 length limit
     style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
     value: "%tt@btn-emoji%"

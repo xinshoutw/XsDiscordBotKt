@@ -7,13 +7,12 @@ components:
       - model_key: "tt@btn-demo"
 
   - !EntitySelectMenu
-    entity_select_menu:
-      uid: # Nonnull
-        action: "create"
-        sub_action: "admin"
-      placeholder: "Empty here to by default" # Ignorable
-      max: 25
-      select_target_type: "ROLE" # allowed values [ "ROLE", "USER", "CHANNEL" ]
+    uid: # Nonnull
+      action: "create"
+      sub_action: "modify-admin"
+    placeholder: "Empty here to by default" # Ignorable
+    max: 25
+    select_target_type: "ROLE" # allowed values [ "ROLE", "USER", "CHANNEL" ]
 
   - !ButtonsComponent
     buttons:

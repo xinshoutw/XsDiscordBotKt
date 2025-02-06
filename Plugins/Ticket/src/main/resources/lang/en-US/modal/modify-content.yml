@@ -1,6 +1,6 @@
 uid:
   action: "create"
-  sub_action: "content"
+  sub_action: "modify-content"
 title: "Create Ticket"
 text_inputs:
   - uid: "title"

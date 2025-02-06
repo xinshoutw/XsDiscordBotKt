@@ -1,6 +1,6 @@
 uid:
   action: "create"
-  sub_action: "reason"
+  sub_action: "modify-reason"
 title: "創建客服單"
 text_inputs:
   - uid: "reason"

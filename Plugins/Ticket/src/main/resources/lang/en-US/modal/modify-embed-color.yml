@@ -1,6 +1,6 @@
 uid:
   action: "create"
-  sub_action: "embed-color"
+  sub_action: "modify-embed-color"
 title: "Create Ticket"
 text_inputs:
   - uid: "color"

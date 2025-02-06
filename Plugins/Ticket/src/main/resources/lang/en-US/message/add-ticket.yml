@@ -10,7 +10,7 @@ components:
     buttons:
       - uid:
           action: "create"
-          sub_action: "btn_category"
+          sub_action: "modify-category"
         style: 1
         label: "set category"
 
@@ -18,30 +18,30 @@ components:
     buttons:
       - uid:
           action: "create"
-          sub_action: "btn_btn-text"
+          sub_action: "modify-btn-text"
         style: 1
         label: "set btn text"
 
       - uid:
           action: "create"
-          sub_action: "btn_btn-color"
+          sub_action: "modify-btn-color"
         style: 1
         label: "set btn color"
 
       - uid:
           action: "create"
-          sub_action: "btn_reason"
+          sub_action: "modify-reason"
         style: 1
         label: "set ask title"
 
       - uid:
           action: "create"
-          sub_action: "btn_admin"
+          sub_action: "modify-admin"
         style: 1
         label: "set allow role"
 
       - uid:
           action: "create"
-          sub_action: "btn_confirm"
+          sub_action: "confirm-create"
         style: 3
         label: "confirm create"

@@ -1,18 +1,18 @@
 uid:
   action: "create"
-  sub_action: "author"
-title: "創建客服單"
+  sub_action: "modify-author"
+title: "Create Ticket"
 text_inputs:
   - uid: "author"
-    label: "設定作者名稱" # Nonnull, 45 length limit
+    label: "Modify author name" # Nonnull, 45 length limit
     style: "SHORT" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
     value: "%tt@author%"
-    placeholder: "Ticket 服務"
+    placeholder: "Ticket Service"
     max_length: 256
     required: false
 
   - uid: "image"
-    label: "設定作者圖示" # Nonnull, 45 length limit
+    label: "Modify Author Image" # Nonnull, 45 length limit
     style: "PARAGRAPH" # Nonnull, allowed values: [ "SHORT", "PARAGRAPH" ]
     value: "%tt@author-icon-url%"
     placeholder: "https://img .... 5_wh1200.png"
