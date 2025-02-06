@@ -89,7 +89,7 @@ data class MessageDataSerializer(
 
                 val uid: Map<String, String>? = null,
                 val url: String? = null,
-                val style: Int,
+                val style: Int = 1,
                 val label: String? = null,
                 val disabled: Boolean = false,
                 val emoji: EmojiSetting? = null
