@@ -21,4 +21,10 @@ class JsonAryGuildFileManager {
     operator fun get(guildId: Long): JsonAryFileManager {
         return mapper.getOrElse(guildId) { JsonAryFileManager(File(this.dataDirectory, "${guildId}.json")) }
     }
+
+    @Synchronized
+    fun remove(guildId: Long) {
+        mapper.remove(guildId)
+        dataDirectory.resolve("${guildId}.json").delete()
+    }
 }
