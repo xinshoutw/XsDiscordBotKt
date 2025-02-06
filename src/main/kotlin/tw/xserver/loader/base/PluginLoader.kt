@@ -22,6 +22,7 @@ internal object PluginLoader {
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
     val intents: EnumSet<GatewayIntent> = EnumSet.noneOf(GatewayIntent::class.java)
     val cacheFlags: EnumSet<CacheFlag> = EnumSet.noneOf(CacheFlag::class.java)
+    val memberCachePolicies: MutableList<String> = mutableListOf()
     val guildCommands = mutableListOf<CommandData>()
     val globalCommands = mutableListOf<CommandData>()
     val listenersQueue = ArrayDeque<PluginEvent>()
@@ -60,6 +61,7 @@ internal object PluginLoader {
 
                         intents.addAll(config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() })
                         cacheFlags.addAll(config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() })
+                        memberCachePolicies.addAll(config.requireMemberCachePolicies)
                         logger.info("==ADD==> {}", config.name)
                     }
                 } catch (e: Exception) {

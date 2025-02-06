@@ -4,13 +4,13 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.base.SettingsLoader.token
 import tw.xserver.loader.builtin.statuschanger.StatusChanger
 import tw.xserver.loader.logger.InteractionLogger
+import tw.xserver.loader.plugin.yaml.processMemberCachePolicy
 import tw.xserver.loader.util.Arguments
 import kotlin.system.exitProcess
 
@@ -41,25 +41,25 @@ object BotLoader {
         }
 
         PluginLoader.preLoad()
-
         jdaBot = JDABuilder.createDefault(Arguments.botToken ?: token)
             .setBulkDeleteSplittingEnabled(false)
-            .setMemberCachePolicy(MemberCachePolicy.OWNER)
             .disableCache(
                 CacheFlag.ACTIVITY,
                 CacheFlag.VOICE_STATE,
                 CacheFlag.CLIENT_STATUS,
                 CacheFlag.ONLINE_STATUS,
             )
-            .enableCache(PluginLoader.cacheFlags)
             .setEnabledIntents(
                 GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.SCHEDULED_EVENTS,
                 GatewayIntent.GUILD_EXPRESSIONS,
             )
+            .setMemberCachePolicy(processMemberCachePolicy(PluginLoader.memberCachePolicies))
+            .enableCache(PluginLoader.cacheFlags)
             .enableIntents(PluginLoader.intents)
             .build()
             .awaitReady()
+
         bot = jdaBot.selfUser
 
         jdaBot.apply {
