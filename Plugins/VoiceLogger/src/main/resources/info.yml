@@ -9,3 +9,6 @@ require_intents:
 
 require_cache_flags:
   - VOICE_STATE
+
+require_member_cache_policies:
+  - VOICE
