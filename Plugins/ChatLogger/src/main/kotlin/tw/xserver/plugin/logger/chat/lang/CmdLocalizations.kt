@@ -1,5 +1,6 @@
 package tw.xserver.plugin.logger.chat.lang
 
+import tw.xserver.loader.localizations.LocalTemplate
 import tw.xserver.loader.localizations.LocaleData
 
 internal object CmdLocalizations {
@@ -11,12 +12,7 @@ internal object CmdLocalizations {
         val subcommands = SubCommandsLd()
 
         internal class SubCommandsLd {
-            val setting = SimpleCommandLd()
-
-            internal class SimpleCommandLd {
-                val name = LocaleData()
-                val description = LocaleData()
-            }
+            val setting = LocalTemplate.NDLocalData()
         }
     }
 }
