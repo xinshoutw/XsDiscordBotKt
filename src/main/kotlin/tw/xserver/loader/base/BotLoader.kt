@@ -12,6 +12,7 @@ import tw.xserver.loader.builtin.statuschanger.StatusChanger
 import tw.xserver.loader.logger.InteractionLogger
 import tw.xserver.loader.plugin.yaml.processMemberCachePolicy
 import tw.xserver.loader.util.Arguments
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 /**
@@ -19,7 +20,7 @@ import kotlin.system.exitProcess
  */
 object BotLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    val ROOT_PATH: String = System.getProperty("user.dir")
+    val ROOT_PATH: String = Paths.get("").toAbsolutePath().toString()
     lateinit var jdaBot: JDA
         private set
     lateinit var bot: User
