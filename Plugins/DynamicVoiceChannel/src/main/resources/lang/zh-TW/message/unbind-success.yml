@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "取消綁定成功"
+    color_code: "#00FF00"

@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "The channel must be under the category"
+    color_code: "#FF0000"

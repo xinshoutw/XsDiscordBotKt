@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "取消綁定失敗，找不到設定記錄"
+    color_code: "#FF0000"

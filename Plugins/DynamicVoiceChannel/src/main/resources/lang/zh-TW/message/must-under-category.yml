@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "語音頻道必須在類別(Category)下"
+    color_code: "#FF0000"

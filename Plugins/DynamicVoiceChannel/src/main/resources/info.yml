@@ -4,3 +4,12 @@ name: DynamicVoiceChannel
 version: '0.2.0'
 depend_plugins:
   - SQLiteAPI
+
+require_intents:
+  - GUILD_VOICE_STATES
+
+require_cache_flags:
+  - VOICE_STATE
+
+require_member_cache_policies:
+  - VOICE
