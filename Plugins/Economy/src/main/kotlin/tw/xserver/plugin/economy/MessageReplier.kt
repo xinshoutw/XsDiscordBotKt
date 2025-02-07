@@ -54,7 +54,7 @@ internal object MessageReplier {
         user: User,
         userLocale: DiscordLocale,
     ): MessageEditData {
-        val substitutor = user.let { Placeholder.getSubstitutor(it) }
+        val substitutor = user.let { Placeholder.get(it) }
         val builder = creator.getCreateBuilder(key, userLocale, substitutor)
         val type: Economy.Type = when (key) {
             "top-money" -> Economy.Type.Money

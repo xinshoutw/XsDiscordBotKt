@@ -79,7 +79,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "preview-reason",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).put(
+                substitutor = Placeholder.get(event).put(
                     "tt@reason-title", step.data.reasonTitle
                 )
             ).build()
@@ -93,7 +93,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "modify-author",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).putAll(
+                substitutor = Placeholder.get(event).putAll(
                     "tt@author" to (step.data.author ?: ""),
                     "tt@author-icon-url" to (step.data.authorIconUrl ?: "")
                 )
@@ -108,7 +108,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "modify-content",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).putAll(
+                substitutor = Placeholder.get(event).putAll(
                     "tt@title" to (step.data.title ?: ""),
                     "tt@description" to (step.data.description ?: "")
                 )
@@ -140,7 +140,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "modify-embed-color",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).put(
+                substitutor = Placeholder.get(event).put(
                     "tt@hex-color", String.format("#%06X", step.data.color and 0xFFFFFF)
                 )
             ).build()
@@ -154,7 +154,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "modify-btn-text",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).putAll(
+                substitutor = Placeholder.get(event).putAll(
                     "tt@btn-text" to (step.data.btnText ?: ""),
                     "tt@btn-emoji" to (step.data.btnEmoji?.asReactionCode ?: "")
                 )
@@ -186,7 +186,7 @@ internal object StepManager {
             modalCreator.getModalBuilder(
                 "modify-reason-title",
                 event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event).putAll(
+                substitutor = Placeholder.get(event).putAll(
                     mapOf(
                         "tt@reason-title" to step.data.reasonTitle
                     )

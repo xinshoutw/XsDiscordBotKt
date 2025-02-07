@@ -102,7 +102,7 @@ internal object Ticket {
                     modalCreator.getModalBuilder(
                         "press-ticket",
                         event.userLocale,
-                        substitutor = Placeholder.getSubstitutor(event).putAll(
+                        substitutor = Placeholder.get(event).putAll(
                             mapOf(
                                 "tt@msg-id" to event.messageId,
                                 "tt@btn-index" to idMap["btn_index"] as String,

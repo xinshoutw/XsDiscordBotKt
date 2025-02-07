@@ -59,7 +59,7 @@ internal object VoiceLogger {
         getSettingMenu(
             dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
             event.userLocale,
-            Placeholder.getSubstitutor(event)
+            Placeholder.get(event)
         )
     ).queue()
 
@@ -115,7 +115,7 @@ internal object VoiceLogger {
                 getSettingMenu(
                     channelData,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 )
             )
         }.queue()
@@ -174,7 +174,7 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.getSubstitutor(member).putAll(
+            val substitutor = Placeholder.get(member).putAll(
                 "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
@@ -190,7 +190,7 @@ internal object VoiceLogger {
                 creator.getCreateBuilder(
                     key,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 ).build()
             )
         ).queue()
@@ -207,7 +207,7 @@ internal object VoiceLogger {
                 getSettingMenu(
                     channelData,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 )
             )
         }.queue()
@@ -223,7 +223,7 @@ internal object VoiceLogger {
                 creator.getCreateBuilder(
                     "delete",
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 ).build()
             )
         ).queue()
@@ -236,7 +236,7 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.getSubstitutor(member).putAll(
+            val substitutor = Placeholder.get(member).putAll(
                 "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
@@ -254,7 +254,7 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.getSubstitutor(member).putAll(
+            val substitutor = Placeholder.get(member).putAll(
                 "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
@@ -270,7 +270,7 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.getSubstitutor(data.member).putAll(
+        val substitutor = Placeholder.get(data.member).putAll(
             "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
             "vl_channel_join_mention" to data.channelJoin.asMention,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
@@ -287,7 +287,7 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.getSubstitutor(data.member).putAll(
+        val substitutor = Placeholder.get(data.member).putAll(
             "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
             "vl_channel_join_mention" to data.channelJoin.asMention,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
@@ -304,7 +304,7 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.getSubstitutor(data.member).putAll(
+        val substitutor = Placeholder.get(data.member).putAll(
             "vl_category_left_mention" to data.channelLeft!!.parentCategory!!.asMention,
             "vl_channel_left_mention" to data.channelLeft.asMention,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,

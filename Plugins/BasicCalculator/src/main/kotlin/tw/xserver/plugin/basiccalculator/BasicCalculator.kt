@@ -33,7 +33,7 @@ internal object BasicCalculator {
                     creator.getCreateBuilder(
                         "error",
                         event.userLocale,
-                        Placeholder.getSubstitutor(event.member!!).putAll(
+                        Placeholder.get(event.member!!).putAll(
                             "bc_question" to formula,
                             "bc_error" to (e.message ?: "Unknown error"),
                         )
@@ -47,7 +47,7 @@ internal object BasicCalculator {
             creator.getCreateBuilder(
                 "basic-calculate",
                 event.userLocale,
-                Placeholder.getSubstitutor(event.member!!).putAll(
+                Placeholder.get(event.member!!).putAll(
                     "bc_question" to formula,
                     "bc_answer" to ans,
                     "bc_answer_round" to ans.split('.', limit = 1)[0],

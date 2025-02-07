@@ -65,7 +65,7 @@ internal object Feedbacker {
             messageCreator.getCreateBuilder(
                 key = "ask-message",
                 locale = event.userLocale,
-                substitutor = Placeholder.getSubstitutor(event.getOption("member")!!.asMember!!)
+                substitutor = Placeholder.get(event.getOption("member")!!.asMember!!)
             ).build()
         ).flatMap {
             event.hook.editOriginal(config.formSuccess)
@@ -138,14 +138,14 @@ internal object Feedbacker {
             modalCreator.getModalBuilder(
                 key = "fill-form",
                 locale = locale,
-                substitutor = Placeholder.getSubstitutor(event).put("fb_star_count", stars.toString())
+                substitutor = Placeholder.get(event).put("fb_star_count", stars.toString())
             ).build()
         ).queue()
     }
 
     fun handleFormSubmit(event: ModalInteractionEvent, idMap: Map<String, Any>) {
         val stars = idMap["star_count"] as Int
-        val substitutor = Placeholder.getSubstitutor(event.member!!)
+        val substitutor = Placeholder.get(event.member!!)
             .putAll(
                 "fb_stars" to "${"★ ".repeat(stars)}${"☆ ".repeat(5 - stars)}",
                 "fb_content" to event.getValue("form")!!.asString

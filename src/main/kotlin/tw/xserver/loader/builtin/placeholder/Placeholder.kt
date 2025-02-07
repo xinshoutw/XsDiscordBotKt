@@ -17,14 +17,14 @@ object Placeholder {
     private val memberPlaceholder: MutableMap<Long, Substitutor> = HashMap()
 
     fun update(user: User, vararg placeholders: Map<String, String>) {
-        getSubstitutor(user).putAll(placeholders.fold(mutableMapOf()) { acc, map -> acc.apply { putAll(map) } })
+        get(user).putAll(placeholders.fold(mutableMapOf()) { acc, map -> acc.apply { putAll(map) } })
     }
 
     fun update(user: User, vararg placeholders: Pair<String, String>) {
-        getSubstitutor(user).putAll(placeholders.toMap())
+        get(user).putAll(placeholders.toMap())
     }
 
-    fun getSubstitutor(user: User): Substitutor {
+    fun get(user: User): Substitutor {
         return userPlaceholder.getOrPut(
             user.idLong
         ) {
@@ -38,7 +38,7 @@ object Placeholder {
         }
     }
 
-    fun getSubstitutor(member: Member): Substitutor {
+    fun get(member: Member): Substitutor {
         return memberPlaceholder.getOrPut(
             member.idLong,
         ) { Substitutor(globalSubstitutor, "user_id" to member.id) }.apply { // force update some changeable data
@@ -54,8 +54,8 @@ object Placeholder {
         }
     }
 
-    fun getSubstitutor(event: SlashCommandInteractionEvent): Substitutor {
-        return (event.member?.let { getSubstitutor(it) } ?: getSubstitutor(event.user)).apply {
+    fun get(event: SlashCommandInteractionEvent): Substitutor {
+        return (event.member?.let { get(it) } ?: get(event.user)).apply {
             putAll(
                 "command_name" to event.name,
                 "full_command_name" to event.fullCommandName,
@@ -76,8 +76,8 @@ object Placeholder {
         }
     }
 
-    fun getSubstitutor(event: EntitySelectInteraction): Substitutor {
-        return (event.member?.let { getSubstitutor(it) } ?: getSubstitutor(event.user)).apply {
+    fun get(event: EntitySelectInteraction): Substitutor {
+        return (event.member?.let { get(it) } ?: get(event.user)).apply {
             putAll(
                 "component_id" to event.componentId,
                 "component_min" to event.component.minValues.toString(),
@@ -94,8 +94,8 @@ object Placeholder {
         }
     }
 
-    fun getSubstitutor(event: StringSelectInteractionEvent): Substitutor {
-        return (event.member?.let { getSubstitutor(it) } ?: getSubstitutor(event.user)).apply {
+    fun get(event: StringSelectInteractionEvent): Substitutor {
+        return (event.member?.let { get(it) } ?: get(event.user)).apply {
             putAll(
                 "component_id" to event.componentId,
                 "component_min" to event.component.minValues.toString(),
@@ -112,8 +112,8 @@ object Placeholder {
         }
     }
 
-    fun getSubstitutor(event: ButtonInteractionEvent): Substitutor {
-        return (event.member?.let { getSubstitutor(it) } ?: getSubstitutor(event.user)).apply {
+    fun get(event: ButtonInteractionEvent): Substitutor {
+        return (event.member?.let { get(it) } ?: get(event.user)).apply {
             putAll(
                 "component_id" to event.componentId,
                 "component_label" to event.component.label,

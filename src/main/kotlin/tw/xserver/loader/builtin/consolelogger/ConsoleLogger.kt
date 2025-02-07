@@ -71,7 +71,7 @@ internal object ConsoleLogger : ListenerAdapter() {
     private fun sendChannel(event: GenericInteractionCreateEvent, console: ConsoleChannel) {
         val interactionString = when (event) {
             is SlashCommandInteractionEvent -> {
-                Placeholder.getSubstitutor(event.user)
+                Placeholder.get(event.user)
                     .putAll(
                         "cl_type" to "CMD",
                         "cl_interaction_string" to event.commandString
@@ -79,7 +79,7 @@ internal object ConsoleLogger : ListenerAdapter() {
             }
 
             is ButtonInteractionEvent -> {
-                Placeholder.getSubstitutor(event.user)
+                Placeholder.get(event.user)
                     .putAll(
                         "cl_type" to "BTN",
                         "cl_interaction_string" to event.componentId
@@ -87,7 +87,7 @@ internal object ConsoleLogger : ListenerAdapter() {
             }
 
             is ModalInteractionEvent -> {
-                Placeholder.getSubstitutor(event.user)
+                Placeholder.get(event.user)
                     .putAll(
                         "cl_type" to "BTN",
                         "cl_interaction_string" to event.modalId

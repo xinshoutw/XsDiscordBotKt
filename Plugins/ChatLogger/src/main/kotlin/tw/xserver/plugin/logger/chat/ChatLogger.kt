@@ -55,7 +55,7 @@ internal object ChatLogger {
         getSettingMenu(
             dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
             event.userLocale,
-            Placeholder.getSubstitutor(event)
+            Placeholder.get(event)
         )
     ).queue()
 
@@ -111,7 +111,7 @@ internal object ChatLogger {
                 getSettingMenu(
                     channelData,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 )
             )
         }.queue()
@@ -147,7 +147,7 @@ internal object ChatLogger {
             )
 
             if (listenChannelIds.isEmpty()) return
-            val substitutor = Placeholder.getSubstitutor(event.member!!).putAll(
+            val substitutor = Placeholder.get(event.member!!).putAll(
                 "cl_msg_after_url" to event.message.jumpUrl,
                 "cl_category_mention" to channel.asTextChannel().parentCategory!!.asMention,
                 "cl_channel_mention" to channel.asMention,
@@ -184,7 +184,7 @@ internal object ChatLogger {
             if (listenChannelIds.isEmpty()) return
 
             event.guild.retrieveMemberById(userId).queue { member ->
-                val substitutor = Placeholder.getSubstitutor(member).putAll(
+                val substitutor = Placeholder.get(member).putAll(
                     "cl_category_mention" to channel.asTextChannel().parentCategory!!.asMention,
                     "cl_channel_mention" to channel.asMention,
                     "cl_change_count" to updateCount.toString(),
@@ -222,7 +222,7 @@ internal object ChatLogger {
                 creator.getCreateBuilder(
                     key,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 ).build()
             )
         ).queue()
@@ -244,7 +244,7 @@ internal object ChatLogger {
                 getSettingMenu(
                     channelData,
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 )
             )
         }.queue()
@@ -260,7 +260,7 @@ internal object ChatLogger {
                 creator.getCreateBuilder(
                     "delete",
                     event.userLocale,
-                    Placeholder.getSubstitutor(event)
+                    Placeholder.get(event)
                 ).build()
             )
         ).queue()

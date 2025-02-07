@@ -45,7 +45,7 @@ internal object Economy {
     private fun handleButtonBalance(event: ButtonInteractionEvent, hook: InteractionHook) {
         updatePapi(event.user)
         hook.editOriginal(
-            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.getSubstitutor(event.user))
+            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.get(event.user))
         ).queue()
     }
 
@@ -55,7 +55,7 @@ internal object Economy {
         val targetUser = getTargetUser(event)
         updatePapi(targetUser)
         event.hook.editOriginal(
-            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.getSubstitutor(targetUser))
+            MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.get(targetUser))
         ).queue()
     }
 
@@ -73,7 +73,7 @@ internal object Economy {
                 val before = data.money
                 data.addMoney(value)
                 saveAndUpdate(targetUser, data, "economy_money_before" to "$before")
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
 
@@ -86,7 +86,7 @@ internal object Economy {
                     "economy_money_before" to "$beforeMoney",
                     "economy_cost_before" to "$beforeCost"
                 )
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
                 storageManager.sortCostBoard()
             }
@@ -95,7 +95,7 @@ internal object Economy {
                 val before = data.money
                 data.setMoney(value)
                 saveAndUpdate(targetUser, data, "economy_money_before" to "$before")
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
 
@@ -103,7 +103,7 @@ internal object Economy {
                 val before = data.cost
                 data.addCost(value)
                 saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
 
@@ -111,7 +111,7 @@ internal object Economy {
                 val before = data.cost
                 data.removeCost(value)
                 saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
 
@@ -119,7 +119,7 @@ internal object Economy {
                 val before = data.cost
                 data.setCost(value)
                 saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
-                reply(event, Placeholder.getSubstitutor(targetUser))
+                reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
         }
