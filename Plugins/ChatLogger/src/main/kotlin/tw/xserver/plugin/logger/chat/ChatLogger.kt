@@ -149,7 +149,7 @@ internal object ChatLogger {
             if (listenChannelIds.isEmpty()) return
             val substitutor = Placeholder.get(event.member!!).putAll(
                 "cl_msg_after_url" to event.message.jumpUrl,
-                "cl_category_mention" to channel.asTextChannel().parentCategory!!.asMention,
+                "cl_category_mention" to channel.asStandardGuildChannel().parentCategory!!.asMention,
                 "cl_channel_mention" to channel.asMention,
                 "cl_change_count" to updateCount.toString(),
                 "cl_msg_before" to oldMessage,
@@ -185,7 +185,7 @@ internal object ChatLogger {
 
             event.guild.retrieveMemberById(userId).queue { member ->
                 val substitutor = Placeholder.get(member).putAll(
-                    "cl_category_mention" to channel.asTextChannel().parentCategory!!.asMention,
+                    "cl_category_mention" to channel.asStandardGuildChannel().parentCategory!!.asMention,
                     "cl_channel_mention" to channel.asMention,
                     "cl_change_count" to updateCount.toString(),
                     "cl_msg_before" to oldMessage,
