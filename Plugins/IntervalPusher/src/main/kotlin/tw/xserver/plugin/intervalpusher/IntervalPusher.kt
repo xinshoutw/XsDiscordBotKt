@@ -76,7 +76,7 @@ internal class IntervalPusher(
                                 else -> logger.error("Query URL $updatedUrl failed, code: ${response.code}!")
                             }
                         } else {
-                            logger.info("Successfully queried URL: $updatedUrl.")
+                            logger.debug("Successfully queried URL: $updatedUrl.")
                         }
                     }
                 } catch (e: IOException) {
