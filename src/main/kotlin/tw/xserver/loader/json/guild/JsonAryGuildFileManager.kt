@@ -23,7 +23,7 @@ class JsonAryGuildFileManager {
     }
 
     @Synchronized
-    fun remove(guildId: Long) {
+    fun removeAndSave(guildId: Long) {
         mapper.remove(guildId)
         dataDirectory.resolve("${guildId}.json").delete()
     }
