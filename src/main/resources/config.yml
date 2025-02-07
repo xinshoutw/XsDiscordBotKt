@@ -16,4 +16,4 @@ builtin_settings:
     - guild_id: 858672865355890708
       channel_id: 1277193832378667040
       log_type: [ "command", "button", "modal" ]
-      format: "[%cl_type%] %user_mention% `%cl_interaction_string%`"
+      format: "[%cl_type%] %user_name% `%cl_interaction_string%`"
