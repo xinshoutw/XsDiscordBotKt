@@ -65,12 +65,16 @@ internal class MessageBuilder(
     }
 
     private fun setupEmbeds() {
+        if (messageData.embeds.isEmpty()) return
+
         messageData.embeds.let { embeds ->
             builder.setEmbeds(buildEmbeds(embeds))
         }
     }
 
     private fun setupComponents() {
+        if (messageData.components.isEmpty()) return
+
         messageData.components.let { components ->
             builder.setComponents(buildComponents(components))
         }
