@@ -10,7 +10,7 @@ data class MainConfigSerializer(
 
     @SerialName("user_id")
     val userId: String,
-    val prefix: String,
+    val prefix: List<String>,
 
     @SerialName("delay_millis")
     val delayMillis: Long,

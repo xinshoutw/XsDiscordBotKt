@@ -20,7 +20,7 @@ internal object TicketAddons {
 
     fun onChannelCreate(event: ChannelCreateEvent) {
         if (!event.isFromGuild && event.guild.id != config.guildId) return
-        if (!event.channel.name.startsWith(config.prefix)) return
+        if (config.prefix.none { event.channel.name.startsWith(it) }) return
 
         event.guild.retrieveMemberById(config.userId).queue {
             if (it.onlineStatus != OnlineStatus.OFFLINE) return@queue

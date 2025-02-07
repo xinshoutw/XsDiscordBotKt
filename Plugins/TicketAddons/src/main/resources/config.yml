@@ -1,4 +1,6 @@
 guild_id: 858672865355890708
 user_id: 270062130470846465
-prefix: 客服單-
+prefix:
+  - 客服單-
+  - ticket-
 delay_millis: 2000
