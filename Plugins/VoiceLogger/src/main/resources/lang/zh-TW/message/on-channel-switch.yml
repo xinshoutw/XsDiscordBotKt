@@ -15,10 +15,10 @@ embeds:
         value: "%vl_category_left_mention%"
 
       - name: "`退出頻道`"
-        value: "%vl_channel_left_mention%"
+        value: "%vl_channel_left_mention% (%vl_channel_left_name%)"
 
       - name: "`進入類別`"
         value: "%vl_category_join_mention%"
 
       - name: "`進入頻道`"
-        value: "%vl_channel_join_mention%"
+        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"

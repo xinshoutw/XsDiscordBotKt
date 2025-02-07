@@ -15,10 +15,10 @@ embeds:
         value: "%vl_category_left_mention%"
 
       - name: "`Channel Left`"
-        value: "%vl_channel_left_mention%"
+        value: "%vl_channel_left_mention% (%vl_channel_left_name%)"
 
       - name: "`Category Join`"
         value: "%vl_category_join_mention%"
 
       - name: "`Channel Join`"
-        value: "%vl_channel_join_mention%"
+        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"

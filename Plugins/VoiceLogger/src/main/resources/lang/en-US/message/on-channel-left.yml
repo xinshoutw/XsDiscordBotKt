@@ -15,4 +15,4 @@ embeds:
         value: "%vl_category_left_mention%"
 
       - name: "`Channel`"
-        value: "%vl_channel_left_mention%"
+        value: "%vl_channel_left_mention% (%vl_channel_left_name%)"

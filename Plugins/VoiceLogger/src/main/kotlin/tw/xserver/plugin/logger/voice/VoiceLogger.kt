@@ -273,6 +273,7 @@ internal object VoiceLogger {
         val substitutor = Placeholder.get(data.member).putAll(
             "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
             "vl_channel_join_mention" to data.channelJoin.asMention,
+            "vl_channel_join_name" to data.channelJoin.name,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
         )
         sendListenChannel("on-channel-join", event.guild, listenChannelIds, substitutor)
@@ -291,8 +292,10 @@ internal object VoiceLogger {
             "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
             "vl_channel_join_mention" to data.channelJoin.asMention,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
+            "vl_channel_join_name" to data.channelJoin.name,
             "vl_category_left_mention" to data.channelLeft!!.parentCategory!!.asMention,
             "vl_channel_left_mention" to data.channelLeft.asMention,
+            "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
         sendListenChannel("on-channel-switch", event.guild, listenChannelIds, substitutor)
@@ -307,6 +310,7 @@ internal object VoiceLogger {
         val substitutor = Placeholder.get(data.member).putAll(
             "vl_category_left_mention" to data.channelLeft!!.parentCategory!!.asMention,
             "vl_channel_left_mention" to data.channelLeft.asMention,
+            "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
         sendListenChannel("on-channel-left", event.guild, listenChannelIds, substitutor)

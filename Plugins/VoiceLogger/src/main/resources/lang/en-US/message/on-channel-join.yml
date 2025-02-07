@@ -15,4 +15,4 @@ embeds:
         value: "%vl_category_join_mention%"
 
       - name: "`Channel`"
-        value: "%vl_channel_join_mention%"
+        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"
