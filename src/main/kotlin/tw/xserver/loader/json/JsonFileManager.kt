@@ -30,7 +30,6 @@ abstract class JsonFileManager<T : JsonElement>(
             data = Gson().fromJson(fileText, dataType)
 
         } catch (e: IllegalStateException) {
-            logger.error("Bad format for file: {}", file.name, e)
             data = defaultFileAndData()
 
         } catch (e: IOException) {
