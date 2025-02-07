@@ -23,27 +23,33 @@ abstract class JsonFileManager<T : JsonElement>(
 
     @Synchronized
     private fun initData() {
+        if (!file.exists()) {
+            logger.debug("File {} does not exist. Creating default file.", file.absolutePath)
+            data = defaultFileAndData()
+            save()
+            return
+        }
         try {
-            check(file.exists()) { "File does not exist." }
             val fileText = file.readText()
-            check(fileText.isNotEmpty()) { "File is empty." }
-            data = Gson().fromJson(fileText, dataType)
-
-        } catch (e: IllegalStateException) {
-            data = defaultFileAndData()
-
-        } catch (e: IOException) {
-            logger.error("Cannot read file.", e)
-            data = defaultFileAndData()
-
+            if (fileText.isEmpty()) {
+                logger.debug("File {} is empty. Using default data.", file.absolutePath)
+                data = defaultFileAndData()
+                save()
+            } else {
+                data = gson.fromJson(fileText, dataType)
+            }
         } catch (e: JsonSyntaxException) {
-            logger.error("Bad format for file: {}", file.name, e)
+            logger.error("Bad JSON format in file: {}. Resetting to default data.", file.absolutePath, e)
             data = defaultFileAndData()
-            logger.info("File {} has been reset.", file.name)
-
+            save()
+        } catch (e: IOException) {
+            logger.error("Cannot read file: {}.", file.absolutePath, e)
+            data = defaultFileAndData()
+            save()
         } catch (e: Exception) {
-            logger.error("Unknown error.", e)
+            logger.error("Unknown error reading file: {}.", file.absolutePath, e)
             data = defaultFileAndData()
+            save()
         }
     }
 
@@ -55,16 +61,22 @@ abstract class JsonFileManager<T : JsonElement>(
     fun save() {
         ensureNotDeleted()
         try {
+            // 在儲存前記錄日誌
+            logger.debug("Saving file: {}", file.absolutePath)
             file.writeText(data.toString())
         } catch (e: IOException) {
-            logger.error("Cannot save file.", e)
+            logger.error("Cannot save file: {}.", file.absolutePath, e)
         }
     }
 
     @Synchronized
     fun delete() {
         ensureNotDeleted()
-        file.delete()
+        if (file.delete()) {
+            logger.debug("File {} deleted successfully.", file.absolutePath)
+        } else {
+            logger.error("Failed to delete file {}.", file.absolutePath)
+        }
         isDeleted = true
     }
 
@@ -75,7 +87,7 @@ abstract class JsonFileManager<T : JsonElement>(
 
     private fun ensureNotDeleted() {
         if (isDeleted)
-            throw IllegalStateException("Cannot perform operation: This class couldn't be used after delete method called.")
+            throw IllegalStateException("Cannot perform operation: This class cannot be used after delete() has been called.")
     }
 
     companion object {
