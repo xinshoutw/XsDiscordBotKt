@@ -49,7 +49,7 @@ internal object StepManager {
 
     /* ------------------------------------- */
     fun onButtonInteraction(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        when (idMap["sub_action"]) { // TODO: replace to new key
+        when (idMap["sub_action"]) {
             "prev" -> previewReason(event)
 
             "modify-author" -> authorForm(event)
