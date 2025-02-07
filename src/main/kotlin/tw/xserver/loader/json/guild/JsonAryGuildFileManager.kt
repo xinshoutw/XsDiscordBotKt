@@ -13,7 +13,7 @@ class JsonAryGuildFileManager {
             return
         }
 
-        for (file in dataDirectory.listFiles()!!) {
+        for (file in dataDirectory.listFiles().filter { it.isFile && it.extension == "json" }) {
             mapper.put(file.nameWithoutExtension.toLong(), JsonAryFileManager(file))
         }
     }
