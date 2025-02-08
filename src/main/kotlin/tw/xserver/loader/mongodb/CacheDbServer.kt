@@ -7,6 +7,8 @@ import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.transitions.Mongod
 import de.flapdoodle.embed.mongo.transitions.RunningMongodProcess
 import de.flapdoodle.embed.mongo.types.DatabaseDir
+import de.flapdoodle.embed.process.io.ProcessOutput
+import de.flapdoodle.reverse.Transition
 import de.flapdoodle.reverse.TransitionWalker
 import de.flapdoodle.reverse.transitions.Start
 import org.slf4j.LoggerFactory
@@ -31,6 +33,12 @@ object CacheDbServer : AutoCloseable {
     private val mongod = object : Mongod() {
         override fun databaseDir() =
             Start.to(DatabaseDir::class.java).initializedWith(DatabaseDir.of(Path(CUSTOM_DB_PATH)))
+
+        override fun processOutput(): Transition<ProcessOutput?> {
+            return Start.to<ProcessOutput?>(ProcessOutput::class.java)
+                .initializedWith(ProcessOutput.silent())
+                .withTransitionLabel("no output")
+        }
     }
 
     /**
