@@ -1,3 +1,3 @@
 bot-info:
-  name: bot-info
-  description: show about this Bot
+  name: "bot-info"
+  description: "show about this Bot"

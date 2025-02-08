@@ -1,8 +1,8 @@
 voice-logger:
-  name: 語音紀錄
-  description: 有關語音紀錄的指令
+  name: "語音紀錄"
+  description: "有關語音紀錄的指令"
 
   subcommands:
     setting:
-      name: 設定
-      description: 設定語音紀錄在此頻道
+      name: "設定"
+      description: "設定語音紀錄在此頻道"

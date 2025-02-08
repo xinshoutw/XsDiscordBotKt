@@ -8,10 +8,10 @@ embeds:
       text: "❖ ORDERLY SERVER ❖"
 
     fields:
-      - name: 伺服器總數
+      - name: "伺服器總數"
         value: "%guild_counts%"
 
-      - name: 成員總數
+      - name: "成員總數"
         value: "%member_counts%"
 
     color_code: "#00FFFF"

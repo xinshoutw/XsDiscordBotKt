@@ -1,59 +1,59 @@
 balance:
-  name: balance
-  description: get current balance detail from member
+  name: "balance"
+  description: "get current balance detail from member"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"
 
 top-money:
-  name: top-money
-  description: get board from money
+  name: "top-money"
+  description: "get board from money"
 
 top-cost:
-  name: top-cost
-  description: get board from cost
+  name: "top-cost"
+  description: "get board from cost"
 
 add-money:
-  name: add-money
-  description: add money to member
+  name: "add-money"
+  description: "add money to member"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"
     value:
-      name: value
-      description: how much
+      name: "value"
+      description: "how much"
 
 remove-money:
-  name: remove-money
-  description: remove money from member
+  name: "remove-money"
+  description: "remove money from member"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"
     value:
-      name: value
-      description: how much
+      name: "value"
+      description: "how much"
 
 set-money:
-  name: set-money
-  description: set money to member
+  name: "set-money"
+  description: "set money to member"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"
     value:
-      name: value
-      description: how much
+      name: "value"
+      description: "how much"
 
 set-cost:
-  name: set-cost
-  description: set cost to member
+  name: "set-cost"
+  description: "set cost to member"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"
     value:
-      name: value
-      description: how much
+      name: "value"
+      description: "how much"

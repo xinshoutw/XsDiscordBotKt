@@ -1,59 +1,59 @@
 balance:
-  name: 金錢
-  description: 取得成員金錢紀錄
+  name: "金錢"
+  description: "取得成員金錢紀錄"
   options:
     member:
-      name: 成員
-      description: 誰
+      name: "成員"
+      description: "誰"
 
 top-money:
-  name: 餘額排行
-  description: 取得餘額排行
+  name: "餘額排行"
+  description: "取得餘額排行"
 
 top-cost:
-  name: 消費紀錄排行
-  description: 取得消費紀錄排行
+  name: "消費紀錄排行"
+  description: "取得消費紀錄排行"
 
 add-money:
-  name: 增加餘額
-  description: 增加成員餘額
+  name: "增加餘額"
+  description: "增加成員餘額"
   options:
     member:
-      name: 成員
-      description: 誰
+      name: "成員"
+      description: "誰"
     value:
-      name: 金額
-      description: 多少
+      name: "金額"
+      description: "多少"
 
 remove-money:
-  name: 移除餘額
-  description: 移除成員餘額
+  name: "移除餘額"
+  description: "移除成員餘額"
   options:
     member:
-      name: 成員
-      description: 誰
+      name: "成員"
+      description: "誰"
     value:
-      name: 金額
-      description: 多少
+      name: "金額"
+      description: "多少"
 
 set-money:
-  name: 設定餘額
-  description: 設定成員餘額
+  name: "設定餘額"
+  description: "設定成員餘額"
   options:
     member:
-      name: 成員
-      description: 誰
+      name: "成員"
+      description: "誰"
     value:
-      name: 金額
-      description: 多少
+      name: "金額"
+      description: "多少"
 
 set-cost:
-  name: 設定消費紀錄
-  description: 設定成員消費紀錄
+  name: "設定消費紀錄"
+  description: "設定成員消費紀錄"
   options:
     member:
-      name: 成員
-      description: 誰
+      name: "成員"
+      description: "誰"
     value:
-      name: 金額
-      description: 多少
+      name: "金額"
+      description: "多少"

@@ -1,7 +1,7 @@
 basic-calculate:
-  name: 告訴我
-  description: 計算數學算式
+  name: "告訴我"
+  description: "計算數學算式"
   options:
     formula:
-      name: 算式
-      description: 可接受符號有 + - * / ^ ( )，並且可以省略乘號
+      name: "算式"
+      description: "可接受符號有 + - * / ^ ( )，並且可以省略乘號"

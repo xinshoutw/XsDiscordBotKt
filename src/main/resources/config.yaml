@@ -3,7 +3,7 @@
 ##################################################
 
 general_settings:
-  bot_token: ODgAAAAAAAAAAADkx.GBBBBI.V6CCCCCCCCCCCCCCCCCCCCCCCC9mfsU
+  bot_token: "ODgAAAAAAAAAAADkx.GBBBBI.V6CCCCCCCCCCCCCCCCCCCCCCCC9mfsU"
 
 builtin_settings:
   status_changer_settings:

@@ -1,11 +1,11 @@
 create_ticket:
-  name: 建立客服按鈕
-  description: 建立具有客服按鈕的訊息
+  name: "建立客服按鈕"
+  description: "建立具有客服按鈕的訊息"
 
 add_ticket:
-  name: 從已有訊息添加客服按鈕
-  description: 第一行 ActionRow 至多 5 個按鈕
+  name: "從已有訊息添加客服按鈕"
+  description: "第一行 ActionRow 至多 5 個按鈕"
   options:
     message_id:
-      name: 訊息Id
-      description: 要添加按鈕的訊息Id
+      name: "訊息Id"
+      description: "要添加按鈕的訊息Id"

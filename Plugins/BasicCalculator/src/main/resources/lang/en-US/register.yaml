@@ -1,7 +1,7 @@
 basic-calculate:
-  name: calculate
-  description: calculate basic math formula
+  name: "calculate"
+  description: "calculate basic math formula"
   options:
     formula:
-      name: formula
-      description: Legal symbols + - * / ^ ( ), and bracket is ignorable
+      name: "formula"
+      description: "Legal symbols + - * / ^ ( ), and bracket is ignorable"

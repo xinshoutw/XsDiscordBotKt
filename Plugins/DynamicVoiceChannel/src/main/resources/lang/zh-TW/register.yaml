@@ -1,24 +1,24 @@
 dynamic-voice-channel:
-  name: 動態語音頻道
-  description: 動態語音頻道
+  name: "動態語音頻道"
+  description: "動態語音頻道"
   subcommands:
     bind:
-      name: 綁定
-      description: 綁定語音頻道
+      name: "綁定"
+      description: "綁定語音頻道"
       options:
         channel:
-          name: 頻道
-          description: 語音頻道
+          name: "頻道"
+          description: "語音頻道"
         format-name-1:
-          name: 名稱格式 1
-          description: 名稱格式 1
+          name: "名稱格式 1"
+          description: "名稱格式 1"
         format-name-2:
-          name: 名稱格式 2
-          description: 名稱格式 2
+          name: "名稱格式 2"
+          description: "名稱格式 2"
     unbind:
-      name: 解綁
-      description: 解綁語音頻道
+      name: "解綁"
+      description: "解綁語音頻道"
       options:
         channel:
-          name: 頻道
-          description: 語音頻道
+          name: "頻道"
+          description: "語音頻道"

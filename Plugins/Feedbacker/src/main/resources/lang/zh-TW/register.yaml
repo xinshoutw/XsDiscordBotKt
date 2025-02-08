@@ -1,7 +1,7 @@
 feedbacker:
-  name: 評價表單
-  description: 為使用者建立一個評價選單
+  name: "評價表單"
+  description: "為使用者建立一個評價選單"
   options:
     member:
-      name: member
-      description: 誰
+      name: "member"
+      description: "誰"

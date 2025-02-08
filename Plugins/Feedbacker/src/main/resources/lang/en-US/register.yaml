@@ -1,7 +1,7 @@
 feedbacker:
-  name: feedbacker
-  description: create a channel for member feedback
+  name: "feedbacker"
+  description: "create a channel for member feedback"
   options:
     member:
-      name: member
-      description: who
+      name: "member"
+      description: "who"

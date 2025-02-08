@@ -1,8 +1,8 @@
 chat-logger:
-  name: 訊息紀錄
-  description: 有關訊息紀錄的指令
+  name: "訊息紀錄"
+  description: "有關訊息紀錄的指令"
 
   subcommands:
     setting:
-      name: 設定
-      description: 設定訊息紀錄在此頻道
+      name: "設定"
+      description: "設定訊息紀錄在此頻道"

@@ -1,8 +1,8 @@
 chat-logger:
-  name: chat-logger
-  description: commands about chat logger
+  name: "chat-logger"
+  description: "commands about chat logger"
 
   subcommands:
     setting:
-      name: setting
-      description: set chat log in this channel
+      name: "setting"
+      description: "set chat log in this channel"

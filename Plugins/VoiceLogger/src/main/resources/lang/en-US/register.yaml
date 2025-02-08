@@ -1,8 +1,8 @@
 voice-logger:
-  name: voice-logger
-  description: commands about voice logger
+  name: "voice-logger"
+  description: "commands about voice logger"
 
   subcommands:
     setting:
-      name: setting
-      description: set voice log in this channel
+      name: "setting"
+      description: "set voice log in this channel"

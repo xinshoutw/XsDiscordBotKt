@@ -1,10 +1,10 @@
-author: xinshoutw
-main: tw.xserver.plugin.addons.ticket.Event
-name: TicketAddons
-version: '0.1.0'
+author: "xinshoutw"
+main: "tw.xserver.plugin.addons.ticket.Event"
+name: "TicketAddons"
+version: "0.1.0"
 
 require_cache_flags:
-  - ONLINE_STATUS
+  - "ONLINE_STATUS"
 
 require_intents:
-  - GUILD_PRESENCES
+  - "GUILD_PRESENCES"

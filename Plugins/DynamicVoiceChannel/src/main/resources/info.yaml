@@ -1,15 +1,15 @@
-author: xinshoutw
-main: tw.xserver.plugin.dynamicvoicechannel.Event
-name: DynamicVoiceChannel
-version: '0.2.0'
+author: "xinshoutw"
+main: "tw.xserver.plugin.dynamicvoicechannel.Event"
+name: "DynamicVoiceChannel"
+version: "0.2.0"
 depend_plugins:
-  - SQLiteAPI
+  - "SQLiteAPI"
 
 require_intents:
-  - GUILD_VOICE_STATES
+  - "GUILD_VOICE_STATES"
 
 require_cache_flags:
-  - VOICE_STATE
+  - "VOICE_STATE"
 
 require_member_cache_policies:
-  - VOICE
+  - "VOICE"
