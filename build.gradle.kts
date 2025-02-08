@@ -29,7 +29,10 @@ dependencies {
     api("com.google.code.gson:gson:2.12.1") // Json
     api("commons-io:commons-io:2.18.0") // Commons io
     api("org.apache.commons:commons-text:1.13.0") // StringSubstitutor
+    api("org.mongodb:mongodb-driver-kotlin-sync:5.3.1") // MongoDb
+    api("com.squareup.moshi:moshi-kotlin:1.15.2")
 
+    implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.1") // Embedded MongoDb
     implementation("com.google.protobuf:protobuf-java:4.29.3") // CVE fix
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1") // coroutine
     implementation("org.jline:jline:3.29.0") // CLI

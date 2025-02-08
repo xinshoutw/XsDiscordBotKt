@@ -1,4 +1,5 @@
 Server/
+DevServer/
 MainServer/
 .gradle
 build/
