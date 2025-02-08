@@ -42,7 +42,7 @@ internal object PluginLoader {
         dir.listFiles()?.filter { it.isFile && it.extension == "jar" }?.forEach { file ->
             JarFile(file).use { jarFile ->
                 try {
-                    jarFile.getInputStream(jarFile.getEntry("info.yml")).use { inputStream ->
+                    jarFile.getInputStream(jarFile.getEntry("info.yaml")).use { inputStream ->
                         val config = Yaml().decodeFromStream<InfoSerializer>(inputStream)
                         logger.debug("-------> {}", config.name)
 

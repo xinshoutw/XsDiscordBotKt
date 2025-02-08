@@ -14,7 +14,7 @@ import java.util.*
 
 internal object SettingsLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private const val CONFIG_NAME: String = "config.yml"
+    private const val CONFIG_NAME: String = "config.yaml"
     lateinit var config: SettingSerializer
     lateinit var token: String
 

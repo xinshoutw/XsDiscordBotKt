@@ -46,7 +46,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             PLUGIN_DIR_FILE,
-            "register.yml",
+            "register.yaml",
             defaultLocale = DEFAULT_LOCALE,
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
@@ -54,7 +54,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             PLUGIN_DIR_FILE,
-            "placeholder.yml",
+            "placeholder.yaml",
             defaultLocale = DEFAULT_LOCALE,
             clazzSerializer = PlaceholderSerializer::class,
             clazzLocalization = PlaceholderLocalizations::class

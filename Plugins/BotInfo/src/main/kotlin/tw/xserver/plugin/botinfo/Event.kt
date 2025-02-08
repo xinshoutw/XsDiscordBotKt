@@ -34,7 +34,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             pluginDirFile = PLUGIN_DIR_FILE,
-            fileName = "register.yml",
+            fileName = "register.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class

@@ -54,7 +54,7 @@ object Event : PluginEvent(true) {
     }
 
     override fun reloadConfigFile() {
-        fileGetter.readInputStream("config.yml").use {
+        fileGetter.readInputStream("config.yaml").use {
             config = Yaml().decodeFromStream<MainConfigSerializer>(it)
         }
 
@@ -66,7 +66,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             PLUGIN_DIR_FILE,
-            "register.yml",
+            "register.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
@@ -74,7 +74,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             PLUGIN_DIR_FILE,
-            "placeholder.yml",
+            "placeholder.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = PlaceholderSerializer::class,
             clazzLocalization = PlaceholderLocalizations::class

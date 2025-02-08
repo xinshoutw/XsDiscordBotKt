@@ -1,0 +1,4 @@
+author: xinshoutw
+main: tw.xserver.plugin.botinfo.Event
+name: BotInfo
+version: '0.2.0'

@@ -53,11 +53,11 @@ object Event : PluginEvent(true) {
 
     override fun reloadConfigFile() {
         try {
-            fileGetter.readInputStream("config.yml").use {
+            fileGetter.readInputStream("config.yaml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
             }
         } catch (e: IOException) {
-            logger.error("Please configure {}./config.yml!", PLUGIN_DIR_FILE.canonicalPath, e)
+            logger.error("Please configure {}./config.yaml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
         logger.info("Setting file loaded successfully.")
@@ -84,7 +84,7 @@ object Event : PluginEvent(true) {
 
         LangManager(
             pluginDirFile = PLUGIN_DIR_FILE,
-            fileName = "register.yml",
+            fileName = "register.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
