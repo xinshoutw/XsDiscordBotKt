@@ -35,8 +35,6 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
             .append("value", bsonValue)
             .append("timestamp", System.currentTimeMillis())
         collection.replaceOne(Filters.eq("_id", strKey), doc, ReplaceOptions().upsert(true))
-
-        logger.info("Upserted key: $strKey")
     }
 
     override fun add(key: Any, value: Any) = upsert(key, value)
