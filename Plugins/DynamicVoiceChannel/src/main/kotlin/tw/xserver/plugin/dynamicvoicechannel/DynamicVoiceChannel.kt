@@ -9,6 +9,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xserver.loader.builtin.messagecreator.MessageCreator
 import tw.xserver.loader.builtin.placeholder.Placeholder
+import tw.xserver.loader.mongodb.CacheDbManager
+import tw.xserver.loader.mongodb.ICacheDb
 import tw.xserver.plugin.dynamicvoicechannel.Event.PLUGIN_DIR_FILE
 import tw.xserver.plugin.dynamicvoicechannel.json.serializer.DataContainer
 import java.io.File
@@ -16,6 +18,8 @@ import java.io.File
 
 internal object DynamicVoiceChannel {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val cacheDbManager: CacheDbManager = CacheDbManager(Event.PLUGIN_NAME)
+    private val generatedCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
         DiscordLocale.CHINESE_TAIWAN,
@@ -26,7 +30,6 @@ internal object DynamicVoiceChannel {
             "unbind-fail",
         )
     )
-    private val trackedChannel: MutableMap<Long, Long> = HashMap()
 
     fun bind(event: SlashCommandInteractionEvent) {
         val locale = event.userLocale
@@ -99,9 +102,9 @@ internal object DynamicVoiceChannel {
         }
 
         if (channelLeft != null && channelLeft.members.isEmpty()) {
-            if (trackedChannel.containsKey(channelLeft.idLong)) {
-                trackedChannel.remove(channelLeft.idLong)
+            if (generatedCache.containsKey(channelLeft.idLong)) {
                 channelLeft.delete().queue()
+                generatedCache.remove(channelLeft.idLong)
             }
         }
     }
@@ -123,6 +126,6 @@ internal object DynamicVoiceChannel {
         ).queue()
 
         // add the new channel to the tracked list
-        trackedChannel[channelJoin.idLong] = event.member.idLong
+        generatedCache.put(channelJoin.idLong, event.member.idLong)
     }
 }

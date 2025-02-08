@@ -23,7 +23,8 @@ import java.io.File
  * Main class for the Economy plugin managing configurations, commands, and data handling.
  */
 internal object Event : PluginEvent(true) {
-    val PLUGIN_DIR_FILE = File("plugins/DynamicVoiceChannel")
+    const val PLUGIN_NAME = "DynamicVoiceChannel"
+    val PLUGIN_DIR_FILE = File("plugins/$PLUGIN_NAME")
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     override fun load() {

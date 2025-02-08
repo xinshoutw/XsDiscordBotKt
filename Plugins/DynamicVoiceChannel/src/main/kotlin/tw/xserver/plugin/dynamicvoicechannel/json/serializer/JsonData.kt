@@ -3,8 +3,8 @@ package tw.xserver.plugin.dynamicvoicechannel.json.serializer
 data class DataContainer(
     val categoryId: Long,
     val defaultName: String,
-    val formatName1: String,
-    val formatName2: String,
+    val formatName1: String = "",
+    val formatName2: String = "",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

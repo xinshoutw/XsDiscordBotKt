@@ -28,7 +28,7 @@ import java.io.File
 internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val jsonGuildManager: JsonAryGuildFileManager = JsonAryGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
-    internal val dataSet: HashSet<DataContainer> = HashSet()
+    private val dataSet: HashSet<DataContainer> = HashSet()
 
     init {
         jsonGuildManager.mapper.forEach { guildId, json ->
