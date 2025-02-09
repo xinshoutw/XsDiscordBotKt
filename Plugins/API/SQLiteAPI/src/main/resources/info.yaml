@@ -1,4 +1,4 @@
 author: "xinshoutw"
-main: tw.xserver.plugin.api.sqlite.Event
-name: SQLiteAPI
+main: "tw.xserver.plugin.api.sqlite.Event"
+name: "SQLiteAPI"
 version: "0.2.0"
