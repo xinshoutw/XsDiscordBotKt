@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.addons.ticket.Event"
+main: "tw.xinshou.plugin.addons.ticket.Event"
 name: "TicketAddons"
 version: "0.1.0"
 

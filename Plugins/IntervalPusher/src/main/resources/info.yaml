@@ -1,4 +1,4 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.intervalpusher.Event"
+main: "tw.xinshou.plugin.intervalpusher.Event"
 name: "IntervalPusher"
 version: "0.1.0"

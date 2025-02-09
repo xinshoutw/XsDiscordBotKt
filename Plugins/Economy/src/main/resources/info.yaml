@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.economy.Event"
+main: "tw.xinshou.plugin.economy.Event"
 name: "Economy"
 version: "0.2.0"
 component_prefix: "economy@"

@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.logger.chat.Event"
+main: "tw.xinshou.plugin.logger.chat.Event"
 name: "ChatLogger"
 version: "0.2.0"
 component_prefix: "chat-logger@"

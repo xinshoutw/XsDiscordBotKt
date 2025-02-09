@@ -1,4 +1,4 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.basiccalculator.Event"
+main: "tw.xinshou.plugin.basiccalculator.Event"
 name: "BasicCalculator"
 version: "0.1.0"

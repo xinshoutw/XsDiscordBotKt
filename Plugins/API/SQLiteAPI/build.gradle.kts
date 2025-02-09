@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val pluginName = "SQLiteAPI"
-group = "tw.xserver.api"
+group = "tw.xinshou.api"
 version = "0.2.0"
 
 plugins {

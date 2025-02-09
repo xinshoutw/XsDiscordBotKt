@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.logger.voice.Event"
+main: "tw.xinshou.plugin.logger.voice.Event"
 name: "VoiceLogger"
 version: "0.2.0"
 component_prefix: "voice-logger@"

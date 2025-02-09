@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.dynamicvoicechannel.Event"
+main: "tw.xinshou.plugin.dynamicvoicechannel.Event"
 name: "DynamicVoiceChannel"
 version: "0.2.0"
 depend_plugins:

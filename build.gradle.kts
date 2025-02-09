@@ -7,7 +7,7 @@ plugins {
     id("com.gradleup.shadow") version "8.3.6"
 }
 
-group = "tw.xserver.loader"
+group = "tw.xinshou.loader"
 version = "v2.0"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -52,7 +52,7 @@ tasks.named<ShadowJar>("shadowJar") {
     destinationDirectory = outputPath
 
     manifest {
-        attributes("Main-Class" to "tw.xserver.loader.MainKt")
+        attributes("Main-Class" to "tw.xinshou.loader.MainKt")
     }
 }
 

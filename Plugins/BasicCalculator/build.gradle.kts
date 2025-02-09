@@ -1,5 +1,5 @@
 val pluginName = "BasicCalculator"
-group = "tw.xserver.plugin"
+group = "tw.xinshou.plugin"
 version = "0.1.0"
 
 plugins {

@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val pluginName = "GoogleSheetAPI"
-group = "tw.xserver.plugin.api"
+group = "tw.xinshou.plugin.api"
 version = "0.2.0"
 
 plugins {

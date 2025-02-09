@@ -1,5 +1,5 @@
 author: "xinshoutw"
-main: "tw.xserver.plugin.ticket.Event"
+main: "tw.xinshou.plugin.ticket.Event"
 name: "Ticket"
 version: "0.2.0"
 component_prefix: "ticket@"
