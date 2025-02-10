@@ -26,4 +26,4 @@ data class DataContainer(
 }
 
 
-typealias JsonDataClass = List<DataContainer>
+typealias JsonDataClass = MutableList<DataContainer>

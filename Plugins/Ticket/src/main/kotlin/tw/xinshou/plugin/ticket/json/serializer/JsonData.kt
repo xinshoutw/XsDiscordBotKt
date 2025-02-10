@@ -7,4 +7,4 @@ data class DataContainer(
 )
 
 
-typealias JsonDataClass = Map<String, List<DataContainer>>
+typealias JsonDataClass = Map<Long, List<DataContainer>>

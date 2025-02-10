@@ -1,7 +1,5 @@
 package tw.xinshou.plugin.logger.chat
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.concrete.Category
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
