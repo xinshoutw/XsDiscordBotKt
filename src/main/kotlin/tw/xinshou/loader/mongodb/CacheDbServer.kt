@@ -11,6 +11,9 @@ import de.flapdoodle.embed.process.io.ProcessOutput
 import de.flapdoodle.reverse.Transition
 import de.flapdoodle.reverse.TransitionWalker
 import de.flapdoodle.reverse.transitions.Start
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,6 +32,8 @@ object CacheDbServer : AutoCloseable {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var runningMongod: TransitionWalker.ReachedState<RunningMongodProcess>
     private lateinit var mongoClient: com.mongodb.client.MongoClient
+    internal val dbScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        private set
 
     private val mongod = object : Mongod() {
         override fun databaseDir() =

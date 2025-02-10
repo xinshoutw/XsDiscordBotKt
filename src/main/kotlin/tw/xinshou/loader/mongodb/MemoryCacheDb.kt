@@ -3,7 +3,6 @@ package tw.xinshou.loader.mongodb
 import com.mongodb.client.MongoCollection
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.bson.Document
 import java.util.concurrent.ConcurrentHashMap
@@ -51,7 +50,7 @@ class MemoryCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
     override fun upsert(key: Any, value: Any) {
         val strKey = key.toString()
         cache[strKey] = value
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.upsert(strKey, value)
         }
     }
@@ -75,7 +74,7 @@ class MemoryCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
     override fun remove(key: Any) {
         val strKey = key.toString()
         cache.remove(strKey)
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.remove(strKey)
         }
     }
@@ -85,7 +84,7 @@ class MemoryCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
      */
     override fun clear() {
         cache.clear()
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.clear()
         }
     }

@@ -3,7 +3,6 @@ package tw.xinshou.loader.mongodb
 import com.mongodb.client.MongoCollection
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.bson.Document
 
@@ -21,7 +20,7 @@ class DirectCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
      * @param value 要儲存的資料
      */
     override fun upsert(key: Any, value: Any) {
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.upsert(key.toString(), value)
         }
     }
@@ -32,7 +31,7 @@ class DirectCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
      * @param key 唯一標識（自動轉換為字串）
      */
     override fun remove(key: Any) {
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.remove(key.toString())
         }
     }
@@ -41,7 +40,7 @@ class DirectCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
      * 清除 MongoDB 中該集合的所有資料，以非同步方式執行。
      */
     override fun clear() {
-        GlobalScope.launch(Dispatchers.IO) {
+        CacheDbServer.dbScope.launch(Dispatchers.IO) {
             super.clear()
         }
     }
