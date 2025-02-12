@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/Plugins/API" />
             <option value="$PROJECT_DIR$/Plugins/API/GoogleSheetAPI" />
             <option value="$PROJECT_DIR$/Plugins/API/SQLiteAPI" />
+            <option value="$PROJECT_DIR$/Plugins/AutoRole" />
             <option value="$PROJECT_DIR$/Plugins/BasicCalculator" />
             <option value="$PROJECT_DIR$/Plugins/BotInfo" />
             <option value="$PROJECT_DIR$/Plugins/ChatLogger" />

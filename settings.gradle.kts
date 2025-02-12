@@ -49,3 +49,6 @@ findProject(":Plugins:BasicCalculator")?.name = "BasicCalculator"
 
 include("Plugins:Ticket")
 findProject(":Plugins:Ticket")?.name = "Ticket"
+
+include("Plugins:AutoRole")
+findProject(":Plugins:AutoRole")?.name = "AutoRole"
