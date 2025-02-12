@@ -64,9 +64,6 @@ object Event : PluginEvent(true) {
         }
 
         logger.info("Setting file loaded successfully.")
-        if (File(PLUGIN_DIR_FILE, "data").mkdirs()) {
-            logger.info("Default data folder created.")
-        }
 
         when (MODE) {
             Mode.Json -> {

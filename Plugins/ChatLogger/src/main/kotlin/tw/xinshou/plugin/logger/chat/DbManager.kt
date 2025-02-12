@@ -9,6 +9,7 @@ import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.logger.chat.Event.config
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
 import java.io.File
+import java.nio.file.Files
 import java.sql.Connection
 
 
@@ -20,9 +21,7 @@ internal object DbManager {
 
     init {
         val dataFolder = File(PLUGIN_DIR_FILE, "data")
-        if (dataFolder.mkdirs()) {
-            logger.info("Default data folder created.")
-        }
+        Files.createDirectories(dataFolder.toPath())
 
         dataFolder.listFiles()?.filter { it.isFile && it.extension == "db" }?.forEach fileLoop@{ file ->
             val guild: Guild? = jdaBot.getGuildById(file.nameWithoutExtension)

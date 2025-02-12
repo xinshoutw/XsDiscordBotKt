@@ -21,9 +21,7 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     }
 
     init {
-        if (pluginDirFile.mkdirs()) {
-            logger.debug("Folder created: {}", pluginDirFile.canonicalPath)
-        }
+        Files.createDirectories(pluginDirFile.toPath())
     }
 
     /**
@@ -60,7 +58,7 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
             ?: throw FileNotFoundException("Resource not found: $resourceFilePath")
         logger.debug("Output file: {}.", outputFile.canonicalPath)
         inputStream.use { fileInJar ->
-            outputFile.parentFile.mkdirs() // init directories
+            Files.createDirectories(outputFile.parentFile.toPath()) // init directories
             Files.copy(fileInJar, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
             return outputFile
         }
@@ -108,11 +106,11 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     ) {
         if (Arguments.forceRenewLangResources) {
             val success = destDirectory.deleteRecursively()
-            if (success) {
-                destDirectory.mkdirs()
-            } else {
+            if (!success) {
                 logger.warn("Failed to delete directory: {}.", destDirectory.canonicalPath)
             }
+
+            Files.createDirectories(destDirectory.toPath())
             logger.info("Directory modified: {}.", success)
         }
 

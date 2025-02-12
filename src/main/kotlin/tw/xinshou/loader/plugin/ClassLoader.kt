@@ -3,13 +3,13 @@ package tw.xinshou.loader.plugin
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader
-import java.io.File
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.FileSystems
 import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * A custom URLClassLoader to load classes and resources from JAR files dynamically.
@@ -23,14 +23,14 @@ internal object ClassLoader : URLClassLoader(arrayOfNulls(0), BotLoader::class.j
      * Adds a JAR file to the class loader's path. This method allows dynamic loading of JAR files
      * containing classes and resources.
      *
-     * @param file The JAR file to be added.
+     * @param filePath The JAR file path to be added.
      * @param main The main class path used to identify the JAR's resource path.
      * @throws RuntimeException if the resource path is already in use.
      */
-    fun addJar(file: File, main: String) {
+    fun addJar(filePath: Path, main: String) {
         val mainPath = main.substring(0, main.lastIndexOf('.')).replace('.', '/')
         try {
-            val url = file.toURI().toURL()
+            val url = filePath.toUri().toURL()
             if (mainPath in resourcePath) {
                 throw RuntimeException("Duplicate resource path: $mainPath")
             }

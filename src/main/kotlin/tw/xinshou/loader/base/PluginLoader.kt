@@ -9,16 +9,21 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.plugin.yaml.InfoSerializer
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import java.util.jar.JarFile
+import kotlin.io.path.extension
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 
 /**
  * Manages the lifecycle of all plugins, loading and unloading them as required.
  */
 internal object PluginLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val dir: File = File("./plugins")
+    private val dir: Path = Paths.get("plugins")
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
     val intents: EnumSet<GatewayIntent> = EnumSet.noneOf(GatewayIntent::class.java)
     val cacheFlags: EnumSet<CacheFlag> = EnumSet.noneOf(CacheFlag::class.java)
@@ -37,39 +42,43 @@ internal object PluginLoader {
         logger.info("Start loading plugins...")
 
         val loader = tw.xinshou.loader.plugin.ClassLoader
-        dir.mkdirs()
 
-        dir.listFiles()?.filter { it.isFile && it.extension == "jar" }?.forEach { file ->
-            JarFile(file).use { jarFile ->
-                try {
-                    jarFile.getInputStream(jarFile.getEntry("info.yaml")).use { inputStream ->
-                        val config = Yaml().decodeFromStream<InfoSerializer>(inputStream)
-                        logger.debug("-------> {}", config.name)
+        Files.createDirectories(dir)
 
-                        if (pluginInfos.containsKey(config.name)) {
-                            logger.error("Duplicate plugin name: {}!", file.name)
-                            fail++
-                            return
+        dir.listDirectoryEntries()
+            .filter { it.extension == "jar" && it.toFile().isFile }
+            .also { logger.info("Found {} plugin(s).", it.size) }
+            .forEach { path ->
+                JarFile(path.toFile()).use { jarFile ->
+                    try {
+                        jarFile.getInputStream(jarFile.getEntry("info.yaml")).use { inputStream ->
+                            val config = Yaml().decodeFromStream<InfoSerializer>(inputStream)
+                            logger.debug("-------> {}", config.name)
+
+                            if (pluginInfos.containsKey(config.name)) {
+                                logger.error("Duplicate plugin name: {}!", path.name)
+                                fail++
+                                return
+                            }
+                            loader.addJar(path, config.main)
+
+                            loader.getClass(config.main)?.let {
+                                pluginInfos[config.name] =
+                                    InfoSimple(config.name, it, config.dependPlugins, config.softDependPlugins)
+                                success++
+                            } ?: run { fail++ }
+
+                            intents.addAll(config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() })
+                            cacheFlags.addAll(config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() })
+                            memberCachePolicies.addAll(config.requireMemberCachePolicies)
+                            logger.info("==ADD==> {}", config.name)
                         }
-                        loader.addJar(file, config.main)
-
-                        loader.getClass(config.main)?.let {
-                            pluginInfos[config.name] =
-                                InfoSimple(config.name, it, config.dependPlugins, config.softDependPlugins)
-                            success++
-                        } ?: run { fail++ }
-
-                        intents.addAll(config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() })
-                        cacheFlags.addAll(config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() })
-                        memberCachePolicies.addAll(config.requireMemberCachePolicies)
-                        logger.info("==ADD==> {}", config.name)
+                    } catch (e: Exception) {
+                        fail++
+                        logger.error("Error occurred with file: {}!", path.name, e)
                     }
-                } catch (e: Exception) {
-                    fail++
-                    logger.error("Error occurred with file: {}!", file.name, e)
                 }
             }
-        }
 
         pluginInfos.values.forEach { info ->
             if (!pluginQueue.containsKey(info.name) && addPluginToQueue(info)) {

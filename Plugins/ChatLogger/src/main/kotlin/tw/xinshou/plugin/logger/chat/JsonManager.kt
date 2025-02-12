@@ -12,6 +12,7 @@ import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.logger.chat.json.DataContainer
 import tw.xinshou.plugin.logger.chat.json.JsonDataClass
 import java.io.File
+import java.nio.file.Files
 
 internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -27,9 +28,7 @@ internal object JsonManager {
 
     init {
         val settingFolder = File(PLUGIN_DIR_FILE, "setting")
-        if (settingFolder.mkdirs()) {
-            logger.info("Default setting folder created")
-        }
+        Files.createDirectories(settingFolder.toPath())
 
         jsonGuildManager.mapper.forEach { guildId, jsonManager ->
             // check guild available

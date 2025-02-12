@@ -2,6 +2,7 @@ package tw.xinshou.loader.json
 
 import com.squareup.moshi.JsonAdapter
 import java.io.File
+import java.nio.file.Files
 
 class JsonGuildFileManager<T>(
     private val dataDirectory: File,
@@ -11,10 +12,9 @@ class JsonGuildFileManager<T>(
     val mapper: MutableMap<Long, JsonFileManager<T>> = mutableMapOf()
 
     init {
-        if (!dataDirectory.mkdirs()) {
-            for (file in dataDirectory.listFiles().filter { it.isFile && it.extension == "json" }) {
-                mapper.put(file.nameWithoutExtension.toLong(), JsonFileManager(file, adapter, defaultInstance))
-            }
+        Files.createDirectories(dataDirectory.toPath())
+        for (file in dataDirectory.listFiles().filter { it.isFile && it.extension == "json" }) {
+            mapper.put(file.nameWithoutExtension.toLong(), JsonFileManager(file, adapter, defaultInstance))
         }
     }
 
