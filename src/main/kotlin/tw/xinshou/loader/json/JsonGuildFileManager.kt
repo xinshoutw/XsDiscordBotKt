@@ -19,13 +19,20 @@ class JsonGuildFileManager<T>(
     }
 
     operator fun get(guildId: Long): JsonFileManager<T> {
-        return mapper.getOrPut(guildId) {
+        val manager = mapper.getOrPut(guildId) {
             JsonFileManager<T>(
                 File(this.dataDirectory, "${guildId}.json"),
                 adapter,
                 defaultInstance
             )
         }
+
+        if (manager.isDeleted) {
+            mapper.remove(guildId)
+            return get(guildId)
+        }
+
+        return manager
     }
 
     fun removeAndSave(guildId: Long) {

@@ -1,13 +1,14 @@
 package tw.xinshou.plugin.economy.storage
 
-import com.google.gson.JsonObject
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
 import tw.xinshou.loader.builtin.placeholder.Substitutor
-import tw.xinshou.loader.json.JsonObjFileManager
+import tw.xinshou.loader.json.JsonFileManager
 import tw.xinshou.plugin.economy.Economy.Type
 import tw.xinshou.plugin.economy.Event.config
 import tw.xinshou.plugin.economy.UserData
+import tw.xinshou.plugin.economy.json.DataContainer
+import tw.xinshou.plugin.economy.json.JsonDataClass
 import kotlin.math.min
 
 /**
@@ -17,16 +18,15 @@ internal object JsonImpl : IStorage {
     private val userData: MutableMap<Long, UserData> = HashMap()
     private val moneyBoard: MutableList<UserData> = ArrayList()
     private val costBoard: MutableList<UserData> = ArrayList()
-    lateinit var json: JsonObjFileManager
+    lateinit var jsonFileManager: JsonFileManager<JsonDataClass>
 
     /**
      * Initializes the JSON file by loading existing users or creating new entries.
      */
     override fun init() {
-        json.get().keySet().forEach { key ->
+        jsonFileManager.data.forEach { key, data ->
             val id = key.toLong()
-            val obj = json.computeIfAbsent(key, JsonObject()).asJsonObject
-            userData[id] = UserData(id, obj["money"].asInt, obj["cost"].asInt)
+            userData[id] = UserData(id, data)
         }
 
         moneyBoard.addAll(userData.values)
@@ -53,21 +53,21 @@ internal object JsonImpl : IStorage {
      * @param user The user data to update.
      */
     override fun update(user: UserData) {
-        update(user.id, user.money, user.cost)
+        update(user.id, user.data)
     }
 
     /**
      * Sorts the leaderboard based on money.
      */
     override fun sortMoneyBoard() {
-        moneyBoard.sortByDescending { it.money }
+        moneyBoard.sortByDescending { it.data.money }
     }
 
     /**
      * Sorts the leaderboard based on cost.
      */
     override fun sortCostBoard() {
-        costBoard.sortByDescending { it.cost }
+        costBoard.sortByDescending { it.data.cost }
     }
 
     override fun getEmbedBuilder(
@@ -87,13 +87,13 @@ internal object JsonImpl : IStorage {
             setDescription("")
 
             for (i in 1..count) {
-                val data = board[i - 1]
+                val userData = board[i - 1]
                 appendDescription(
                     substitutor
                         .putAll(
                             "index" to "$i",
-                            "name_mention" to "<@${data.id}>",
-                            "economy_board" to "${if (type == Type.Money) data.money else data.cost}",
+                            "name_mention" to "<@${userData.id}>",
+                            "economy_board" to "${if (type == Type.Money) userData.data.money else userData.data.cost}",
                         ).parse(descriptionTemplate)
                 )
             }
@@ -114,10 +114,8 @@ internal object JsonImpl : IStorage {
             moneyBoard.add(data)
             costBoard.add(data)
 
-            val obj = json.computeIfAbsent(id.toString(), JsonObject()).asJsonObject
-            obj.addProperty("money", 0)
-            obj.addProperty("cost", 0)
-            json.save()
+            jsonFileManager.data.put(id.toString(), DataContainer(0, 0))
+            jsonFileManager.save()
         }
     }
 
@@ -125,13 +123,10 @@ internal object JsonImpl : IStorage {
      * Updates the JSON file with the latest user money and cost data.
      *
      * @param userId The ID of the user to update.
-     * @param money The updated amount of money.
-     * @param cost The updated amount of cost.
+     * @param data The updated DataContainer.
      */
-    private fun update(userId: Long, money: Int, cost: Int) {
-        val obj = json.getAsJsonObject(userId.toString())
-        obj.addProperty("money", money)
-        obj.addProperty("cost", cost)
-        json.save()
+    private fun update(userId: Long, data: DataContainer) {
+        jsonFileManager.data.put(userId.toString(), data)
+        jsonFileManager.save()
     }
 }

@@ -2,10 +2,14 @@ package tw.xinshou.loader.json
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
+import kotlin.reflect.javaType
+import kotlin.reflect.typeOf
 
 /**
  * JsonFileManager 使用 Moshi 進行 JSON 讀寫管理，不再需要抽象的 defaultFileAndData() 方法，
@@ -19,7 +23,7 @@ class JsonFileManager<T>(
     private val adapter: JsonAdapter<T>,
     private val defaultInstance: T? = null
 ) : AutoCloseable {
-    private var isDeleted: Boolean = false
+    var isDeleted: Boolean = false
     var data: T
         private set
 
@@ -102,7 +106,16 @@ class JsonFileManager<T>(
             throw IllegalStateException("Cannot perform operation: This class cannot be used after delete() has been called.")
     }
 
+
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(JsonFileManager::class.java)
+        val moshi: Moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+        @OptIn(ExperimentalStdlibApi::class)
+        inline fun <reified T> Moshi.adapterReified(): JsonAdapter<T> {
+            return adapter(typeOf<T>().javaType)
+        }
     }
 }

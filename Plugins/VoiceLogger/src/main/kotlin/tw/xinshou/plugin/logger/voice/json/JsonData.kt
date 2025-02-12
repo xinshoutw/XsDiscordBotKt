@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.logger.chat.json
+package tw.xinshou.plugin.logger.voice.json
 
 import com.squareup.moshi.Json
 

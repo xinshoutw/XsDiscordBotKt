@@ -1,7 +1,5 @@
 package tw.xinshou.plugin.ticket.create
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -16,6 +14,7 @@ import net.dv8tion.jda.internal.interactions.component.ButtonImpl
 import tw.xinshou.loader.util.ComponentField
 import tw.xinshou.plugin.ticket.Ticket.componentIdManager
 import tw.xinshou.plugin.ticket.Ticket.messageCreator
+import tw.xinshou.plugin.ticket.json.serializer.DataContainer
 
 internal class Step(
     val hook: InteractionHook,
@@ -47,20 +46,9 @@ internal class Step(
         return hook.editOriginal(messageEditData)
     }
 
-    val json: JsonObject
+    val json: DataContainer
         get() {
-            val obj = JsonObject()
-            val adminIds = JsonArray().apply {
-                data.adminIds?.let {
-                    for (i in it) add(i)
-                }
-            }
-
-            obj.addProperty("reasonTitle", data.reasonTitle)
-            obj.add("adminIds", adminIds)
-            obj.addProperty("categoryId", data.categoryId)
-
-            return obj
+            return data.json
         }
 
     fun setAuthor(name: String?, iconURL: String?) {
@@ -84,15 +72,15 @@ internal class Step(
 
     fun setReason(reason: String) {
         if (reason.isEmpty()) return
-        data.reasonTitle = reason
+        data.json.reasonTitle = reason
     }
 
-    fun setAdminIds(adminId: List<Long>?) {
-        data.adminIds = adminId
+    fun setAdminIds(adminId: List<Long>) {
+        data.json.adminIds = adminId.toMutableList()
     }
 
     fun setCategoryId(categoryId: Long) {
-        data.categoryId = categoryId
+        data.json.categoryId = categoryId
     }
 
     fun setColor(color: Int) {
@@ -187,17 +175,20 @@ internal class Step(
 
 }
 
+
 internal data class StepData(
+    val json: DataContainer = DataContainer(
+        reasonTitle = "有任何可以幫助的問題嗎~",
+        adminIds = mutableListOf(),
+        categoryId = 0
+    ),
     var author: String? = "Ticket 服務",
     var authorIconUrl: String? =
         "https://img.lovepik.com/free-png/20211116/lovepik-customer-service-personnel-icon-png-image_400960955_wh1200.png",
     var title: String? = "\uD83D\uDEE0 聯絡我們",
     var description: String? = "✨ 點擊下方 **[按鈕]**，並提供所遭遇的問題，我們盡快給予答覆！ ✨",
     var color: Int = 0x00FFFF,
-    var reasonTitle: String = "有任何可以幫助的問題嗎~",
-    var adminIds: List<Long>? = listOf(),
     var btnText: String? = "聯絡我們",
     var btnEmoji: Emoji? = Emoji.fromUnicode("✉"),
     var btnStyle: ButtonStyle? = ButtonStyle.SUCCESS,
-    var categoryId: Long = 0,
 )

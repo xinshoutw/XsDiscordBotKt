@@ -1,18 +1,26 @@
 package tw.xinshou.plugin.logger.voice
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import com.squareup.moshi.JsonAdapter
 import net.dv8tion.jda.api.entities.Guild
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
-import tw.xinshou.loader.json.JsonObjFileManager
+import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.loader.json.JsonGuildFileManager
 import tw.xinshou.plugin.logger.voice.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.logger.voice.json.DataContainer
+import tw.xinshou.plugin.logger.voice.json.JsonDataClass
 import java.io.File
 
 internal object JsonManager {
-    private val fileManagers: MutableMap<Long, JsonObjFileManager> = HashMap()
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
+    private val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
+        dataDirectory = File(PLUGIN_DIR_FILE, "setting"),
+        adapter = jsonAdapter,
+        defaultInstance = mutableMapOf()
+    )
 
     // listen map to setting
     val dataMap: MutableMap<Long, ChannelData> = HashMap()
@@ -23,46 +31,30 @@ internal object JsonManager {
             logger.info("Default setting folder created.")
         }
 
-        // delete unable access guild json files
-        settingFolder.listFiles()?.filter { it.isFile && it.extension == "json" }?.forEach fileLoop@{ file: File ->
-            val guildId = file.nameWithoutExtension.toLong()
+        jsonGuildManager.mapper.forEach { guildId, jsonManager ->
+            // check guild available
             val guild: Guild? = jdaBot.getGuildById(guildId)
             if (guild == null) {
-                file.delete()
-                return@fileLoop
+                jsonGuildManager.removeAndSave(guildId)
+                return@forEach
             }
 
-            val fileManager = JsonObjFileManager(file)
-            this.fileManagers[guildId] = fileManager
-
-            // put data from json files to channelSettings map
-            fileManager.get().entrySet().forEach channelLoop@{ (listenChannelId, detectChannelObj) ->
+            // check json data
+            jsonManager.data.forEach { (listenChannelId, detectChannelObj) ->
                 if (guild.getGuildChannelById(listenChannelId) == null) {
-                    fileManager.remove(listenChannelId)
-                    return@channelLoop
+                    jsonManager.data.remove(listenChannelId)
+                    return@forEach
                 }
 
-                if (detectChannelObj !is JsonObject) return@channelLoop
-
-                fileManager.getAsJsonObject(listenChannelId).apply {
-                    add("allow", JsonArray().apply {
-                        detectChannelObj["allow"].asJsonArray
-                            .filter { guild.getGuildChannelById(it.asLong) != null }
-                            .map { it.asLong }
-                            .forEach { add(it) }
-                    })
-                    add("block", JsonArray().apply {
-                        detectChannelObj["block"].asJsonArray
-                            .filter { guild.getGuildChannelById(it.asLong) != null }
-                            .map { it.asLong }
-                            .forEach { add(it) }
-                    })
-
-                    dataMap[listenChannelId.toLong()] = ChannelData(guild, this)
-                }
+                val data = DataContainer(
+                    allowMode = detectChannelObj.allowMode,
+                    allow = detectChannelObj.allow.filter { guild.getGuildChannelById(it) != null }.toMutableSet(),
+                    block = detectChannelObj.block.filter { guild.getGuildChannelById(it) != null }.toMutableSet(),
+                )
+                jsonManager.data[listenChannelId] = data
+                dataMap[listenChannelId.toLong()] = ChannelData(guild, data)
             }
-
-            fileManager.save()
+            jsonManager.save()
         }
     }
 
@@ -71,9 +63,10 @@ internal object JsonManager {
         val setting = getChannelData(listenChannelId, guild).toggle()
 
         // update json file
-        val (fileManager, obj) = getOrPut(guild, listenChannelId)
-        obj.addProperty("allow_mode", setting.getChannelMode())
-        fileManager.save()
+        val jsonManager = jsonGuildManager.get(guild.idLong)
+        jsonManager.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+            .allowMode = setting.getChannelMode()
+        jsonManager.save()
 
         return setting
     }
@@ -81,15 +74,16 @@ internal object JsonManager {
     fun addAllowChannels(
         guild: Guild,
         listenChannelId: Long,
-        detectedChannelIds: List<Long>,
+        detectedChannelIds: Set<Long>,
     ): ChannelData {
         // update map
         val setting = getChannelData(listenChannelId, guild).addAllows(detectedChannelIds)
 
         // update json file
-        val (fileManager, obj) = getOrPut(guild, listenChannelId)
-        obj.add("allow", setting.getAllowArray())
-        fileManager.save()
+        val jsonManager = jsonGuildManager.get(guild.idLong)
+        jsonManager.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+            .allow = setting.getAllow()
+        jsonManager.save()
 
         return setting
     }
@@ -97,15 +91,16 @@ internal object JsonManager {
     fun addBlockChannels(
         guild: Guild,
         listenChannelId: Long,
-        detectedChannelIds: List<Long>,
+        detectedChannelIds: Set<Long>,
     ): ChannelData {
         // update map
         val setting = getChannelData(listenChannelId, guild).addBlocks(detectedChannelIds)
 
         // update json file
-        val (fileManager, obj) = getOrPut(guild, listenChannelId)
-        obj.add("block", setting.getBlockArray())
-        fileManager.save()
+        val jsonManager = jsonGuildManager.get(guild.idLong)
+        jsonManager.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+            .block = setting.getBlock()
+        jsonManager.save()
 
         return setting
     }
@@ -115,16 +110,7 @@ internal object JsonManager {
         dataMap.remove(channelId)
 
         // remove json file
-        fileManagers[guildId]?.remove(channelId.toString())?.save()
-    }
-
-    private fun getOrPut(guild: Guild, listenChannelId: Long): Pair<JsonObjFileManager, JsonObject> {
-        val fileManager = fileManagers
-            .getOrPut(guild.idLong) { JsonObjFileManager(File(PLUGIN_DIR_FILE, "setting/${guild.id}.json")) }
-        val obj: JsonObject =
-            fileManager.computeIfAbsent(listenChannelId.toString(), ChannelData(guild).getJsonObject()).asJsonObject
-
-        return Pair(fileManager, obj)
+        jsonGuildManager.get(guildId).delete()
     }
 
     // getOrDefault

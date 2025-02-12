@@ -1,6 +1,5 @@
 package tw.xinshou.plugin.ticket.create
 
-import com.google.gson.JsonArray
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
@@ -80,7 +79,7 @@ internal object StepManager {
                 "preview-reason",
                 event.userLocale,
                 substitutor = Placeholder.get(event).put(
-                    "tt@reason-title", step.data.reasonTitle
+                    "tt@reason-title", step.data.json.reasonTitle
                 )
             ).build()
         ).queue()
@@ -188,7 +187,7 @@ internal object StepManager {
                 event.userLocale,
                 substitutor = Placeholder.get(event).putAll(
                     mapOf(
-                        "tt@reason-title" to step.data.reasonTitle
+                        "tt@reason-title" to step.data.json.reasonTitle
                     )
                 )
             ).build()
@@ -217,7 +216,12 @@ internal object StepManager {
 
         val manager = jsonGuildManager[event.guild!!.idLong]
         step.confirmCreateAction(event.userLocale, event.channel).map {
-            manager.computeIfAbsent(it.id, JsonArray()).asJsonArray.add(step.json)
+            val tmp = manager.data.get(it.id)
+            if (tmp == null) {
+                manager.data.put(it.id, mutableListOf(step.json))
+            } else {
+                tmp.add(step.json)
+            }
             manager.save()
         }.queue()
     }

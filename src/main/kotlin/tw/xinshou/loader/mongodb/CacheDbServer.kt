@@ -33,7 +33,6 @@ object CacheDbServer : AutoCloseable {
     private lateinit var runningMongod: TransitionWalker.ReachedState<RunningMongodProcess>
     private lateinit var mongoClient: com.mongodb.client.MongoClient
     internal val dbScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        private set
 
     private val mongod = object : Mongod() {
         override fun databaseDir() =

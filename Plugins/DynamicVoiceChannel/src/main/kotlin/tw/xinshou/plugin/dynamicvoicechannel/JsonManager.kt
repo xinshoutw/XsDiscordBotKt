@@ -1,11 +1,12 @@
 package tw.xinshou.plugin.dynamicvoicechannel
 
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import net.dv8tion.jda.api.entities.Guild
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
+import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.json.JsonGuildFileManager
 import tw.xinshou.plugin.dynamicvoicechannel.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.DataContainer
@@ -27,8 +28,7 @@ import java.io.File
 
 internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    val moshi: Moshi = Moshi.Builder().build()
-    val jsonAdapter: JsonAdapter<JsonDataClass> = moshi.adapter<JsonDataClass>(JsonDataClass::class.java)
+    val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
         dataDirectory = File(PLUGIN_DIR_FILE, "data"),
         adapter = jsonAdapter,

@@ -1,7 +1,6 @@
 package tw.xinshou.plugin.ticket
 
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.Permission.ADMINISTRATOR
 import net.dv8tion.jda.api.Permission.VIEW_CHANNEL
@@ -19,6 +18,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.messagecreator.ModalCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
+import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.json.JsonGuildFileManager
 import tw.xinshou.loader.util.ComponentField
 import tw.xinshou.loader.util.ComponentIdManager
@@ -31,12 +32,11 @@ import tw.xinshou.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 
 internal object Ticket {
-    val moshi: Moshi = Moshi.Builder().build()
-    val jsonAdapter: JsonAdapter<JsonDataClass> = moshi.adapter<JsonDataClass>(JsonDataClass::class.java)
+    val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
         dataDirectory = File(PLUGIN_DIR_FILE, "data"),
         adapter = jsonAdapter,
-        defaultInstance = mapOf()
+        defaultInstance = mutableMapOf()
     )
 
     val componentIdManager = ComponentIdManager(
@@ -99,7 +99,7 @@ internal object Ticket {
                 val reason = jsonGuildManager
                     .get(guild.idLong)
                     .data
-                    .get(event.messageIdLong)
+                    .get(event.messageId)
                     ?.get((idMap["btn_index"] as String).toInt())
                     ?.reasonTitle
                     ?: { throw IllegalStateException("Cannot find data.") }()
@@ -185,7 +185,7 @@ internal object Ticket {
                 val jsonData = jsonGuildManager
                     .get(guild.idLong)
                     .data
-                    .get((idMap["msg_id"] as String).toLong())!!
+                    .get((idMap["msg_id"] as String))!!
                     .get((idMap["btn_index"] as String).toInt())
                 val roleIds = jsonData.adminIds
                 val isAdmin = member.roles.any { roleIds.contains(it.idLong) }
@@ -224,7 +224,7 @@ internal object Ticket {
         val jsonData = jsonGuildManager
             .get(guild.idLong)
             .data
-            .get((idMap["msg_id"] as String).toLong())!!
+            .get((idMap["msg_id"] as String))!!
             .get((idMap["btn_index"] as String).toInt())
 
         val reason = event.getValue("reason")!!.asString
