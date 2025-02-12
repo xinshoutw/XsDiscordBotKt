@@ -11,7 +11,11 @@ group = "tw.xinshou.loader"
 version = "v2.0"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
-val outputPath = file("${rootProject.projectDir}/Server")
+val outputPath = if (project.hasProperty("outputPath")) {
+    file(project.property("outputPath") as String)
+} else {
+    file("${rootProject.projectDir}/Server")
+}
 extra["outputPath"] = outputPath
 
 defaultTasks("build")  // Allow to use `./gradlew` to auto build a full project
