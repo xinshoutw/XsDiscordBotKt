@@ -1,10 +1,10 @@
 package tw.xinshou.plugin.ticket.json.serializer
 
-data class DataContainer(
-    val reasonTitle: String,
-    val adminIds: List<Long>,
-    val categoryId: Long
+internal data class DataContainer(
+    var reasonTitle: String,
+    var adminIds: MutableList<Long>,
+    var categoryId: Long
 )
 
 
-typealias JsonDataClass = Map<String, List<DataContainer>>
+internal typealias JsonDataClass = MutableMap<String, MutableList<DataContainer>>

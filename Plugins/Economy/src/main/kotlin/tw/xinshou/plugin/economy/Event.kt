@@ -2,19 +2,22 @@ package tw.xinshou.plugin.economy
 
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
+import com.squareup.moshi.JsonAdapter
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.json.JsonObjFileManager
+import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.localizations.LangManager
 import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.economy.command.commandStringSet
 import tw.xinshou.plugin.economy.command.guildCommands
+import tw.xinshou.plugin.economy.json.JsonDataClass
 import tw.xinshou.plugin.economy.lang.CmdFileSerializer
 import tw.xinshou.plugin.economy.lang.CmdLocalizations
 import tw.xinshou.plugin.economy.serializer.MainConfigSerializer
@@ -67,7 +70,13 @@ object Event : PluginEvent(true) {
 
         when (MODE) {
             Mode.Json -> {
-                JsonImpl.json = JsonObjFileManager(File(PLUGIN_DIR_FILE, "data/data.json"))
+                val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
+
+                JsonImpl.jsonFileManager = JsonFileManager(
+                    File(PLUGIN_DIR_FILE, "data/data.json"),
+                    jsonAdapter,
+                    mutableMapOf()
+                )
                 storageManager = JsonImpl
             }
 

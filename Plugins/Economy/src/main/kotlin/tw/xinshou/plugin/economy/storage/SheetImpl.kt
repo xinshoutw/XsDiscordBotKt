@@ -10,6 +10,7 @@ import tw.xinshou.plugin.economy.Economy.Type
 import tw.xinshou.plugin.economy.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.economy.Event.config
 import tw.xinshou.plugin.economy.UserData
+import tw.xinshou.plugin.economy.json.DataContainer
 import kotlin.math.min
 
 /**
@@ -37,18 +38,20 @@ internal object SheetImpl : IStorage {
         else
             UserData(
                 user.idLong,
-                money = current[1][index].toString().toInt(),
-                cost = current[2][index].toString().toInt(),
+                DataContainer(
+                    money = current[1][index].toString().toInt(),
+                    cost = current[2][index].toString().toInt(),
+                )
             )
     }
 
     /**
      * Updates the spreadsheet with the latest user data.
      *
-     * @param data The user data to be updated.
+     * @param user The user data to be updated.
      */
-    override fun update(data: UserData) {
-        update(data.id, data.money, data.cost)
+    override fun update(user: UserData) {
+        update(user.id, user.data)
     }
 
     /**
@@ -64,8 +67,8 @@ internal object SheetImpl : IStorage {
         substitutor: Substitutor
     ): EmbedBuilder {
         val board = when (type) {
-            Type.Money -> queryAll().sortedByDescending { it.money }
-            Type.Cost -> queryAll().sortedByDescending { it.cost }
+            Type.Money -> queryAll().sortedByDescending { it.data.money }
+            Type.Cost -> queryAll().sortedByDescending { it.data.cost }
         }
 
         val count = min(board.size, min(config.boardUserShowLimit, 25))
@@ -74,13 +77,13 @@ internal object SheetImpl : IStorage {
             setDescription("")
 
             for (i in 1..count) {
-                val data = board[i - 1]
+                val userData = board[i - 1]
                 appendDescription(
                     substitutor
                         .putAll(
                             "index" to "$i",
-                            "name_mention" to "<@${data.id}>",
-                            "economy_board" to "${if (type == Type.Money) data.money else data.cost}",
+                            "name_mention" to "<@${userData.id}>",
+                            "economy_board" to "${if (type == Type.Money) userData.data.money else userData.data.cost}",
                         ).parse(descriptionTemplate)
                 )
             }
@@ -91,14 +94,14 @@ internal object SheetImpl : IStorage {
 
     override fun sortCostBoard() {}
 
-    private fun update(userId: Long, money: Int, cost: Int) {
+    private fun update(userId: Long, data: DataContainer) {
         val index = indexOfUserId(userId)
         if (index == -1) {
             // User not in the sheet, append new entry
             spreadsheet
                 .append(
                     config.sheetId, parseRange(config.sheetRangeId),
-                    ValueRange().setValues(listOf(listOf("$userId", "$money", "$cost")))
+                    ValueRange().setValues(listOf(listOf("$userId", "${data.money}", "${data.cost}")))
                 )
                 .setValueInputOption("RAW")
                 .execute()
@@ -108,7 +111,7 @@ internal object SheetImpl : IStorage {
                 .update(
                     config.sheetId,
                     parseRange(offsetRange(config.sheetRangeId, index)),
-                    ValueRange().setValues(listOf(listOf("$userId", "$money", "$cost")))
+                    ValueRange().setValues(listOf(listOf("$userId", "${data.money}", "${data.cost}")))
                 )
                 .setValueInputOption("RAW")
                 .execute()
@@ -126,7 +129,7 @@ internal object SheetImpl : IStorage {
     private fun queryAll(): List<UserData> {
         val data = query()
         return data[0].mapIndexed { index, id ->
-            UserData(id, data[1][index].toInt(), data[2][index].toInt())
+            UserData(id, DataContainer(data[1][index].toInt(), data[2][index].toInt()))
         }
     }
 

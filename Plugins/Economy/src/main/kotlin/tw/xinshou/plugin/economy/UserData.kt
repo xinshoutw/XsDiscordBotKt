@@ -1,16 +1,16 @@
 package tw.xinshou.plugin.economy
 
+import tw.xinshou.plugin.economy.json.DataContainer
+
 /**
  * Class representing a user's economic data.
  *
  * @property id Unique identifier for the user.
- * @property money Current balance of money the user holds.
- * @property cost Total expenses or costs recorded for the user.
+ * @property data DataContainer containing the user's balance and total cost.
  */
 internal class UserData(
     val id: Long,
-    var money: Int = 0,
-    var cost: Int = 0,
+    var data: DataContainer = DataContainer(0, 0),
 ) {
     /**
      * Adds a specified amount of money to the user's balance.
@@ -19,8 +19,8 @@ internal class UserData(
      * @return Updated balance after the addition.
      */
     fun addMoney(money: Int): Int {
-        this.money += money
-        return this.money
+        this.data.money += money
+        return this.data.money
     }
 
     /**
@@ -30,9 +30,9 @@ internal class UserData(
      * @return Updated balance after the removal.
      */
     fun removeMoneyAddCost(money: Int): Int {
-        this.money -= money
-        this.cost += money
-        return this.money
+        this.data.money -= money
+        this.data.cost += money
+        return this.data.money
     }
 
     /**
@@ -42,28 +42,28 @@ internal class UserData(
      * @return Updated balance.
      */
     fun setMoney(money: Int): Int {
-        this.money = money
-        return this.money
+        this.data.money = money
+        return this.data.money
     }
 
     fun addCost(cost: Int): Int {
-        this.cost += cost
-        return this.cost
+        this.data.cost += cost
+        return this.data.cost
     }
 
     fun removeCost(cost: Int): Int {
-        this.cost -= cost
-        return this.cost
+        this.data.cost -= cost
+        return this.data.cost
     }
 
     /**
      * Sets the user's total cost to a specified amount.
      *
-     * @param money New total cost amount.
+     * @param cost New total cost amount.
      * @return Updated total cost.
      */
-    fun setCost(money: Int): Int {
-        this.cost = money
-        return this.cost
+    fun setCost(cost: Int): Int {
+        this.data.cost = cost
+        return this.data.cost
     }
 }

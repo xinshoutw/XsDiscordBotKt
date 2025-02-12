@@ -1,7 +1,6 @@
 package tw.xinshou.plugin.ticket
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.JsonAdapter
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.Permission.ADMINISTRATOR
 import net.dv8tion.jda.api.Permission.VIEW_CHANNEL
@@ -19,7 +18,9 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.messagecreator.ModalCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.json.guild.JsonObjGuildFileManager
+import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.loader.json.JsonGuildFileManager
 import tw.xinshou.loader.util.ComponentField
 import tw.xinshou.loader.util.ComponentIdManager
 import tw.xinshou.loader.util.FieldType
@@ -31,8 +32,13 @@ import tw.xinshou.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 
 internal object Ticket {
-    val gson = Gson()
-    val jsonGuildManager = JsonObjGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
+    val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
+    val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
+        dataDirectory = File(PLUGIN_DIR_FILE, "data"),
+        adapter = jsonAdapter,
+        defaultInstance = mutableMapOf()
+    )
+
     val componentIdManager = ComponentIdManager(
         prefix = COMPONENT_PREFIX,
         idKeys = mapOf(
@@ -92,7 +98,7 @@ internal object Ticket {
             "press" -> {
                 val reason = jsonGuildManager
                     .get(guild.idLong)
-                    .toClass<JsonDataClass>(object : TypeToken<JsonDataClass>() {}.type)
+                    .data
                     .get(event.messageId)
                     ?.get((idMap["btn_index"] as String).toInt())
                     ?.reasonTitle
@@ -176,9 +182,12 @@ internal object Ticket {
 
             "delete" -> {
                 val member = event.member!!
-                val jsonData =
-                    jsonGuildManager[guild.idLong].getAsJsonArray(idMap["msg_id"] as String)[(idMap["btn_index"] as String).toInt()].asJsonObject
-                val roleIds = jsonData.getAsJsonArray("adminIds").map { it.asLong }
+                val jsonData = jsonGuildManager
+                    .get(guild.idLong)
+                    .data
+                    .get((idMap["msg_id"] as String))!!
+                    .get((idMap["btn_index"] as String).toInt())
+                val roleIds = jsonData.adminIds
                 val isAdmin = member.roles.any { roleIds.contains(it.idLong) }
 
                 if (isAdmin || member.hasPermission(ADMINISTRATOR)) {
@@ -212,11 +221,15 @@ internal object Ticket {
         event.deferReply(true).queue()
 
         val guild = event.guild!!
-        val jsonData =
-            jsonGuildManager[guild.idLong].getAsJsonArray(idMap["msg_id"] as String)[(idMap["btn_index"] as String).toInt()].asJsonObject
+        val jsonData = jsonGuildManager
+            .get(guild.idLong)
+            .data
+            .get((idMap["msg_id"] as String))!!
+            .get((idMap["btn_index"] as String).toInt())
+
         val reason = event.getValue("reason")!!.asString
-        val roleIds = jsonData.getAsJsonArray("adminIds").toList().map { it.asLong }
-        val categoryId = jsonData.get("categoryId").asLong
+        val roleIds = jsonData.adminIds
+        val categoryId = jsonData.categoryId
         val category: Category? = if (categoryId == 0L) {
             event.guildChannel.asTextChannel().parentCategory
         } else {

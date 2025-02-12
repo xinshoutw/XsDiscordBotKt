@@ -83,7 +83,7 @@ internal object ChatLogger {
         val channelIds = event.values
             .stream()
             .map { obj: IMentionable -> obj.idLong }
-            .collect(Collectors.toList())
+            .collect(Collectors.toSet())
         val idMap = componentIdManager.parse(event.componentId)
         val channelData = when (idMap["action"]) {
             "modify_allow_menu" -> {
@@ -316,11 +316,11 @@ internal object ChatLogger {
         val blockListFormat = PlaceholderLocalizations.blockListFormat[locale]
 
         val allowString = StringBuilder().apply {
-            if (channelData.getAllowArray().isEmpty) {
+            if (channelData.getAllow().isEmpty()) {
                 append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
             } else {
-                channelData.getAllowArray()
-                    .map { it.asString }
+                channelData.getAllow()
+                    .map { it.toString() }
                     .map {
                         substitutor.parse(
                             allowListFormat
@@ -332,11 +332,11 @@ internal object ChatLogger {
         }.toString()
 
         val blockString = StringBuilder().apply {
-            if (channelData.getBlockArray().isEmpty) {
+            if (channelData.getBlock().isEmpty()) {
                 append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
             } else {
-                channelData.getBlockArray()
-                    .map { it.asString }
+                channelData.getBlock()
+                    .map { it.toString() }
                     .map {
                         substitutor.parse(
                             blockListFormat

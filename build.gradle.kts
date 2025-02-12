@@ -30,11 +30,10 @@ dependencies {
     api("net.dv8tion:JDA:5.3.0") // JDA
     api("ch.qos.logback:logback-classic:1.5.16") // Log
     api("com.charleskorn.kaml:kaml:0.70.0") // Yaml
-    api("com.google.code.gson:gson:2.12.1") // Json
     api("commons-io:commons-io:2.18.0") // Commons io
     api("org.apache.commons:commons-text:1.13.0") // StringSubstitutor
     api("org.mongodb:mongodb-driver-kotlin-sync:5.3.1") // MongoDb
-    api("com.squareup.moshi:moshi-kotlin:1.15.2")
+    api("com.squareup.moshi:moshi-kotlin:1.15.2") // Json
 
     implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.1") // Embedded MongoDb
     implementation("com.google.protobuf:protobuf-java:4.29.3") // CVE fix

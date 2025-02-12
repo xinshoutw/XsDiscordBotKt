@@ -67,22 +67,22 @@ internal object Economy {
         if (checkValue(value, event)) return
 
         val targetUser = getTargetUser(event)
-        val data = queryData(targetUser)
+        val userData = queryData(targetUser)
         when (event.name) {
             "add-money" -> {
-                val before = data.money
-                data.addMoney(value)
-                saveAndUpdate(targetUser, data, "economy_money_before" to "$before")
+                val before = userData.data.money
+                userData.addMoney(value)
+                saveAndUpdate(targetUser, userData, "economy_money_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
 
             "remove-money" -> {
-                val beforeMoney = data.money
-                val beforeCost = data.cost
-                data.removeMoneyAddCost(value)
+                val beforeMoney = userData.data.money
+                val beforeCost = userData.data.cost
+                userData.removeMoneyAddCost(value)
                 saveAndUpdate(
-                    targetUser, data,
+                    targetUser, userData,
                     "economy_money_before" to "$beforeMoney",
                     "economy_cost_before" to "$beforeCost"
                 )
@@ -92,33 +92,33 @@ internal object Economy {
             }
 
             "set-money" -> {
-                val before = data.money
-                data.setMoney(value)
-                saveAndUpdate(targetUser, data, "economy_money_before" to "$before")
+                val before = userData.data.money
+                userData.setMoney(value)
+                saveAndUpdate(targetUser, userData, "economy_money_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
 
             "add-cost" -> {
-                val before = data.cost
-                data.addCost(value)
-                saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
+                val before = userData.data.cost
+                userData.addCost(value)
+                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
 
             "remove-cost" -> {
-                val before = data.cost
-                data.removeCost(value)
-                saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
+                val before = userData.data.cost
+                userData.removeCost(value)
+                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
 
             "set-cost" -> {
-                val before = data.cost
-                data.setCost(value)
-                saveAndUpdate(targetUser, data, "economy_cost_before" to "$before")
+                val before = userData.data.cost
+                userData.setCost(value)
+                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
@@ -126,18 +126,18 @@ internal object Economy {
     }
 
     private fun updatePapi(user: User) {
-        val data = queryData(user)
+        val userData = queryData(user)
         Placeholder.update(
             user, hashMapOf(
-                "economy_money" to "${data.money}", "economy_cost" to "${data.cost}"
+                "economy_money" to "${userData.data.money}", "economy_cost" to "${userData.data.cost}"
             )
         )
     }
 
-    private fun updatePapi(user: User, data: UserData, map: Map<String, String> = emptyMap()) {
+    private fun updatePapi(user: User, userData: UserData, map: Map<String, String> = emptyMap()) {
         Placeholder.update(
             user, hashMapOf(
-                "economy_money" to "${data.money}", "economy_cost" to "${data.cost}"
+                "economy_money" to "${userData.data.money}", "economy_cost" to "${userData.data.cost}"
             ).apply { putAll(map) })
     }
 

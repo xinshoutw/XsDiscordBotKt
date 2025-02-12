@@ -3,10 +3,9 @@ package tw.xinshou.loader.mongodb
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.bson.Document
 import org.slf4j.LoggerFactory
+import tw.xinshou.loader.json.JsonFileManager
 
 
 /**
@@ -134,7 +133,7 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
         return when (value) {
             is Document, is String, is Number, is Boolean -> value
             else -> {
-                val adapter = moshi.adapter(Any::class.java)
+                val adapter = JsonFileManager.moshi.adapter(Any::class.java)
                 val jsonStr = adapter.toJson(value)
                 Document.parse(jsonStr)
             }
@@ -143,8 +142,5 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val moshi: Moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
     }
 }

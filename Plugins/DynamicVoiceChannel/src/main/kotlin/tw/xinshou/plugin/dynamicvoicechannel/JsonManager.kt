@@ -1,12 +1,13 @@
 package tw.xinshou.plugin.dynamicvoicechannel
 
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.JsonAdapter
 import net.dv8tion.jda.api.entities.Guild
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
 import tw.xinshou.loader.json.JsonFileManager
-import tw.xinshou.loader.json.guild.JsonAryGuildFileManager
+import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.loader.json.JsonGuildFileManager
 import tw.xinshou.plugin.dynamicvoicechannel.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.DataContainer
 import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.JsonDataClass
@@ -27,11 +28,17 @@ import java.io.File
 
 internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val jsonGuildManager: JsonAryGuildFileManager = JsonAryGuildFileManager(File(PLUGIN_DIR_FILE, "data"))
+    val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
+    val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
+        dataDirectory = File(PLUGIN_DIR_FILE, "data"),
+        adapter = jsonAdapter,
+        defaultInstance = mutableListOf()
+    )
+
     private val dataSet: HashSet<DataContainer> = HashSet()
 
     init {
-        jsonGuildManager.mapper.forEach { guildId, json ->
+        jsonGuildManager.mapper.forEach { guildId, jsonManager ->
             // check guild available
             val guild: Guild? = jdaBot.getGuildById(guildId)
             if (guild == null) {
@@ -41,10 +48,10 @@ internal object JsonManager {
 
             // check json data
             var index = 0
-            json.toClass<JsonDataClass>(object : TypeToken<JsonDataClass>() {}.type).forEach { data ->
+            jsonManager.data.forEach { data ->
                 // check category available
                 if (guild.getCategoryById(data.categoryId) == null) {
-                    json.remove(index)
+                    jsonManager.data.removeAt(index)
                     return@forEach
                 }
 
@@ -57,7 +64,7 @@ internal object JsonManager {
                     }
                 }
                 if (!checkFlag) {
-                    json.remove(index)
+                    jsonManager.data.removeAt(index)
                     return@forEach
                 }
 
@@ -67,13 +74,13 @@ internal object JsonManager {
                 index++
             }
 
-            json.save()
+            jsonManager.save()
         }
     }
 
     fun addData(guildId: Long, data: DataContainer) {
         val json = jsonGuildManager.get(guildId)
-        json.add(JsonFileManager.gson.toJsonTree(data))
+        json.data.add(data)
         json.save()
 
         dataSet.removeIf { it.categoryId == data.categoryId && it.defaultName == data.defaultName }
@@ -83,13 +90,13 @@ internal object JsonManager {
     fun removeData(guildId: Long, categoryId: Long, defaultName: String): Boolean {
         dataSet.removeIf { it.categoryId == categoryId && it.defaultName == defaultName }
 
-        val json = jsonGuildManager.get(guildId)
+        val jsonManager = jsonGuildManager.get(guildId)
         var index = 0
-        json.toClass<JsonDataClass>(object : TypeToken<JsonDataClass>() {}.type).forEach { data ->
+        jsonManager.data.forEach { data ->
             // check category available
             if (categoryId == data.categoryId && defaultName == data.defaultName) {
-                json.remove(index)
-                json.save()
+                jsonManager.data.removeAt(index)
+                jsonManager.save()
                 return false
             }
             index++
