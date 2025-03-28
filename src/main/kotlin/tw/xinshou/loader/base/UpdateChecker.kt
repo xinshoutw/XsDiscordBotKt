@@ -14,7 +14,7 @@ import kotlin.system.exitProcess
 
 internal object UpdateChecker {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private const val VERSION = "v2.0"
+    private const val VERSION = "v2.0.1"
 
     fun versionCheck(): Boolean {
         if (ignoreVersionCheck) {

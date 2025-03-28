@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "tw.xinshou.loader"
-version = "v2.0"
+version = "v2.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 val outputPath = if (project.hasProperty("outputPath")) {
