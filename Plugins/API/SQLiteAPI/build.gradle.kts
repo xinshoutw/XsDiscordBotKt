@@ -9,10 +9,10 @@ plugins {
 }
 
 dependencies {
-    api("org.xerial:sqlite-jdbc:3.49.0.0")
-    api("org.jetbrains.exposed:exposed-core:0.59.0")
-    api("org.jetbrains.exposed:exposed-dao:0.59.0")
-    api("org.jetbrains.exposed:exposed-jdbc:0.59.0")
+    api("org.xerial:sqlite-jdbc:3.49.1.0")
+    api("org.jetbrains.exposed:exposed-core:0.60.0")
+    api("org.jetbrains.exposed:exposed-dao:0.60.0")
+    api("org.jetbrains.exposed:exposed-jdbc:0.60.0")
 }
 
 tasks.build {

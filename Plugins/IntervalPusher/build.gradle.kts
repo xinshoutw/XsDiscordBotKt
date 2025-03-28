@@ -3,7 +3,7 @@ group = "tw.xinshou.plugin"
 version = "0.1.0"
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
 }
 
 dependencies {
