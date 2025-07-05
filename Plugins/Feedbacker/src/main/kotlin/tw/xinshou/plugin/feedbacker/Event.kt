@@ -15,8 +15,8 @@ import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.feedbacker.command.guildCommands
-import tw.xinshou.plugin.feedbacker.lang.CmdFileSerializer
-import tw.xinshou.plugin.feedbacker.lang.CmdLocalizations
+import tw.xinshou.plugin.feedbacker.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.feedbacker.command.lang.CmdLocalizations
 import tw.xinshou.plugin.feedbacker.serializer.MainConfigSerializer
 import java.io.File
 import java.io.IOException

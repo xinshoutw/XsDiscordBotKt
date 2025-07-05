@@ -15,8 +15,8 @@ import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.ticket.command.commandNameSet
 import tw.xinshou.plugin.ticket.command.guildCommands
-import tw.xinshou.plugin.ticket.lang.CmdFileSerializer
-import tw.xinshou.plugin.ticket.lang.CmdLocalizations
+import tw.xinshou.plugin.ticket.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.ticket.command.lang.CmdLocalizations
 import java.io.File
 
 object Event : PluginEvent(true) {

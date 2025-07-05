@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.basiccalculator.lang
+package tw.xinshou.plugin.logger.voice.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -6,18 +6,18 @@ import tw.xinshou.loader.localizations.LocalTemplate
 
 @Serializable
 internal data class CmdFileSerializer(
-    @SerialName("basic-calculate")
-    val basicCalculate: Command,
+    @SerialName("voice-logger")
+    val voiceLogger: Command,
 ) {
     @Serializable
     internal data class Command(
         val name: String,
         val description: String,
-        val options: Options,
+        val subcommands: SubCommands,
     ) {
         @Serializable
-        internal data class Options(
-            val formula: LocalTemplate.NDString
+        internal data class SubCommands(
+            val setting: LocalTemplate.NDString,
         )
     }
 }

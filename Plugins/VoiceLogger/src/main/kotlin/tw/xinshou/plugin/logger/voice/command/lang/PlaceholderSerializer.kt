@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.logger.voice.lang
+package tw.xinshou.plugin.logger.voice.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -1,10 +1,10 @@
-package tw.xinshou.plugin.logger.voice.lang
+package tw.xinshou.plugin.logger.chat.command.lang
 
 import tw.xinshou.loader.localizations.LocalTemplate
 import tw.xinshou.loader.localizations.LocaleData
 
 internal object CmdLocalizations {
-    val voiceLogger = CommandWithMemberLd()
+    val chatLogger = CommandWithMemberLd()
 
     internal class CommandWithMemberLd {
         val name = LocaleData()

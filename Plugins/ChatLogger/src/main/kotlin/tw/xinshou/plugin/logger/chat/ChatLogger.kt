@@ -24,7 +24,7 @@ import tw.xinshou.plugin.logger.chat.Event.COMPONENT_PREFIX
 import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.logger.chat.Event.config
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
-import tw.xinshou.plugin.logger.chat.lang.PlaceholderLocalizations
+import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderLocalizations
 import java.io.File
 import java.util.stream.Collectors
 

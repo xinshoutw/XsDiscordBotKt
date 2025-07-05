@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.dynamicvoicechannel.lang
+package tw.xinshou.plugin.dynamicvoicechannel.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

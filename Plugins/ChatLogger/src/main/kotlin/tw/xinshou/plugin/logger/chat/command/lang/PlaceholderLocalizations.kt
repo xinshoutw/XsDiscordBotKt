@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.logger.chat.lang
+package tw.xinshou.plugin.logger.chat.command.lang
 
 import tw.xinshou.loader.localizations.LocaleData
 

@@ -21,10 +21,10 @@ import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
 import tw.xinshou.plugin.logger.chat.command.guildCommands
-import tw.xinshou.plugin.logger.chat.lang.CmdFileSerializer
-import tw.xinshou.plugin.logger.chat.lang.CmdLocalizations
-import tw.xinshou.plugin.logger.chat.lang.PlaceholderLocalizations
-import tw.xinshou.plugin.logger.chat.lang.PlaceholderSerializer
+import tw.xinshou.plugin.logger.chat.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.logger.chat.command.lang.CmdLocalizations
+import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderLocalizations
+import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderSerializer
 import tw.xinshou.plugin.logger.chat.serializer.MainConfigSerializer
 import java.io.File
 

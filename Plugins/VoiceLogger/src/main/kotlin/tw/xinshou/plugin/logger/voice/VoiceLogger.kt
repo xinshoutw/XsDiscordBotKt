@@ -23,7 +23,7 @@ import tw.xinshou.plugin.logger.voice.Event.COMPONENT_PREFIX
 import tw.xinshou.plugin.logger.voice.Event.DEFAULT_LOCALE
 import tw.xinshou.plugin.logger.voice.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.logger.voice.JsonManager.dataMap
-import tw.xinshou.plugin.logger.voice.lang.PlaceholderLocalizations
+import tw.xinshou.plugin.logger.voice.command.lang.PlaceholderLocalizations
 import java.io.File
 import java.util.stream.Collectors
 

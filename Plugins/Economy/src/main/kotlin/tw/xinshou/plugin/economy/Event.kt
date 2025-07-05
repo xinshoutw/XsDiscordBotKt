@@ -18,8 +18,8 @@ import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.economy.command.commandStringSet
 import tw.xinshou.plugin.economy.command.guildCommands
 import tw.xinshou.plugin.economy.json.JsonDataClass
-import tw.xinshou.plugin.economy.lang.CmdFileSerializer
-import tw.xinshou.plugin.economy.lang.CmdLocalizations
+import tw.xinshou.plugin.economy.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.economy.command.lang.CmdLocalizations
 import tw.xinshou.plugin.economy.serializer.MainConfigSerializer
 import tw.xinshou.plugin.economy.storage.IStorage
 import tw.xinshou.plugin.economy.storage.JsonImpl

@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.logger.voice.lang
+package tw.xinshou.plugin.logger.voice.command.lang
 
 import tw.xinshou.loader.localizations.LocaleData
 

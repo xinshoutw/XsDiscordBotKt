@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.ticket.lang
+package tw.xinshou.plugin.ticket.command.lang
 
 import tw.xinshou.loader.localizations.LocalTemplate
 import tw.xinshou.loader.localizations.LocaleData

@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.ticket.lang
+package tw.xinshou.plugin.ticket.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

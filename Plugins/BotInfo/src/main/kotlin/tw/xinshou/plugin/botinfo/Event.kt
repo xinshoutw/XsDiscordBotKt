@@ -10,8 +10,8 @@ import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.botinfo.command.guildCommands
-import tw.xinshou.plugin.botinfo.lang.CmdFileSerializer
-import tw.xinshou.plugin.botinfo.lang.CmdLocalizations
+import tw.xinshou.plugin.botinfo.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.botinfo.command.lang.CmdLocalizations
 import java.io.File
 
 object Event : PluginEvent(true) {

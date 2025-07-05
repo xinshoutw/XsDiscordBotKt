@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.plugin.economy.lang.CmdLocalizations
+import tw.xinshou.plugin.economy.command.lang.CmdLocalizations
 
 internal val commandStringSet: Set<String> = setOf(
     "balance",

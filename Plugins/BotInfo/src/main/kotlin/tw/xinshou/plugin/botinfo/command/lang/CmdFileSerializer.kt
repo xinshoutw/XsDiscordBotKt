@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.botinfo.lang
+package tw.xinshou.plugin.botinfo.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -15,10 +15,10 @@ import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.logger.voice.command.guildCommands
-import tw.xinshou.plugin.logger.voice.lang.CmdFileSerializer
-import tw.xinshou.plugin.logger.voice.lang.CmdLocalizations
-import tw.xinshou.plugin.logger.voice.lang.PlaceholderLocalizations
-import tw.xinshou.plugin.logger.voice.lang.PlaceholderSerializer
+import tw.xinshou.plugin.logger.voice.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.logger.voice.command.lang.CmdLocalizations
+import tw.xinshou.plugin.logger.voice.command.lang.PlaceholderLocalizations
+import tw.xinshou.plugin.logger.voice.command.lang.PlaceholderSerializer
 import java.io.File
 
 

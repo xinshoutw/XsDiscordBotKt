@@ -3,7 +3,7 @@ package tw.xinshou.plugin.botinfo.command
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import tw.xinshou.plugin.botinfo.lang.CmdLocalizations
+import tw.xinshou.plugin.botinfo.command.lang.CmdLocalizations
 
 /**
  * Retrieves and constructs an array of guild-specific command configurations.

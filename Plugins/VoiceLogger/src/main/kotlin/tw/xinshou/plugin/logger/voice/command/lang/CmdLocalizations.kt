@@ -1,18 +1,18 @@
-package tw.xinshou.plugin.feedbacker.lang
+package tw.xinshou.plugin.logger.voice.command.lang
 
 import tw.xinshou.loader.localizations.LocalTemplate
 import tw.xinshou.loader.localizations.LocaleData
 
 internal object CmdLocalizations {
-    val feedbacker = CommandWithMemberLd()
+    val voiceLogger = CommandWithMemberLd()
 
     internal class CommandWithMemberLd {
-        val options = OptionsLd()
         val name = LocaleData()
         val description = LocaleData()
+        val subcommands = SubCommandsLd()
 
-        internal class OptionsLd {
-            val member = LocalTemplate.NDLocalData()
+        internal class SubCommandsLd {
+            val setting = LocalTemplate.NDLocalData()
         }
     }
 }

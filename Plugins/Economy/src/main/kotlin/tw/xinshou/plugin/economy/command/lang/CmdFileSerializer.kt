@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.economy.lang
+package tw.xinshou.plugin.economy.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

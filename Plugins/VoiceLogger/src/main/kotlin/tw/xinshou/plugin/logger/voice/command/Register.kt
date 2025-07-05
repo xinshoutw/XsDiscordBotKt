@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import tw.xinshou.plugin.logger.voice.lang.CmdLocalizations
+import tw.xinshou.plugin.logger.voice.command.lang.CmdLocalizations
 
 internal val guildCommands: Array<CommandData>
     get() = arrayOf(

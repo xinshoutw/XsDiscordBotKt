@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.logger.chat.lang
+package tw.xinshou.plugin.logger.chat.command.lang
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

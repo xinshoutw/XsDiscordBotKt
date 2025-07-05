@@ -11,8 +11,8 @@ import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.basiccalculator.command.guildCommands
-import tw.xinshou.plugin.basiccalculator.lang.CmdFileSerializer
-import tw.xinshou.plugin.basiccalculator.lang.CmdLocalizations
+import tw.xinshou.plugin.basiccalculator.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.basiccalculator.command.lang.CmdLocalizations
 import java.io.File
 
 

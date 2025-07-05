@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.feedbacker.lang
+package tw.xinshou.plugin.feedbacker.command.lang
 
 import kotlinx.serialization.Serializable
 import tw.xinshou.loader.localizations.LocalTemplate

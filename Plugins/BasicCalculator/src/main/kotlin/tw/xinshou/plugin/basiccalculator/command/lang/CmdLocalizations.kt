@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.basiccalculator.lang
+package tw.xinshou.plugin.basiccalculator.command.lang
 
 import tw.xinshou.loader.localizations.LocalTemplate
 import tw.xinshou.loader.localizations.LocaleData

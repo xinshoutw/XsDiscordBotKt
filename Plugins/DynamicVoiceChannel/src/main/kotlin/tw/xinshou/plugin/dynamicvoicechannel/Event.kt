@@ -14,8 +14,8 @@ import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.dynamicvoicechannel.command.commandStringSet
 import tw.xinshou.plugin.dynamicvoicechannel.command.guildCommands
-import tw.xinshou.plugin.dynamicvoicechannel.lang.CmdFileSerializer
-import tw.xinshou.plugin.dynamicvoicechannel.lang.CmdLocalizations
+import tw.xinshou.plugin.dynamicvoicechannel.command.lang.CmdFileSerializer
+import tw.xinshou.plugin.dynamicvoicechannel.command.lang.CmdLocalizations
 import java.io.File
 
 
