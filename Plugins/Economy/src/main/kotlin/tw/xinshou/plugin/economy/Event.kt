@@ -11,7 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.json.JsonFileManager
 import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
-import tw.xinshou.loader.localizations.LangManager
+import tw.xinshou.loader.localizations.DiscordLocalizationExporter
 import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
@@ -88,7 +88,7 @@ object Event : PluginEvent(true) {
     override fun reloadLang() {
         fileGetter.exportDefaultDirectory("lang")
 
-        LangManager(
+        DiscordLocalizationExporter(
             pluginDirFile = PLUGIN_DIR_FILE,
             fileName = "register.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,

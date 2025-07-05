@@ -23,7 +23,7 @@ import kotlin.reflect.full.memberProperties
  * @param clazzLocalization the class type of the all localized data.
  */
 @OptIn(InternalSerializationApi::class)
-class LangManager<D : Any, L : Any>(
+class DiscordLocalizationExporter<D : Any, L : Any>(
     private val pluginDirFile: File,
     private val fileName: String,
     private val defaultLocale: DiscordLocale,

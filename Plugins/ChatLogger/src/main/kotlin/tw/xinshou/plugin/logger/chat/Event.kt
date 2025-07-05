@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
-import tw.xinshou.loader.localizations.LangManager
+import tw.xinshou.loader.localizations.DiscordLocalizationExporter
 import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
@@ -64,7 +64,7 @@ object Event : PluginEvent(true) {
     override fun reloadLang() {
         fileGetter.exportDefaultDirectory("lang")
 
-        LangManager(
+        DiscordLocalizationExporter(
             PLUGIN_DIR_FILE,
             "register.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
@@ -72,7 +72,7 @@ object Event : PluginEvent(true) {
             clazzLocalization = CmdLocalizations::class
         )
 
-        LangManager(
+        DiscordLocalizationExporter(
             PLUGIN_DIR_FILE,
             "placeholder.yaml",
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
