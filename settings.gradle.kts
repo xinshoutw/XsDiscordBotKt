@@ -52,3 +52,6 @@ findProject(":Plugins:Ticket")?.name = "Ticket"
 
 include("Plugins:AutoRole")
 findProject(":Plugins:AutoRole")?.name = "AutoRole"
+
+include("Plugins:RentSystem")
+findProject(":Plugins:RentSystem")?.name = "RentSystem"
