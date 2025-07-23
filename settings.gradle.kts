@@ -55,3 +55,8 @@ findProject(":Plugins:AutoRole")?.name = "AutoRole"
 
 include("Plugins:RentSystem")
 findProject(":Plugins:RentSystem")?.name = "RentSystem"
+
+include("Plugins:MusicPlayer")
+findProject(":Plugins:MusicPlayer")?.name = "MusicPlayer"
+
+include("Plugins:API:AudioAPI")

@@ -1,0 +1,91 @@
+enabled: true  # 啟用插件
+
+command_message_acknowledges:
+  join: false
+  disconnect: false
+  stop: false
+  play: true
+  pause: true
+  resume: true
+  skip: true
+  queue: true
+  volume: true
+  now_playing: true
+
+# 音源引擎配置
+engines:
+  # YouTube 配置
+  youtube:
+    enabled: true
+    search_enabled: true      # 啟用搜索功能
+    auto_complete: true       # 啟用自動完成
+    max_search_results: 25    # 自動完成最大結果數
+
+  # SoundCloud 配置
+  soundcloud:
+    enabled: true
+    client_id: ""             # SoundCloud Client ID (選填)
+
+  # Spotify 配置
+  spotify:
+    enabled: false            # 需要手動啟用
+    client_id: "01234567890123456789012367890123"
+    client_secret: "01234567890123456789012367890123"
+    country_code: "TW"        # 地區代碼
+
+# 播放器設定
+player:
+  default_volume: 40          # 預設音量 (0-100)
+  auto_leave_timeout: 600000  # 自動離開語音頻道時間 (毫秒)
+  max_queue_size: 100         # 最大佇列大小
+  search_timeout: 30000       # 搜索超時時間 (毫秒)
+
+  # 播放模式設定
+  playback:
+    enable_lyrics: true       # 啟用歌詞功能
+    show_artwork: true        # 顯示封面圖片
+    show_author_avatar: true  # 顯示作者頭像
+    lyrics_preview_length: 500 # 歌詞預覽長度
+
+  # 快取設定
+  cache:
+    search_cache_size: 1000   # 搜索結果快取大小
+    search_cache_ttl: 300000  # 搜索快取生存時間 (毫秒)
+    artwork_cache_enabled: true # 啟用封面圖片快取
+
+# 訊息設定
+messages:
+  show_detailed_errors: true  # 顯示詳細錯誤訊息
+  announce_new_track: true    # 新歌曲播放通知
+  use_enhanced_embeds: true   # 使用增強嵌入訊息
+
+  # 嵌入訊息設定
+  embeds:
+    show_thumbnails: true     # 顯示縮圖
+    show_progress_bar: false  # 顯示進度條 (實驗性功能)
+    color_scheme: "dynamic"   # 顏色方案: "dynamic", "blue", "green", "purple"
+
+# 功能開關
+features:
+  auto_complete: true         # 自動完成功能
+  lyrics_support: true        # 歌詞支援
+  artwork_display: true       # 封面圖片顯示
+  multi_skip: true           # 多歌曲跳過
+  volume_control: true        # 音量控制
+
+# 性能設定
+performance:
+  max_concurrent_searches: 5  # 最大並發搜索數
+  search_thread_pool_size: 3  # 搜索線程池大小
+  audio_send_system: "JDA"    # 音頻發送系統: "JDA", "NAS"
+
+# 快取配置
+cache:
+  size: 100                   # 快取大小 (MB)
+  expire_time: 24            # 快取過期時間 (小時)
+
+# 開發者設定
+developer:
+  debug_mode: false          # 調試模式
+  log_search_queries: false  # 記錄搜索查詢
+  log_audio_events: false    # 記錄音頻事件

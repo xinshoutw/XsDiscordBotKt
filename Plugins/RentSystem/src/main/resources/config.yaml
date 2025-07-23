@@ -1,0 +1,68 @@
+guild_id: 1390682572429856841
+forum_channel_id: 1391067942266867853
+forum_channel_name_format: "〔 %rs@yyyy%.%rs@MM% 〕"
+
+time:
+  start_time:
+    year: 2025
+    month: 6
+  end_time:
+    year: 2026
+    month: 5
+
+members:
+  - room: "A"
+    name: "xinshoutw"
+    id: 810822763601461318
+    rent: 11000
+
+  - room: "B"
+    name: "Sam"
+    id: 519528961491992582
+    rent: 11000
+
+  - room: "C"
+    name: "Miller"
+    id: 911505368096595999
+    rent: 8000
+
+
+expense_categories:
+  Power:
+    enabled: true
+    calculation_method: "progressive_contribution"
+    meters:
+      - "public"
+      - "xinshoutw"
+      - "Sam"
+      - "Miller"
+    share:
+      - 810822763601461318
+      - 519528961491992582
+      - 911505368096595999
+
+  Water:
+    enabled: true
+    calculation_method: "average_split"
+    meters:
+      - "public"
+    share:
+      - 810822763601461318
+      - 519528961491992582
+      - 911505368096595999
+
+  Misc:
+    enabled: true
+    calculation_method: "average_split"
+    share:
+      - 810822763601461318
+      - 519528961491992582
+      - 911505368096595999
+
+  Internet:
+    enabled: true
+    calculation_method: "fixed_cost_split"
+    fixed_cost: 1200
+    share:
+      - 810822763601461318
+      - 519528961491992582

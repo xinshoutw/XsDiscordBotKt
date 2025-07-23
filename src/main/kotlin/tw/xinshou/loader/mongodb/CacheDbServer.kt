@@ -89,9 +89,7 @@ object CacheDbServer : AutoCloseable {
      * @param databaseName 資料庫名稱
      * @return MongoDatabase 實例
      */
-    fun getDatabase(databaseName: String): MongoDatabase {
-        return mongoClient.getDatabase(databaseName)
-    }
+    fun getDatabase(databaseName: String): MongoDatabase = mongoClient.getDatabase(databaseName)
 
     /**
      * 取得內部使用的 MongoClient 實例。

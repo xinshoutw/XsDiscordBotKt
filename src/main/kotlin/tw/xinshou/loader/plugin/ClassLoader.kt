@@ -24,7 +24,7 @@ internal object ClassLoader : URLClassLoader(arrayOfNulls(0), BotLoader::class.j
      * containing classes and resources.
      *
      * @param filePath The JAR file path to be added.
-     * @param main The main class path used to identify the JAR's resource path.
+     * @param main The tw.xinshou.loader.main class path used to identify the JAR's resource path.
      * @throws RuntimeException if the resource path is already in use.
      */
     fun addJar(filePath: Path, main: String) {

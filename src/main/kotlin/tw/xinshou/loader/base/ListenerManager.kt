@@ -1,5 +1,6 @@
 package tw.xinshou.loader.base
 
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.Logger
@@ -26,6 +27,12 @@ internal class ListenerManager(
         ConsoleLogger.run()
 
         logger.info("Bot ready.")
+    }
+
+    override fun onGuildJoin(event: GuildJoinEvent) {
+        // Register guild-specific commands when the bot joins a new guild
+        event.guild.updateCommands().addCommands(guildCommands).queue()
+        logger.info("Guild joined: {} ({})", event.guild.name, event.guild.id)
     }
 
     companion object {

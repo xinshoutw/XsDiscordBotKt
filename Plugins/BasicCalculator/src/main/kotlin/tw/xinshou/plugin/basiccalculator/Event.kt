@@ -25,8 +25,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
-
+        reload(true)
         logger.info("BasicCalculator loaded.")
     }
 
@@ -34,7 +33,7 @@ object Event : PluginEvent(true) {
         logger.info("BasicCalculator unloaded.")
     }
 
-    override fun reloadLang() {
+    override fun reload(init: Boolean) {
         fileGetter.exportDefaultDirectory("lang")
 
         DiscordLocalizationExporter(

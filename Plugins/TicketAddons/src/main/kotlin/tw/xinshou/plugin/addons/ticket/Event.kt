@@ -19,7 +19,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
+        reload(true)
 
         logger.info("TicketAddons loaded.")
     }
@@ -28,7 +28,8 @@ object Event : PluginEvent(true) {
         logger.info("TicketAddons unloaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
+        fileGetter.exportDefaultDirectory("lang")
 
         try {
             fileGetter.readInputStream("config.yaml").use {
@@ -39,10 +40,6 @@ object Event : PluginEvent(true) {
         }
 
         logger.info("Setting file loaded successfully.")
-    }
-
-    override fun reloadLang() {
-        fileGetter.exportDefaultDirectory("lang")
     }
 
     override fun onChannelCreate(event: ChannelCreateEvent) {

@@ -1,0 +1,115 @@
+embeds: # A list of embeds to display.
+  - author:
+      name: "Shared - 2025.05"
+    title:
+      text: "—"
+    color_code: "#4765A9" # Corresponds to decimal 4679849
+    fields:
+      - name: "Water"
+        value: "```8 km³```"
+        inline: true
+      - name: " "
+        value: "```$ 150 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: "Power"
+        value: "```350 kWh```"
+        inline: true
+      - name: " "
+        value: "```$ 150 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: "Misc"
+        value: "```7 Items```"
+        inline: true
+      - name: " "
+        value: "```$ 3764 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+
+  - author:
+      name: "Misc"
+    title:
+      text: "—"
+    color_code: "#3A6D52" # Corresponds to decimal 3831122
+    # Use a literal block scalar to preserve newlines and formatting
+    description: |
+      - 掃把+畚箕
+      `$ 185 `
+      - 好神拖
+      `$ 779`
+      - 洗衣機清潔劑
+      `$ 45`
+      - 馬桶疏通器
+      `$ 99`
+      - 5L小垃圾袋
+      `$ 36`
+      - 25L大垃圾袋
+      `$ 180`
+      - 生飲濾水芯
+      `$ 2440`
+
+components: # A list of action rows.
+  - !ButtonsComponent
+    buttons: # View switching buttons
+      - uid:
+          action: "switch_view"
+          sub_action: "shared"
+        style: 2 # GRAY
+        emoji:
+          formatted: "🌏"
+      - uid:
+          action: "switch_view"
+          sub_action: "details"
+        style: 3 # GREEN
+        emoji:
+          formatted: "🚪"
+      - uid:
+          action: "switch_view"
+          sub_action: "member_a"
+        style: 2 # GRAY
+        label: "A"
+      - uid:
+          action: "switch_view"
+          sub_action: "member_b"
+        style: 2 # GRAY
+        label: "B"
+      - uid:
+          action: "switch_view"
+          sub_action: "member_c"
+        style: 2 # GRAY
+        label: "C"
+
+  - !ButtonsComponent
+    buttons: # Time navigation buttons
+      - uid:
+          action: "navigate_time"
+          sub_action: "prev_month_3"
+        style: 2 # GRAY
+        label: " <<<"
+      - uid:
+          action: "navigate_time"
+          sub_action: "prev_month_1"
+        style: 2 # GRAY
+        label: "<"
+      - uid:
+          action: "navigate_time"
+          sub_action: "current_month"
+        style: 3 # GREEN
+        label: "本月"
+      - uid:
+          action: "navigate_time"
+          sub_action: "next_month_1"
+        style: 2 # GRAY
+        label: ">"
+      - uid:
+          action: "navigate_time"
+          sub_action: "next_month_3"
+        style: 2 # GRAY
+        label: " >>>"

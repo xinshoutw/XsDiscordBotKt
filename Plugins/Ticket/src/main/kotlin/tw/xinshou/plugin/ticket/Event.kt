@@ -26,7 +26,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadLang()
+        reload(true)
 
         logger.info("Ticket loaded.")
     }
@@ -35,7 +35,7 @@ object Event : PluginEvent(true) {
         logger.info("Ticket unloaded.")
     }
 
-    override fun reloadLang() {
+    override fun reload(init: Boolean) {
         fileGetter.exportDefaultDirectory("lang")
 
         DiscordLocalizationExporter(

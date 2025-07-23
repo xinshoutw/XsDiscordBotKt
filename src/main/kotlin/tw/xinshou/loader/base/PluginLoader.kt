@@ -111,9 +111,7 @@ internal object PluginLoader {
     /**
      * Reloads all plugins by calling their reload methods.
      */
-    fun reload() {
-        pluginQueue.values.forEach { it.reloadAll() }
-    }
+    fun reload() = pluginQueue.values.forEach { it.reload() }
 
     /**
      * Recursively loads a plugin and its dependencies.

@@ -1,5 +1,6 @@
 package tw.xinshou.plugin.dynamicvoicechannel
 
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
@@ -114,16 +115,21 @@ internal object DynamicVoiceChannel {
         channelJoin.createCopy().flatMap {
             it.manager.setPosition(0)
         }.flatMap {
-            channelJoin.manager.setPosition(1)
+            channelJoin.manager.let {
+                it.setPosition(1)
+                it.setName(
+                    Placeholder.get(event.member).putAll(
+                        "dvc@custom_name" to event.member.effectiveName.split(" - ").first()
+                    ).parse(data.formatName1)
+                )
+                it.putMemberPermissionOverride(
+                    event.member.idLong,
+                    listOf(Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS),
+                    emptyList<Permission>()
+                )
+            }
+
         }.queue()
-
-
-        // set the new channel name
-        channelJoin.manager.setName(
-            Placeholder.get(event.member).putAll(
-                "dvc@custom_name" to event.member.effectiveName.split(" - ").first()
-            ).parse(data.formatName1)
-        ).queue()
 
         // add the new channel to the tracked list
         generatedCache.put(channelJoin.idLong, event.member.idLong)

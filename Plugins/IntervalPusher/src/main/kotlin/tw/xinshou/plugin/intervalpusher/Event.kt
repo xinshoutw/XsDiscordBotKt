@@ -23,25 +23,23 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
+        reload(true)
 
         for (listener in config.listeners) {
             val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
             pusher.start()
             pushers.add(pusher)
         }
-
         logger.info("IntervalPusher loaded.")
     }
 
     override fun unload() {
         pushers.forEach { it.stop() }
         coroutineScope.cancel()
-
         logger.info("IntervalPusher unloaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
         try {
             fileGetter.readInputStream("config.yaml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
@@ -50,6 +48,8 @@ object Event : PluginEvent(true) {
             logger.error("Please configure {}./config.yaml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
-        logger.info("Setting file loaded successfully.")
+        if (!init) {
+            logger.info("Setting file loaded successfully.")
+        }
     }
 }

@@ -23,7 +23,7 @@ internal fun main(args: Array<String>) = runBlocking {
         JLineManager.start(scope = this, stopSignal = stopSignal)
         stopSignal.await()
     } catch (e: Exception) {
-        logger.error("An unexpected error occurred in main:", e)
+        logger.error("An unexpected error occurred in tw.xinshou.loader.main:", e)
     } finally {
         BotLoader.stop()
         CacheDbServer.close()

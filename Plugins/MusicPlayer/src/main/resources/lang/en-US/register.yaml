@@ -1,0 +1,42 @@
+join:
+  name: "Join"
+  description: "Make the bot join your current voice channel"
+disconnect:
+  name: "Disconnect"
+  description: "Make the bot leave the current voice channel"
+play:
+  name: "Play"
+  description: "Play a specified song or add it to the queue"
+  options:
+    query:
+      name: "song"
+      description: "Enter a song's YouTube/Spotify URL or keyword"
+pause:
+  name: "Pause"
+  description: "Pause the currently playing song"
+resume:
+  name: "Resume"
+  description: "Resume the paused song"
+stop:
+  name: "Stop"
+  description: "Stop the playback and clear the entire queue"
+skip:
+  name: "Skip"
+  description: "Skip the currently playing song"
+  options:
+    count:
+      name: "amount"
+      description: "The number of songs to skip (default is 1)"
+volume:
+  name: "Volume"
+  description: "Adjust the playback volume"
+  options:
+    level:
+      name: "level"
+      description: "Set the volume level (0-100)"
+queue:
+  name: "Queue"
+  description: "View the current song queue"
+now_playing:
+  name: "Now Playing"
+  description: "Display information about the currently playing song"

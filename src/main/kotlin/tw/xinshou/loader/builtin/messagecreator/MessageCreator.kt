@@ -3,7 +3,6 @@ package tw.xinshou.loader.builtin.messagecreator
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.dv8tion.jda.api.interactions.DiscordLocale
@@ -12,7 +11,6 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.builtin.messagecreator.builder.MessageBuilder
-import tw.xinshou.loader.builtin.messagecreator.serializer.ColorSerializer
 import tw.xinshou.loader.builtin.messagecreator.serializer.MessageDataSerializer
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.builtin.placeholder.Substitutor
@@ -36,7 +34,6 @@ class MessageCreator(
     init {
         val yaml = Yaml(
             serializersModule = SerializersModule {
-                contextual(ColorSerializer)
                 include(SerializersModule {
                     polymorphic(MessageDataSerializer.ActionRowSetting::class) {
                         subclass(MessageDataSerializer.ActionRowSetting.ButtonsSetting::class)
@@ -78,6 +75,19 @@ class MessageCreator(
             modelMapper
         ).getBuilder()
 
+    fun getCreateBuilder(
+        key: String,
+        locale: DiscordLocale = defaultLocale,
+        replaceMap: Map<String, String>,
+        modelMapper: Map<String, Any>? = null,
+    ): MessageCreateBuilder =
+        getCreateBuilder(
+            key,
+            locale,
+            Placeholder.globalSubstitutor.putAll(replaceMap),
+            modelMapper
+        )
+
     fun getEditBuilder(
         key: String,
         locale: DiscordLocale = defaultLocale,
@@ -85,12 +95,17 @@ class MessageCreator(
         modelMapper: Map<String, Any>? = null,
     ): MessageEditBuilder =
         MessageEditBuilder.fromCreateData(
-            MessageBuilder(
-                getMessageData(key, locale),
-                substitutor,
-                componentIdManager,
-                modelMapper
-            ).getBuilder().build()
+            getCreateBuilder(key, locale, substitutor, modelMapper).build()
+        )
+
+    fun getEditBuilder(
+        key: String,
+        locale: DiscordLocale = defaultLocale,
+        replaceMap: Map<String, String>,
+        modelMapper: Map<String, Any>? = null,
+    ): MessageEditBuilder =
+        MessageEditBuilder.fromCreateData(
+            getCreateBuilder(key, locale, Placeholder.globalSubstitutor.putAll(replaceMap), modelMapper).build()
         )
 
     fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {

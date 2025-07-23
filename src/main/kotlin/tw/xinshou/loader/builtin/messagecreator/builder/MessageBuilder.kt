@@ -22,6 +22,7 @@ import tw.xinshou.loader.builtin.messagecreator.serializer.MessageDataSerializer
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.builtin.placeholder.Substitutor
 import tw.xinshou.loader.util.ComponentIdManager
+import java.awt.Color
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.temporal.TemporalAccessor
@@ -107,7 +108,7 @@ internal class MessageBuilder(
             setupDescription(embedSetting.description) { setDescription(it) }
             setupThumbnailUrl(embedSetting.thumbnailUrl) { setThumbnail(it) }
             setupImage(embedSetting.imageUrl) { setImage(it) }
-            setColor(embedSetting.colorCode)
+            setupColor(embedSetting.colorCode) { setColor(it) }
             setupFooter(embedSetting.footer) { text, iconUrl -> setFooter(text, iconUrl) }
             setupTimestamp(embedSetting.timestamp) { setTimestamp(it) }
             setupFields(
@@ -159,13 +160,24 @@ internal class MessageBuilder(
         setImage: (url: String?) -> EmbedBuilder
     ) = imageUrl?.let { setImage(parsePlaceholder(it)) }
 
+    private fun setupColor(
+        colorCode: String?,
+        setColor: (color: Color?) -> EmbedBuilder
+    ) = colorCode?.let {
+        setColor(
+            when {
+                colorCode.startsWith("%") -> Color.decode(parsePlaceholder(colorCode))
+                else -> Color.decode(colorCode)
+            }
+        )
+    }
+
     private fun setupFooter(
         footer: EmbedSetting.FooterSetting?,
         setFooter: (text: String?, iconUrl: String?) -> EmbedBuilder
     ) = footer?.let { footer ->
         setFooter(
             parsePlaceholder(footer.text),
-
             footer.iconUrl?.let { parsePlaceholder(it) }
         )
     }
@@ -279,7 +291,7 @@ internal class MessageBuilder(
                                 is Emoji -> model
                                 else -> throw IllegalArgumentException("Unknown component model: $model")
                             }
-                        } ?: Emoji.fromUnicode(buttonSetting.emoji.name)
+                        } ?: Emoji.fromFormatted(parsePlaceholder(emojiSetting.formatted!!))
                     }
                 )
             )

@@ -9,7 +9,7 @@ import tw.xinshou.loader.localizations.DiscordLocalizationExporter
 import tw.xinshou.loader.plugin.PluginEvent
 import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
-import tw.xinshou.plugin.botinfo.command.guildCommands
+import tw.xinshou.plugin.botinfo.command.globalCommands
 import tw.xinshou.plugin.botinfo.command.lang.CmdFileSerializer
 import tw.xinshou.plugin.botinfo.command.lang.CmdLocalizations
 import java.io.File
@@ -20,8 +20,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
-
+        reload(true)
         logger.info("BotInfo loaded.")
     }
 
@@ -29,7 +28,7 @@ object Event : PluginEvent(true) {
         logger.info("BotInfo unloaded.")
     }
 
-    override fun reloadLang() {
+    override fun reload(init: Boolean) {
         fileGetter.exportDefaultDirectory("lang")
 
         DiscordLocalizationExporter(
@@ -41,7 +40,7 @@ object Event : PluginEvent(true) {
         )
     }
 
-    override fun globalCommands(): Array<CommandData> = guildCommands
+    override fun globalCommands(): Array<CommandData> = globalCommands
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (GlobalUtil.checkCommandString(event, "bot-info")) return

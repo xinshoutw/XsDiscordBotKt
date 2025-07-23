@@ -1,0 +1,52 @@
+join:
+  name: "加入"
+  description: "讓機器人加入您所在的語音頻道"
+
+disconnect:
+  name: "離開"
+  description: "讓機器人離開目前的語音頻道"
+
+play:
+  name: "播放"
+  description: "播放指定的歌曲或將其加入佇列"
+  options:
+    query:
+      name: "歌曲"
+      description: "輸入歌曲的 YouTube/Spotify 網址或關鍵字"
+
+pause:
+  name: "暫停"
+  description: "暫停目前正在播放的歌曲"
+
+resume:
+  name: "繼續"
+  description: "繼續播放已暫停的歌曲"
+
+stop:
+  name: "停止"
+  description: "停止播放並清空整個佇列"
+
+skip:
+  name: "跳過"
+  description: "跳過目前播放的歌曲"
+  options:
+    count:
+      name: "數量"
+      description: "要跳過的歌曲數量 (預設為 1)"
+
+volume:
+  name: "音量"
+  description: "調整播放音量"
+  options:
+    level:
+      name: "大小"
+      description: "設定音量大小 (0-100)"
+
+queue:
+  name: "待播清單"
+  description: "查看目前的歌曲播放佇列"
+
+now_playing:
+  name: "正在播放"
+  description: "顯示目前正在播放的歌曲資訊"
+

@@ -27,7 +27,7 @@ repositories {
 dependencies {
     compileOnly("org.jetbrains:annotations:26.0.2")
 
-    api("net.dv8tion:JDA:5.6.1") // JDA
+    api("net.dv8tion:JDA:5.6.1")
     api("ch.qos.logback:logback-classic:1.5.18") // Log
     api("com.charleskorn.kaml:kaml:0.83.0") // Yaml
     api("commons-io:commons-io:2.19.0") // Commons io
