@@ -1,0 +1,85 @@
+# ██    ██ ███████ ██████  ███████ ██  ██████  ███    ██ ███████
+# ██    ██ ██      ██   ██ ██      ██ ██    ██ ████   ██ ██
+# ██    ██ █████   ██████  ███████ ██ ██    ██ ██ ██  ██ ███████
+#  ██  ██  ██      ██   ██      ██ ██ ██    ██ ██  ██ ██      ██
+#   ████   ███████ ██   ██ ███████ ██  ██████  ██   ████ ███████
+[versions]
+jda = "5.6.1"
+logback = "1.5.18"
+kaml = "0.85.0"
+commons-io = "2.20.0"
+commons-text = "1.13.1"
+mongo-driver = "5.4.0"
+moshi = "1.15.2"
+kotlin = "2.0.21"
+shadowPlugin = "8.3.8"
+annotations = "26.0.2"
+udpqueue = "0.2.9"
+embed-mongo = "4.20.1"
+protobuf = "4.31.1"
+kotlinx-coroutines = "1.10.2"
+jline = "3.30.4"
+clikt = "5.0.3"
+jansi = "2.4.2"
+jsoup = "1.21.1"
+kotlin-v = "2.0.21"
+shadow-gradle-plugin = "8.3.8"
+
+
+# ██████  ██      ██    ██  ██████  ██ ███    ██ ███████
+# ██   ██ ██      ██    ██ ██       ██ ████   ██ ██
+# ██████  ██      ██    ██ ██   ███ ██ ██ ██  ██ ███████
+# ██      ██      ██    ██ ██    ██ ██ ██  ██ ██      ██
+# ██      ███████  ██████   ██████  ██ ██   ████ ███████
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }
+
+
+
+# ██      ██ ██████  ██████   █████  ██████  ██ ███████ ███████
+# ██      ██ ██   ██ ██   ██ ██   ██ ██   ██ ██ ██      ██
+# ██      ██ ██████  ██████  ███████ ██████  ██ █████   ███████
+# ██      ██ ██   ██ ██   ██ ██   ██ ██   ██ ██ ██           ██
+# ███████ ██ ██████  ██   ██ ██   ██ ██   ██ ██ ███████ ███████
+[libraries]
+jda = { group = "net.dv8tion", name = "JDA", version.ref = "jda" }
+logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
+commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
+commons-text = { group = "org.apache.commons", name = "commons-text", version.ref = "commons-text" }
+mongodb-driver-kotlin-sync = { group = "org.mongodb", name = "mongodb-driver-kotlin-sync", version.ref = "mongo-driver" }
+moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+kotlinx_coroutines_core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
+# Additional dependencies
+annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+udpqueue_native_linux_x64 = { group = "club.minnced", name = "udpqueue-native-linux-x86-64", version.ref = "udpqueue" }
+udpqueue_native_linux_x86 = { group = "club.minnced", name = "udpqueue-native-linux-x86", version.ref = "udpqueue" }
+udpqueue_native_linux_aarch64 = { group = "club.minnced", name = "udpqueue-native-linux-aarch64", version.ref = "udpqueue" }
+udpqueue_native_linux_arm = { group = "club.minnced", name = "udpqueue-native-linux-arm", version.ref = "udpqueue" }
+udpqueue_native_linux_musl_x64 = { group = "club.minnced", name = "udpqueue-native-linux-musl-x86-64", version.ref = "udpqueue" }
+udpqueue_native_linux_musl_aarch64 = { group = "club.minnced", name = "udpqueue-native-linux-musl-aarch64", version.ref = "udpqueue" }
+udpqueue_native_win_x64 = { group = "club.minnced", name = "udpqueue-native-win-x86-64", version.ref = "udpqueue" }
+udpqueue_native_win_x86 = { group = "club.minnced", name = "udpqueue-native-win-x86", version.ref = "udpqueue" }
+udpqueue_native_darwin = { group = "club.minnced", name = "udpqueue-native-darwin", version.ref = "udpqueue" }
+embed_mongo = { group = "de.flapdoodle.embed", name = "de.flapdoodle.embed.mongo", version.ref = "embed-mongo" }
+protobuf_java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
+jline = { group = "org.jline", name = "jline", version.ref = "jline" }
+clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
+jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+shadow_gradle_plugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow-gradle-plugin" }
+kotlin_gradle_plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin-v" }
+kotlin_reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin-v" }
+kotlin_serialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin-v" }
+
+
+
+# ██████  ██    ██ ███    ██ ██████  ██      ███████ ███████
+# ██   ██ ██    ██ ████   ██ ██   ██ ██      ██      ██
+# ██████  ██    ██ ██ ██  ██ ██   ██ ██      █████   ███████
+# ██   ██ ██    ██ ██  ██ ██ ██   ██ ██      ██           ██
+# ██████   ██████  ██   ████ ██████  ███████ ███████ ███████
+[bundles]

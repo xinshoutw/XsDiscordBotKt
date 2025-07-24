@@ -92,6 +92,12 @@ internal val guildCommands: Array<CommandData>
             .setDescriptionLocalizations(CmdLocalizations.queue.description)
             .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
 
+        // 打亂播放清單指令
+        Commands.slash("shuffle", "Shuffle the current playlist once")
+            .setNameLocalizations(CmdLocalizations.shuffle.name)
+            .setDescriptionLocalizations(CmdLocalizations.shuffle.description)
+            .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
+
         // 查看正在播放指令
         Commands.slash("now-playing", "View detailed information of the currently playing song")
             .setNameLocalizations(CmdLocalizations.nowPlaying.name)

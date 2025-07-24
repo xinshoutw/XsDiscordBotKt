@@ -42,6 +42,7 @@ import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.formatTime
 import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.getSubstitutor
 import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.isUserInVoiceChannel
 import java.io.File
+import java.util.*
 import java.util.concurrent.*
 
 data class TrackedMessage(
@@ -79,7 +80,12 @@ object MusicPlayer {
 
     private val playerManager: AudioPlayerManager = DefaultAudioPlayerManager()
     private val musicManagers: ConcurrentHashMap<Long, GuildMusicManager> = ConcurrentHashMap()
-    private val searchCache: ConcurrentHashMap<String, List<EnhancedTrackInfo>> = ConcurrentHashMap()
+    private val searchCache: MutableMap<String, List<EnhancedTrackInfo>> =
+        Collections.synchronizedMap(object : LinkedHashMap<String, List<EnhancedTrackInfo>>() {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<EnhancedTrackInfo>>?): Boolean {
+                return size > 100 // 限制快取大小
+            }
+        })
 
     // Message tracking system
     private val trackedMessages: ConcurrentHashMap<String, TrackedMessage> = ConcurrentHashMap()
@@ -87,37 +93,58 @@ object MusicPlayer {
     private val messageUpdateScheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(2)
 
     init {
-        // YouTube Support
-        playerManager.registerSourceManager(
-            YoutubeAudioSourceManager(
-                /* allowSearch = */ true,
-                /* allowDirectVideoIds = */ true,
-                /* allowDirectPlaylistIds = */ true
-            )
-        )
-
-        // SoundCloud Support
-        playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault())
-
-        // Spotify Support
         try {
-            if (config.engines.spotify.enabled) {
-                val spotifySourceManager = SpotifySourceManager(
-                    null,
-                    config.engines.spotify.clientId,
-                    config.engines.spotify.clientSecret,
-                    config.engines.spotify.countryCode,
-                    playerManager
+            // YouTube Support
+            playerManager.registerSourceManager(
+                YoutubeAudioSourceManager(
+                    /* allowSearch = */ true,
+                    /* allowDirectVideoIds = */ true,
+                    /* allowDirectPlaylistIds = */ true
                 )
-                playerManager.registerSourceManager(spotifySourceManager)
-                logger.info("Spotify source manager registered successfully")
-            }
-        } catch (e: Exception) {
-            logger.warn("Failed to register Spotify source manager, using defaults", e)
-        }
+            )
+            logger.info("YouTube source manager registered successfully")
 
-        AudioSourceManagers.registerRemoteSources(playerManager)
-        AudioSourceManagers.registerLocalSource(playerManager)
+            // SoundCloud Support
+            playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault())
+            logger.info("SoundCloud source manager registered successfully")
+
+            // Spotify Support
+            try {
+                if (config.engines.spotify.enabled) {
+                    val spotifySourceManager = SpotifySourceManager(
+                        null,
+                        config.engines.spotify.clientId,
+                        config.engines.spotify.clientSecret,
+                        config.engines.spotify.countryCode,
+                        playerManager
+                    )
+                    playerManager.registerSourceManager(spotifySourceManager)
+                    logger.info("Spotify source manager registered successfully")
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to register Spotify source manager, using defaults", e)
+            }
+
+            // Register remote and local sources with error handling
+            try {
+                AudioSourceManagers.registerRemoteSources(playerManager)
+                logger.info("Remote audio sources registered successfully")
+            } catch (e: Exception) {
+                logger.error("Failed to register remote audio sources. This may cause issues with audio playback.", e)
+            }
+
+            try {
+                AudioSourceManagers.registerLocalSource(playerManager)
+                logger.info("Local audio sources registered successfully")
+            } catch (e: Exception) {
+                logger.warn("Failed to register local audio sources", e)
+            }
+
+            logger.info("AudioPlayerManager initialized successfully")
+        } catch (e: Exception) {
+            logger.error("Failed to initialize AudioPlayerManager. Audio playback may not work properly.", e)
+            throw e
+        }
     }
 
     // Message tracking methods
@@ -138,11 +165,9 @@ object MusicPlayer {
                 existingTrackedMessage.hook.deleteOriginal().queue(
                     {
                         trackedMessages.remove(existingMessageId)
-                        logger.debug("Cleaned up existing tracked message for user: $userId")
                     },
                     {
                         trackedMessages.remove(existingMessageId)
-                        logger.debug("Failed to delete existing tracked message for user: $userId, but removed from tracking")
                     }
                 )
             }
@@ -199,7 +224,7 @@ object MusicPlayer {
                 }
             }
         } catch (e: Exception) {
-            logger.debug("Failed to update tracked message: ${e.message}")
+            // Silently handle tracked message update failures
         }
     }
 
@@ -266,6 +291,7 @@ object MusicPlayer {
             "skip" -> handleSkipCommand(event, member, musicManager)
             "volume" -> handleVolumeCommand(event, member, musicManager)
             "queue" -> handleQueueCommand(event, member, musicManager)
+            "shuffle" -> handleShuffleCommand(event, member, musicManager)
             "now-playing" -> handleNowPlayingCommand(event, member, musicManager)
         }
     }
@@ -675,6 +701,32 @@ object MusicPlayer {
         }
     }
 
+    private fun handleShuffleCommand(
+        event: SlashCommandInteractionEvent,
+        member: Member,
+        musicManager: GuildMusicManager
+    ) {
+        if (!isUserInVoiceChannel(member)) {
+            event.hook.editOriginal("❌ 您必須在語音頻道中才能使用此指令！").queue()
+            return
+        }
+
+        val historyIndexManager = musicManager.getHistoryIndexManager()
+        val queueSize = historyIndexManager.queueSize
+
+        if (queueSize <= 1) {
+            event.hook.editOriginal("❌ 播放清單中沒有足夠的歌曲可以打亂！（至少需要2首歌曲）").queue()
+            return
+        }
+
+        val success = historyIndexManager.shuffleQueue()
+        if (success) {
+            event.hook.editOriginal("🔀 已成功打亂播放清單！共打亂了 $queueSize 首歌曲。").queue()
+        } else {
+            event.hook.editOriginal("❌ 打亂播放清單失敗！").queue()
+        }
+    }
+
 
     private fun searchYouTube(query: String): CompletableFuture<List<EnhancedTrackInfo>> {
         val future = CompletableFuture<List<EnhancedTrackInfo>>()
@@ -853,26 +905,16 @@ object MusicPlayer {
     private fun handleLoopButton(event: ButtonInteractionEvent, member: Member, musicManager: GuildMusicManager) {
         val scheduler = musicManager.scheduler
 
-        // Cycle through the four distinct playback modes:
-        // Sequential -> Shuffle -> Single Track Loop -> Queue Loop -> Sequential
+        // Cycle through the two distinct playback modes:
+        // Sequential -> Single Track Loop -> Sequential
         when {
             scheduler.isSequentialPlayback() -> {
-                // Sequential -> Shuffle
-                scheduler.setShufflePlayback(true)
-            }
-
-            scheduler.isShufflePlayback() -> {
-                // Shuffle -> Single Track Loop
+                // Sequential -> Single Track Loop
                 scheduler.setSingleTrackLoop(true)
             }
 
             scheduler.isSingleTrackLoop() -> {
-                // Single Track Loop -> Queue Loop
-                scheduler.setQueueLoop(true)
-            }
-
-            scheduler.isQueueLoop() -> {
-                // Queue Loop -> Sequential (back to start)
+                // Single Track Loop -> Sequential (back to start)
                 scheduler.setSequentialPlayback(true)
             }
 

@@ -2,8 +2,6 @@ author: "xinshoutw"
 main: "tw.xinshou.plugin.musicplayer.Event"
 name: "MusicPlayer"
 version: "0.1.0"
-depend_plugins:
-  - "AudioAPI"
 
 require_intents:
   - "GUILD_VOICE_STATES"

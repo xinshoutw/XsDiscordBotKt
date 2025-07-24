@@ -58,6 +58,7 @@ object BotLoader {
             .setMemberCachePolicy(processMemberCachePolicy(PluginLoader.memberCachePolicies))
             .enableCache(PluginLoader.cacheFlags)
             .enableIntents(PluginLoader.intents)
+//            .setAudioSendFactory(NativeAudioSendFactory())
             .build()
             .awaitReady()
 

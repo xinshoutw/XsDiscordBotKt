@@ -14,6 +14,7 @@ internal object CmdLocalizations {
     val skip = CommandSkip()
     val volume = CommandVolume()
     val queue = LocalTemplate.NDLocalData()
+    val shuffle = LocalTemplate.NDLocalData()
 
     val nowPlaying = LocalTemplate.NDLocalData()
 

@@ -115,12 +115,14 @@ internal object MusicPlayerUtils {
             return "$playPauseEmoji 直播中"
         }
 
-        val progress = (currentPosition.toDouble() / totalDuration.toDouble()).coerceIn(0.1, 1.0)
+        val progress =
+            (currentPosition.toDouble() / totalDuration.toDouble()).coerceIn(0.0, PROGRESS_BAR_LENGTH.toDouble() - 1)
+                .toInt()
         val playPauseEmoji = if (isPlaying) EMOJI_MEDIA_PLAY else EMOJI_MEDIA_PAUSE
 
         return "$playPauseEmoji " +
                 formatTime(currentPosition) +
-                BAR_ARRAY[(progress * PROGRESS_BAR_LENGTH).toInt() - 1] +
+                BAR_ARRAY[progress] +
                 formatTime(totalDuration)
     }
 
@@ -272,20 +274,10 @@ internal object MusicPlayerUtils {
                     "music_player@player_currnet_loop_mode_emoji",
                     "<:music_player__media_ordered:1396616068679598120>"
                 )
-            } else if (musicManager.scheduler.isShufflePlayback()) {
-                put(
-                    "music_player@player_currnet_loop_mode_emoji",
-                    "<:music_player__media_shuffle:1395593799677382766>"
-                )
             } else if (musicManager.scheduler.isSingleTrackLoop()) {
                 put(
                     "music_player@player_currnet_loop_mode_emoji",
                     "<:music_player__media_repeat_once:1396395280236286063>"
-                )
-            } else if (musicManager.scheduler.isQueueLoop()) {
-                put(
-                    "music_player@player_currnet_loop_mode_emoji",
-                    "<:music_player__media_loop:1395593790835785928>"
                 )
             }
         }

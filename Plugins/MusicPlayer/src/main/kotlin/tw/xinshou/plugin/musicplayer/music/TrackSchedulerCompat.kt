@@ -21,17 +21,39 @@ class TrackSchedulerCompat(
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     }
 
+    // Playback mode state
+    private var sequentialPlayback: Boolean = true
+    private var singleTrackLoop: Boolean = false
+
     /**
      * 音軌結束事件處理
-     * 委派給 HistoryIndexManager.onTrackEnd()
+     * 根據播放模式決定下一步行為
      */
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         try {
-            logger.debug("Track ended: {}, reason: {}", track.info.title, endReason)
-
-            // 只在正常結束時自動播放下一首
+            // 只在正常結束時處理播放邏輯
             if (endReason == AudioTrackEndReason.FINISHED || endReason == AudioTrackEndReason.STOPPED || endReason == AudioTrackEndReason.LOAD_FAILED) {
-                historyIndexManager.onTrackEnd()
+                when {
+                    singleTrackLoop -> {
+                        // 單曲循環：重新播放當前歌曲
+                        val currentTrack = historyIndexManager.currentTrack
+                        if (currentTrack != null) {
+                            player.startTrack(currentTrack.makeClone(), false)
+                        } else {
+                            logger.warn("Single track loop: no current track to restart")
+                        }
+                    }
+
+                    sequentialPlayback -> {
+                        // 順序播放：播放下一首
+                        historyIndexManager.onTrackEnd()
+                    }
+
+                    else -> {
+                        // 預設行為：順序播放
+                        historyIndexManager.onTrackEnd()
+                    }
+                }
             }
         } catch (e: Exception) {
             logger.error("Error handling track end event", e)
@@ -43,7 +65,7 @@ class TrackSchedulerCompat(
      */
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
         try {
-            logger.debug("Track started: ${track.info.title}")
+            // Track start handling - no logging needed for routine operation
         } catch (e: Exception) {
             logger.error("Error handling track start event", e)
         }
@@ -56,7 +78,6 @@ class TrackSchedulerCompat(
     fun clearQueue() {
         try {
             historyIndexManager.clear()
-            logger.debug("Cleared queue via HistoryIndexManager")
         } catch (e: Exception) {
             logger.error("Error clearing queue", e)
         }
@@ -69,7 +90,6 @@ class TrackSchedulerCompat(
     fun clearHistory() {
         try {
             historyIndexManager.clear()
-            logger.debug("Cleared history via HistoryIndexManager")
         } catch (e: Exception) {
             logger.error("Error clearing history", e)
         }
@@ -87,25 +107,21 @@ class TrackSchedulerCompat(
      */
     fun getQueueCopy(): List<AudioTrack> = historyIndexManager.getQueueCopy()
 
-    // 播放模式相關方法 - 暫時保持空實現，因為新系統專注於 History_index 行為
+    // 播放模式相關方法
     fun setSequentialPlayback(enabled: Boolean) {
-        logger.debug("setSequentialPlayback($enabled) - not implemented in History_index system")
-    }
-
-    fun setShufflePlayback(enabled: Boolean) {
-        logger.debug("setShufflePlayback($enabled) - not implemented in History_index system")
+        if (enabled) {
+            sequentialPlayback = true
+            singleTrackLoop = false
+        }
     }
 
     fun setSingleTrackLoop(enabled: Boolean) {
-        logger.debug("setSingleTrackLoop($enabled) - not implemented in History_index system")
+        if (enabled) {
+            singleTrackLoop = true
+            sequentialPlayback = false
+        }
     }
 
-    fun setQueueLoop(enabled: Boolean) {
-        logger.debug("setQueueLoop($enabled) - not implemented in History_index system")
-    }
-
-    fun isSequentialPlayback(): Boolean = true // 默認行為
-    fun isShufflePlayback(): Boolean = false
-    fun isSingleTrackLoop(): Boolean = false
-    fun isQueueLoop(): Boolean = false
+    fun isSequentialPlayback(): Boolean = sequentialPlayback
+    fun isSingleTrackLoop(): Boolean = singleTrackLoop
 }

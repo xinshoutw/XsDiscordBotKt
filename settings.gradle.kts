@@ -1,4 +1,4 @@
-rootProject.name = "XsDiscordBotKt"
+@file:Suppress("UnstableApiUsage")
 
 pluginManagement {
     repositories {
@@ -7,56 +7,56 @@ pluginManagement {
     }
 }
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+dependencyResolutionManagement {
+    versionCatalogs { create("libs") {} }
 }
 
+rootProject.name = "XsDiscordBotKt"
+
 include(":Plugins:API:GoogleSheetAPI")
-findProject(":Plugins:API:GoogleSheetAPI")?.name = "GoogleSheetAPI"
+project(":Plugins:API:GoogleSheetAPI").name = "GoogleSheetAPI"
 
 include(":Plugins:Economy")
-findProject(":Plugins:Economy")?.name = "Economy"
+project(":Plugins:Economy").name = "Economy"
 
 include("Plugins:BotInfo")
-findProject(":Plugins:BotInfo")?.name = "BotInfo"
+project(":Plugins:BotInfo").name = "BotInfo"
 
 include("Plugins:ChatLogger")
-findProject(":Plugins:ChatLogger")?.name = "ChatLogger"
-
-include("Plugins:ChatLogger")
-findProject(":Plugins:ChatLogger")?.name = "ChatLogger"
+project(":Plugins:ChatLogger").name = "ChatLogger"
 
 include("Plugins:API:SQLiteAPI")
-findProject(":Plugins:API:SQLiteAPI")?.name = "SQLiteAPI"
+project(":Plugins:API:SQLiteAPI").name = "SQLiteAPI"
 
 include("Plugins:IntervalPusher")
-findProject(":Plugins:IntervalPusher")?.name = "IntervalPusher"
+project(":Plugins:IntervalPusher").name = "IntervalPusher"
 
 include("Plugins:TicketAddons")
-findProject(":Plugins:TicketAddons")?.name = "TicketAddons"
+project(":Plugins:TicketAddons").name = "TicketAddons"
 
 include("Plugins:VoiceLogger")
-findProject(":Plugins:VoiceLogger")?.name = "VoiceLogger"
+project(":Plugins:VoiceLogger").name = "VoiceLogger"
 
 include("Plugins:DynamicVoiceChannel")
-findProject(":Plugins:DynamicVoiceChannel")?.name = "DynamicVoiceChannel"
+project(":Plugins:DynamicVoiceChannel").name = "DynamicVoiceChannel"
 
 include("Plugins:Feedbacker")
-findProject(":Plugins:Feedbacker")?.name = "Feedbacker"
+project(":Plugins:Feedbacker").name = "Feedbacker"
 
 include("Plugins:BasicCalculator")
-findProject(":Plugins:BasicCalculator")?.name = "BasicCalculator"
+project(":Plugins:BasicCalculator").name = "BasicCalculator"
 
 include("Plugins:Ticket")
-findProject(":Plugins:Ticket")?.name = "Ticket"
+project(":Plugins:Ticket").name = "Ticket"
 
 include("Plugins:AutoRole")
-findProject(":Plugins:AutoRole")?.name = "AutoRole"
+project(":Plugins:AutoRole").name = "AutoRole"
 
 include("Plugins:RentSystem")
-findProject(":Plugins:RentSystem")?.name = "RentSystem"
+project(":Plugins:RentSystem").name = "RentSystem"
 
 include("Plugins:MusicPlayer")
-findProject(":Plugins:MusicPlayer")?.name = "MusicPlayer"
+project(":Plugins:MusicPlayer").name = "MusicPlayer"
 
 include("Plugins:API:AudioAPI")
+project(":Plugins:API:AudioAPI").name = "AudioAPI"

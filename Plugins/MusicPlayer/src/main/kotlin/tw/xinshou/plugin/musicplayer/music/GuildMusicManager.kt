@@ -61,9 +61,6 @@ class GuildMusicManager(
 
         // 啟動閒置檢查
         startIdleCheck()
-
-        logger.debug("GuildMusicManager created for guild: $guildId with volume: ${audioPlayer.volume}")
-        logger.debug("Audio configuration: Opus format, optimized buffer handling")
     }
 
     /**
@@ -76,7 +73,6 @@ class GuildMusicManager(
             }, IDLE_TIMEOUT_MINUTES, 1, TimeUnit.MINUTES)
 
             idleCheckTask.set(task)
-            logger.debug("Idle check started for guild: $guildId")
         }
     }
 
@@ -95,7 +91,6 @@ class GuildMusicManager(
 
             // 檢查是否正在播放
             if (audioPlayer.playingTrack == null && scheduler.getQueueSize() == 0) {
-                logger.debug("Guild $guildId has been idle for $idleTimeMinutes minutes, triggering cleanup")
                 onIdleTimeout()
             }
         } catch (e: Exception) {
@@ -152,11 +147,9 @@ class GuildMusicManager(
 
             if (success) {
                 totalTracksPlayed.incrementAndGet()
-                logger.debug("Successfully queued track: ${track.info.title}")
 
                 // 如果音頻播放器處於不正常狀態，嘗試重置
                 if (audioPlayer.isPaused && audioPlayer.playingTrack == null) {
-                    logger.debug("Player was paused with no track, resuming")
                     audioPlayer.isPaused = false
                 }
             } else {
@@ -179,10 +172,8 @@ class GuildMusicManager(
             if (audioPlayer.playingTrack != null && !audioPlayer.isPaused) {
                 audioPlayer.isPaused = true
                 updateActivity()
-                logger.debug("Paused playback for guild: $guildId")
                 true
             } else {
-                logger.debug("Cannot pause - no track playing or already paused for guild: $guildId")
                 false
             }
         } catch (e: Exception) {
@@ -200,10 +191,8 @@ class GuildMusicManager(
             if (audioPlayer.playingTrack != null && audioPlayer.isPaused) {
                 audioPlayer.isPaused = false
                 updateActivity()
-                logger.debug("Resumed playback for guild: $guildId")
                 true
             } else {
-                logger.debug("Cannot resume - no track playing or already playing for guild: $guildId")
                 false
             }
         } catch (e: Exception) {
@@ -219,7 +208,6 @@ class GuildMusicManager(
         audioPlayer.stopTrack()
         scheduler.clearQueue()
         updateActivity()
-        logger.debug("Stopped playback for guild: $guildId")
     }
 
     /**
@@ -234,20 +222,12 @@ class GuildMusicManager(
                 // 確保播放器沒有暫停
                 if (audioPlayer.isPaused) {
                     audioPlayer.isPaused = false
-                    logger.debug("Unpaused player before skipping for guild: $guildId")
                 }
 
                 // 直接使用 HistoryIndexManager.skip() 避免雙重跳過
                 // 這會正確地增加 History_index 並開始下一首歌曲
-                val success = historyIndexManager.skip()
-                if (success) {
-                    logger.debug("Skipped track for guild: $guildId")
-                } else {
-                    logger.debug("Cannot skip - no more tracks available for guild: $guildId")
-                }
-                success
+                historyIndexManager.skip()
             } else {
-                logger.debug("Cannot skip - no track playing for guild: $guildId")
                 false
             }
         } catch (e: Exception) {
@@ -268,11 +248,8 @@ class GuildMusicManager(
                 return false
             }
 
-            val oldVolume = audioPlayer.volume
             audioPlayer.volume = volume
             updateActivity()
-
-            logger.debug("Volume changed from $oldVolume to $volume for guild: $guildId")
             true
         } catch (e: Exception) {
             logger.error("Error occurred while setting volume to $volume for guild: $guildId", e)
@@ -343,8 +320,6 @@ class GuildMusicManager(
 
             // 清理發送處理器
             sendHandler.close()
-
-            logger.debug("GuildMusicManager cleaned up for guild: $guildId")
         } catch (e: Exception) {
             logger.error("Error during cleanup for guild: $guildId", e)
         }

@@ -56,9 +56,7 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
                 historyIndex.set(0)
 
                 return audioPlayer.startTrack(currentTrack!!, false).let { success ->
-                    if (success) {
-                        logger.debug("Started first track: ${track.info.title}")
-                    } else {
+                    if (!success) {
                         logger.error("Failed to start first track: ${track.info.title}")
                     }
                     success
@@ -66,7 +64,6 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
             }
 
             // add to the end of history
-            logger.debug("Added track to history: ${track.info.title} (position ${history.size - 1})")
             manageHistorySize()
             return true
 
@@ -79,7 +76,6 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
     fun skip(): Boolean {
         return try {
             if (!hasNext) {
-                logger.debug("No next track available for skip")
                 return false
             }
 
@@ -92,9 +88,7 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
             }
 
             audioPlayer.startTrack(nextTrack.makeClone(), false).let { success ->
-                if (success) {
-                    logger.debug("Skipped to track at index ${historyIndex.get()}: ${nextTrack.info.title}")
-                } else {
+                if (!success) {
                     logger.error("Failed to skip to track at index ${historyIndex.get()}: ${nextTrack.info.title}")
                     skip() // Try to skip again if it failed
                 }
@@ -130,7 +124,6 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
                 audioPlayer.startTrack(previousTrack.makeClone(), false).let { success ->
                     if (success) {
                         historyIndex.decrementAndGet()
-                        logger.debug("Moved to previous track at index ${historyIndex.get()}: ${previousTrack.info.title}")
                         PreviousButtonResult.PreviousTrackPlayed(previousTrack)
                     } else {
                         PreviousButtonResult.Error("無法播放上一首歌曲")
@@ -151,7 +144,6 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
 
             audioPlayer.startTrack(current.makeClone(), false).let { success ->
                 if (success) {
-                    logger.debug("Restarted current track: ${current.info.title}")
                     PreviousButtonResult.TrackRestarted(current)
                 } else {
                     logger.error("Failed to restart current track: ${current.info.title}")
@@ -169,7 +161,6 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
             if (hasNext) {
                 skip()
             } else {
-                logger.debug("Reached end of history, no more tracks to play")
                 false
             }
         } catch (e: Exception) {
@@ -198,10 +189,16 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
                 }
                 // Adjust index since we removed from beginning
                 historyIndex.addAndGet(-canRemove)
-
-                logger.debug("Removed $canRemove tracks from history beginning, new index: ${historyIndex.get()}")
             } else {
                 logger.warn("Cannot remove enough tracks from history beginning, history size: ${history.size}")
+            }
+
+            if (history.size > MAX_HISTORY_SIZE) {
+                val stillToRemove = history.size - MAX_HISTORY_SIZE
+                repeat(stillToRemove) {
+                    history.removeLast()
+                }
+                logger.warn("Removed $stillToRemove tracks from history end due to overflow")
             }
         } catch (e: Exception) {
             logger.error("Error managing history size", e)
@@ -212,6 +209,39 @@ class HistoryIndexManager(private val audioPlayer: AudioPlayer) {
      * Get queue copy for display
      */
     fun getQueueCopy(): List<AudioTrack> = queue.map { it.makeClone() }
+
+    /**
+     * Shuffle the current queue (tracks after current index)
+     */
+    fun shuffleQueue(): Boolean {
+        return try {
+            val currentIdx = historyIndex.get()
+            if (currentIdx >= history.size - 1) {
+                return false
+            }
+
+            // Get the queue portion (tracks after current index)
+            val queueStartIndex = currentIdx + 1
+            val queueTracks = history.subList(queueStartIndex, history.size).toMutableList()
+
+            if (queueTracks.size <= 1) {
+                return false
+            }
+
+            // Shuffle the queue tracks
+            queueTracks.shuffle()
+
+            // Replace the queue portion in history with shuffled tracks
+            for (i in queueTracks.indices) {
+                history[queueStartIndex + i] = queueTracks[i]
+            }
+
+            true
+        } catch (e: Exception) {
+            logger.error("Error shuffling queue", e)
+            false
+        }
+    }
 
     /**
      * Clear all data

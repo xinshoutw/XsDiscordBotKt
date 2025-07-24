@@ -156,6 +156,7 @@ object Event : PluginEvent(true) {
      * 處理指令自動完成事件
      *
      * 為 play 指令提供動態的 YouTube 搜索建議
+     * 為 volume 指令提供當前音量建議
      * 注意：這個方法需要在主事件監聽器中註冊
      */
 
@@ -164,7 +165,9 @@ object Event : PluginEvent(true) {
             logger.debug("Processing auto-complete for command: ${event.name}, option: ${event.focusedOption.name}")
 
             // 檢查是否為支援的指令和選項
-            if (event.name == "play" && event.focusedOption.name == "query") {
+            if ((event.name == "play" && event.focusedOption.name == "query") ||
+                (event.name == "volume" && event.focusedOption.name == "level")
+            ) {
                 MusicPlayer.onCommandAutoCompleteInteraction(event)
             } else {
                 // 對於不支援的自動完成請求，返回空選項
