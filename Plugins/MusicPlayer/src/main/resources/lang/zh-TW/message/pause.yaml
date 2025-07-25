@@ -1,0 +1,57 @@
+# https://message.style/app/editor/share/ZYUGtETT
+embeds:
+  - author:
+      name: "%music_player@song_author_name%"
+    title:
+      text: "%music_player@song_name%"
+      url: "%music_player@song_url%"
+
+    thumbnail_url: "%music_player@song_thumbnail_url%"
+
+    footer:
+      text: "由 %music_player@song_requester_username% 點播"
+      icon_url: "%music_player@song_requester_avatar_url%"
+
+    fields:
+      - name: ""
+        value: "%music_player@song_duration%"
+
+    color_code: "%music_player@player_current_color%"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "previous"
+        style: 2
+        disabled: false
+        emoji:
+          formatted: "<:music_player__media_previous:1395593807352954950>"
+
+      - uid:
+          action: "pause-resume"
+        style: 2
+        disabled: false
+        emoji:
+          formatted: "<:music_player__media_pause_resume:1395593823916265524>"
+
+      - uid:
+          action: "skip"
+        style: 2
+        disabled: false
+        emoji:
+          formatted: "<:music_player__media_next:1395593814684471307>"
+
+      - uid:
+          action: "loop"
+        style: 2
+        disabled: false
+        emoji:
+          formatted: "%music_player@player_currnet_loop_mode_emoji%"
+
+      - uid:
+          action: "disconnect"
+        style: 4
+        disabled: false
+        emoji:
+          formatted: "<:music_player__media_disconnect:1395595107255844915>"

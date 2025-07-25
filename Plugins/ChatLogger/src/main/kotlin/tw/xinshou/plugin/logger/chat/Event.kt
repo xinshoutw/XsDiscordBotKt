@@ -41,7 +41,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
+        reload(true)
 
         logger.info("ChatLogger loaded.")
     }
@@ -53,17 +53,13 @@ object Event : PluginEvent(true) {
         logger.info("ChatLogger unloaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
         fileGetter.readInputStream("config.yaml").use {
             config = Yaml().decodeFromStream<MainConfigSerializer>(it)
         }
-
         logger.info("Data file loaded successfully.")
-    }
 
-    override fun reloadLang() {
         fileGetter.exportDefaultDirectory("lang")
-
         DiscordLocalizationExporter(
             PLUGIN_DIR_FILE,
             "register.yaml",
@@ -71,7 +67,6 @@ object Event : PluginEvent(true) {
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
         )
-
         DiscordLocalizationExporter(
             PLUGIN_DIR_FILE,
             "placeholder.yaml",
@@ -79,7 +74,9 @@ object Event : PluginEvent(true) {
             clazzSerializer = PlaceholderSerializer::class,
             clazzLocalization = PlaceholderLocalizations::class
         )
+
     }
+
 
     override fun guildCommands(): Array<CommandData> = guildCommands
 

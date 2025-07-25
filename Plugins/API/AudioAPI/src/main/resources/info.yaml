@@ -1,0 +1,13 @@
+author: "xinshoutw"
+main: "tw.xinshou.plugin.api.audioapi.Event"
+name: "AudioAPI"
+version: "0.1.0"
+
+require_intents:
+  - "GUILD_VOICE_STATES"
+
+require_cache_flags:
+  - "VOICE_STATE"
+
+require_member_cache_policies:
+  - "VOICE"

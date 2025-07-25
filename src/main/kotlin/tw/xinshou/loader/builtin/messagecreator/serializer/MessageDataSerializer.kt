@@ -3,7 +3,6 @@ package tw.xinshou.loader.builtin.messagecreator.serializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.awt.Color
 
 @Serializable
 data class MessageDataSerializer(
@@ -31,7 +30,7 @@ data class MessageDataSerializer(
 
         @Contextual
         @SerialName("color_code")
-        val colorCode: Color? = null, // default: "#FFFFFF", allowed format: [ "0xFFFFFF", "#FFFFFF", "FFFFFFh" ]
+        val colorCode: String? = null, // default: "#FFFFFF", allowed format: [ "0xFFFFFF", "#FFFFFF" ]
 
         val footer: FooterSetting? = null,
         val timestamp: String? = null, // allowed format: [ "%now%", "1723675788491" ]
@@ -99,9 +98,14 @@ data class MessageDataSerializer(
                     @SerialName("model_key")
                     override val modelKey: String? = null,
 
-                    val name: String,
-                    val animated: Boolean = false
-                ) : BaseSerializer
+                    val formatted: String? = null,
+                ) : BaseSerializer {
+                    init {
+                        require((modelKey != null) xor (formatted != null)) {
+                            "Either model_key or formatted must be provided for EmojiSetting"
+                        }
+                    }
+                }
             }
         }
 

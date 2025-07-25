@@ -22,12 +22,11 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
-
-        logger.info("AutoRole loaded.")
+        reload(true)
+        logger.info("AutoRole configuration loaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
         try {
             fileGetter.readInputStream("config.yaml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
@@ -36,7 +35,9 @@ object Event : PluginEvent(true) {
             logger.error("Please configure {}./config.yaml!", PLUGIN_DIR_FILE.canonicalPath, e)
         }
 
-        logger.info("Setting file loaded successfully.")
+        if (!init) {
+            logger.info("AutoRole configuration reloaded.")
+        }
     }
 
     override fun unload() {

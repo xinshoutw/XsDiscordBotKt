@@ -1,0 +1,5 @@
+# https://message.style/app/editor/share/GwSaAgzv
+embeds:
+  - title:
+      text: "Player volume adjusted from %music_player@player_volume_before% ➞ %music_player@player_volume_after%"
+    color_code: "0x7fbf78"

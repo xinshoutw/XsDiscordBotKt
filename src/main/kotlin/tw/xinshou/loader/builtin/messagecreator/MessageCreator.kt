@@ -3,7 +3,6 @@ package tw.xinshou.loader.builtin.messagecreator
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.dv8tion.jda.api.interactions.DiscordLocale
@@ -12,7 +11,6 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.builtin.messagecreator.builder.MessageBuilder
-import tw.xinshou.loader.builtin.messagecreator.serializer.ColorSerializer
 import tw.xinshou.loader.builtin.messagecreator.serializer.MessageDataSerializer
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.builtin.placeholder.Substitutor
@@ -24,7 +22,7 @@ class MessageCreator(
     langDirFile: File,
     private val defaultLocale: DiscordLocale,
     private val componentIdManager: ComponentIdManager? = null,
-    private val messageKeys: List<String>,
+    private val directoryRelativePath: String = "./message/"
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -36,7 +34,6 @@ class MessageCreator(
     init {
         val yaml = Yaml(
             serializersModule = SerializersModule {
-                contextual(ColorSerializer)
                 include(SerializersModule {
                     polymorphic(MessageDataSerializer.ActionRowSetting::class) {
                         subclass(MessageDataSerializer.ActionRowSetting.ButtonsSetting::class)
@@ -48,7 +45,7 @@ class MessageCreator(
         )
 
         langDirFile.listFiles()?.filter { it.isDirectory }?.forEach { directory ->
-            File(directory, "./message/").listFiles()
+            File(directory, directoryRelativePath).listFiles()
                 ?.filter { it.isFile && it.extension in listOf("yml", "yaml") }
                 ?.forEach { file ->
                     messageLocaleMapper.getOrPut(DiscordLocale.from(directory.name)) { mutableMapOf() }[file.nameWithoutExtension] =
@@ -78,6 +75,19 @@ class MessageCreator(
             modelMapper
         ).getBuilder()
 
+    fun getCreateBuilder(
+        key: String,
+        locale: DiscordLocale = defaultLocale,
+        replaceMap: Map<String, String>,
+        modelMapper: Map<String, Any>? = null,
+    ): MessageCreateBuilder =
+        getCreateBuilder(
+            key,
+            locale,
+            Placeholder.globalSubstitutor.putAll(replaceMap),
+            modelMapper
+        )
+
     fun getEditBuilder(
         key: String,
         locale: DiscordLocale = defaultLocale,
@@ -85,21 +95,20 @@ class MessageCreator(
         modelMapper: Map<String, Any>? = null,
     ): MessageEditBuilder =
         MessageEditBuilder.fromCreateData(
-            MessageBuilder(
-                getMessageData(key, locale),
-                substitutor,
-                componentIdManager,
-                modelMapper
-            ).getBuilder().build()
+            getCreateBuilder(key, locale, substitutor, modelMapper).build()
         )
 
-    fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {
-        if (key !in messageKeys) {
-            if (fuzzy)
-                return getMessageData(key.replace('_', '-'), locale)
-            throw IllegalStateException("Message data not found for key: $key")
-        }
+    fun getEditBuilder(
+        key: String,
+        locale: DiscordLocale = defaultLocale,
+        replaceMap: Map<String, String>,
+        modelMapper: Map<String, Any>? = null,
+    ): MessageEditBuilder =
+        MessageEditBuilder.fromCreateData(
+            getCreateBuilder(key, locale, Placeholder.globalSubstitutor.putAll(replaceMap), modelMapper).build()
+        )
 
+    fun getMessageData(key: String, locale: DiscordLocale): MessageDataSerializer {
         return messageLocaleMapper.getOrDefault(locale, messageLocaleMapper[defaultLocale])
             ?.get(key)
             ?: throw IllegalStateException("Message data not found for command: $key")

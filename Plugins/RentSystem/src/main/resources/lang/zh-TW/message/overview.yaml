@@ -1,0 +1,113 @@
+embeds:
+  - author:
+      name: "Overview - 2025.05"
+    color_code: "#4765A9"
+    fields:
+      - name: "Water"
+        value: "```8 km³```"
+        inline: true
+      - name: " "
+        value: "```$ 150 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: "Power"
+        value: "```350 kWh```"
+        inline: true
+      - name: " "
+        value: "```$ 150 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: "Misc"
+        value: "```7 Items```"
+        inline: true
+      - name: " "
+        value: "```$ 3764 ```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+
+  - author:
+      name: "Power"
+    color_code: "#BB998F"
+    fields:
+      - name: "shared"
+        value: "```100 kWh```"
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: " "
+        value: " "
+        inline: true
+      - name: "xinshoutw"
+        value: "```150 kWh```"
+        inline: true
+      - name: "Sam"
+        value: "```50 kWh```"
+        inline: true
+      - name: "Miller"
+        value: "```50 kWh```"
+        inline: true
+
+  - author:
+      name: "Payment"
+    color_code: "#BA8D8D"
+    fields:
+      - name: "xinshoutw"
+        value: "```$ 150 ```"
+        inline: true
+      - name: "Sam"
+        value: "```$ 50 ```"
+        inline: true
+      - name: "Miller"
+        value: "```$ 50 ```"
+        inline: true
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "navigate_time"
+          sub_action: "prev_month_3"
+        style: 2 # GRAY
+        label: " <<<"
+      - uid:
+          action: "navigate_time"
+          sub_action: "prev_month_1"
+        style: 2 # GRAY
+        label: "<"
+      - uid:
+          action: "navigate_time"
+          sub_action: "current_month"
+        style: 3 # GREEN
+        label: "本月"
+      - uid:
+          action: "navigate_time"
+          sub_action: "next_month_1"
+        style: 2 # GRAY
+        label: ">"
+      - uid:
+          action: "navigate_time"
+          sub_action: "next_month_3"
+        style: 2 # GRAY
+        label: " >>>"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "switch_view"
+          sub_action: "overview"
+        style: 3 # GREEN
+        emoji:
+          formatted: "🌏"
+      - uid:
+          action: "switch_view"
+          sub_action: "details"
+        style: 2 # GRAY
+        emoji:
+          formatted: "🚪"

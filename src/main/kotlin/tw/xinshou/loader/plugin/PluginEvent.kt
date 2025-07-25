@@ -10,13 +10,7 @@ abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
 
     abstract fun load()
     abstract fun unload()
-    open fun reloadConfigFile() {}
-    open fun reloadLang() {}
-
-    open fun reloadAll() {
-        reloadLang()
-        reloadConfigFile()
-    }
+    open fun reload(init: Boolean = false) {}
 
     open fun guildCommands(): Array<CommandData>? = null
 

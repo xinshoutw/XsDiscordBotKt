@@ -1,12 +1,15 @@
 package tw.xinshou.plugin.intervalpusher
 
 import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
 import java.io.IOException
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
 import kotlin.coroutines.resumeWithException
 
 internal class IntervalPusher(
@@ -14,7 +17,9 @@ internal class IntervalPusher(
     private val intervalSeconds: Int,
     private val scope: CoroutineScope
 ) {
-    private val client = OkHttpClient()
+    private val client = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(10))
+        .build()
     private var job: Job? = null
 
     // Logger 實例
@@ -59,24 +64,55 @@ internal class IntervalPusher(
                     // 構建包含最新 ping 的 URL
                     val updatedUrl = buildUrl(originUrl)
 
-                    val request = Request.Builder()
-                        .url(updatedUrl)
+                    // 使用 Java HttpClient 建立請求
+                    val request = HttpRequest.newBuilder()
+                        .uri(URI.create(updatedUrl))
+                        .timeout(Duration.ofSeconds(30))
+                        .GET()
                         .build()
 
-                    client.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) {
-                            when (response.code) {
-                                404 -> {
-                                    logger.warn("Status Monitor refused the connection! (Code: 404)!")
-                                    logger.warn("Breaking the heartbeat loop!")
-                                    stop()
-                                }
+                    // 使用 suspendCancellableCoroutine 將 CompletableFuture 轉換為 suspend function
+                    val response = suspendCancellableCoroutine<HttpResponse<String>> { cont ->
+                        val future = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
 
-                                521 -> logger.warn("Status Monitor is OFFLINE! (Code: 521)!") // Response from Cloudflare
-                                else -> logger.error("Query URL $updatedUrl failed, code: ${response.code}!")
+                        future.whenComplete { result, throwable ->
+                            if (throwable != null) {
+                                if (cont.isActive) {
+                                    cont.resumeWithException(throwable)
+                                }
+                            } else {
+                                if (cont.isActive) {
+                                    cont.resume(result) { cause, _, _ ->
+                                        logger.warn("Coroutine was cancelled while waiting for HTTP response! Cause: $cause!")
+                                    }
+                                }
                             }
-                        } else {
+                        }
+
+                        // 當協程被取消時，取消 HTTP 請求
+                        cont.invokeOnCancellation {
+                            future.cancel(true)
+                        }
+                    }
+
+                    // 處理 HTTP 回應
+                    when (response.statusCode()) {
+                        in 200..299 -> {
                             logger.debug("Successfully queried URL: $updatedUrl.")
+                        }
+
+                        404 -> {
+                            logger.warn("Status Monitor refused the connection! (Code: 404)!")
+                            logger.warn("Breaking the heartbeat loop!")
+                            stop()
+                        }
+
+                        521 -> {
+                            logger.warn("Status Monitor is OFFLINE! (Code: 521)!") // Response from Cloudflare
+                        }
+
+                        else -> {
+                            logger.error("Query URL $updatedUrl failed, code: ${response.statusCode()}!")
                         }
                     }
                 } catch (e: IOException) {
@@ -94,9 +130,7 @@ internal class IntervalPusher(
     // 停止 IntervalPusher
     fun stop() {
         job?.cancel()
-        client.dispatcher.executorService.shutdown()
-        client.connectionPool.evictAll()
-        client.cache?.close()
+        // Java HttpClient 會自動管理資源，不需要手動清理
         logger.info("IntervalPusher stopped.")
     }
 }

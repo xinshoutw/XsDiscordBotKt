@@ -115,8 +115,12 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
         }
 
         val filenames = getResourceList(resourcePath)
-        require(filenames.isNotEmpty()) { "No default resource files found in $resourcePath." }
-
+//        require(filenames.isNotEmpty()) { "No default resource files found in $resourcePath." }
+        if (filenames.isEmpty()) {
+            logger.warn("No default resource files found in {}.", resourcePath)
+            return
+        }
+        
         filenames.forEach { zipEntry ->
             val outputFile = File(destDirectory, zipEntry.name.removePrefix(resourcePath).removePrefix("/"))
             if (forceReplace || !outputFile.exists())

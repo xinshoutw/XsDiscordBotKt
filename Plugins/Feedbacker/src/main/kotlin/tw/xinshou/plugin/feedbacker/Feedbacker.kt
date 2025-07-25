@@ -35,10 +35,6 @@ internal object Feedbacker {
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         componentIdManager = componentIdManager,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "ask-message",
-            "print-result",
-        ),
     )
 
     private val modalCreator = ModalCreator(

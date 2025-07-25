@@ -1,0 +1,16 @@
+meter:
+  name: "電表"
+  description: "上傳目前的電表數值"
+  options:
+    public:
+      name: "公共電表"
+      description: "公共電表數值"
+    roomA:
+      name: "房間 A"
+      description: "房間 A 的電表數值"
+    roomB:
+      name: "房間 B"
+      description: "房間 B 的電表數值"
+    roomC:
+      name: "房間 C"
+      description: "房間 C 的電表數值"

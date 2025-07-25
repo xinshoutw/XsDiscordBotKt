@@ -1,0 +1,16 @@
+meter:
+  name: "meter"
+  description: "upload current power meters"
+  options:
+    public:
+      name: "public"
+      description: "the power meter value"
+    roomA:
+      name: "room-a"
+      description: "the power meter value of room A"
+    roomB:
+      name: "room-b"
+      description: "the power meter value of room B"
+    roomC:
+      name: "room-c"
+      description: "the power meter value of room C"

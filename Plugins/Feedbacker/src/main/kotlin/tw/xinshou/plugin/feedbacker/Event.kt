@@ -30,8 +30,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
-
+        reload(true)
         logger.info("Feedbacker loaded.")
     }
 
@@ -39,7 +38,7 @@ object Event : PluginEvent(true) {
         logger.info("Feedbacker unloaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
         try {
             fileGetter.readInputStream("config.yaml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
@@ -55,11 +54,8 @@ object Event : PluginEvent(true) {
             Feedbacker.guild = guild
             Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
         }
-    }
 
-    override fun reloadLang() {
         fileGetter.exportDefaultDirectory("lang")
-
         DiscordLocalizationExporter(
             PLUGIN_DIR_FILE,
             "register.yaml",

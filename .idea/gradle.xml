@@ -4,12 +4,24 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/buildSrc" name="buildSrc">
+                <projects>
+                  <project path="$PROJECT_DIR$/buildSrc" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/Plugins" />
             <option value="$PROJECT_DIR$/Plugins/API" />
+            <option value="$PROJECT_DIR$/Plugins/API/AudioAPI" />
             <option value="$PROJECT_DIR$/Plugins/API/GoogleSheetAPI" />
             <option value="$PROJECT_DIR$/Plugins/API/SQLiteAPI" />
             <option value="$PROJECT_DIR$/Plugins/AutoRole" />
@@ -20,10 +32,13 @@
             <option value="$PROJECT_DIR$/Plugins/Economy" />
             <option value="$PROJECT_DIR$/Plugins/Feedbacker" />
             <option value="$PROJECT_DIR$/Plugins/IntervalPusher" />
+            <option value="$PROJECT_DIR$/Plugins/MusicPlayer" />
             <option value="$PROJECT_DIR$/Plugins/RentSystem" />
+            <option value="$PROJECT_DIR$/Plugins/SimpleCommand" />
             <option value="$PROJECT_DIR$/Plugins/Ticket" />
             <option value="$PROJECT_DIR$/Plugins/TicketAddons" />
             <option value="$PROJECT_DIR$/Plugins/VoiceLogger" />
+            <option value="$PROJECT_DIR$/buildSrc" />
           </set>
         </option>
       </GradleProjectSettings>

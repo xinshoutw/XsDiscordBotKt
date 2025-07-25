@@ -40,19 +40,6 @@ internal object VoiceLogger {
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
-        messageKeys = listOf(
-            "voice-logger@setting",
-            "delete",
-            "modify-allow",
-            "modify-block",
-
-            "on-channel-join",
-            "on-channel-left",
-            "on-channel-switch",
-            "on-status-new",
-            "on-status-update",
-            "on-status-delete",
-        ),
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(

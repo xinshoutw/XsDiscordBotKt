@@ -17,9 +17,9 @@ import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.economy.command.commandStringSet
 import tw.xinshou.plugin.economy.command.guildCommands
-import tw.xinshou.plugin.economy.json.JsonDataClass
 import tw.xinshou.plugin.economy.command.lang.CmdFileSerializer
 import tw.xinshou.plugin.economy.command.lang.CmdLocalizations
+import tw.xinshou.plugin.economy.json.JsonDataClass
 import tw.xinshou.plugin.economy.serializer.MainConfigSerializer
 import tw.xinshou.plugin.economy.storage.IStorage
 import tw.xinshou.plugin.economy.storage.JsonImpl
@@ -41,7 +41,7 @@ object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
+        reload(true)
 
         storageManager.init()
         storageManager.sortMoneyBoard()
@@ -54,7 +54,7 @@ object Event : PluginEvent(true) {
         logger.info("Economy unloaded.")
     }
 
-    override fun reloadConfigFile() {
+    override fun reload(init: Boolean) {
         try {
             fileGetter.readInputStream("config.yaml").use {
                 config = Yaml().decodeFromStream<MainConfigSerializer>(it)
@@ -82,10 +82,7 @@ object Event : PluginEvent(true) {
             }
         }
 
-        logger.info("Data file loaded successfully.")
-    }
 
-    override fun reloadLang() {
         fileGetter.exportDefaultDirectory("lang")
 
         DiscordLocalizationExporter(
@@ -95,6 +92,10 @@ object Event : PluginEvent(true) {
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
         )
+
+        if (!init) {
+            logger.info("Data file loaded successfully.")
+        }
     }
 
     override fun guildCommands(): Array<CommandData> = guildCommands

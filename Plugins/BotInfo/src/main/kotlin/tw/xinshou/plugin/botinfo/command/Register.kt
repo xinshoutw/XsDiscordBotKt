@@ -11,7 +11,7 @@ import tw.xinshou.plugin.botinfo.command.lang.CmdLocalizations
  *
  * @return Array<CommandData> Collection of guild commands configured with localizations and permissions.
  */
-internal val guildCommands: Array<CommandData>
+internal val globalCommands: Array<CommandData>
     get() = arrayOf(
         // Command to display bot info message
         Commands.slash("bot-info", "show about the bot data")

@@ -34,8 +34,12 @@ components: # 5 size limit, allowed values: [ "buttons", "string_select_menu", "
         label: "CUTE" # Ignorable, 80 length limit
         disabled: false # Ignorable, default: false
         emoji: # Ignorable
-          name: "🐳" # Nonnull
-          animated: false # Ignorable, default: false
+          # "<a:dance:123456789123456789>"
+          # "<:dog:123456789123456789>"
+          # "&#92;uD83D&#92;uDE03"
+          # "U+1F602"
+          # "😃"
+          formatted: "🐳" # Ignorable
 
       - url: "https://xinshou.tw/"
         style: 5
@@ -55,8 +59,12 @@ components: # 5 size limit, allowed values: [ "buttons", "string_select_menu", "
           description: "desc1" # Ignorable
           default: false # Ignorable, default: false
           emoji: # Ignorable
-            name: "🐳" # Nonnull
-            animated: false # Ignorable, default: false
+            # "<a:dance:123456789123456789>"
+            # "<:dog:123456789123456789>"
+            # "&#92;uD83D&#92;uDE03"
+            # "U+1F602"
+            # "😃"
+            formatted: "🐳" # Ignorable
 
         - label: "option2"
           value: "value2"

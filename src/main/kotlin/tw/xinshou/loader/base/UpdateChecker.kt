@@ -1,14 +1,15 @@
 package tw.xinshou.loader.base
 
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.logger.Color
 import tw.xinshou.loader.util.Arguments.ignoreVersionCheck
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.nio.channels.Channels
 import kotlin.system.exitProcess
 
@@ -23,17 +24,19 @@ internal object UpdateChecker {
         }
 
         logger.info("Checking version...")
-        val client = OkHttpClient()
-        var response: Response? = null
+        val client = HttpClient.newHttpClient()
 
         try {
-            val request = Request.Builder()
-                .url("https://github.com/IceXinShou/XsDiscordBot/releases/latest").build()
-            response = client.newCall(request).execute()
+            val request = HttpRequest.newBuilder()
+                .uri(URI.create("https://github.com/IceXinShou/XsDiscordBot/releases/latest"))
+                .GET()
+                .build()
 
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-            val latestVersion = response.request.url.toString().substringAfterLast('/')
+            if (response.statusCode() != 200) throw IOException("Unexpected code ${response.statusCode()}")
+
+            val latestVersion = response.uri().toString().substringAfterLast('/')
             val fileName = "XsDiscordBotLoader_$latestVersion.jar"
             val downloadURL = "https://github.com/IceXinShou/XsDiscordBot/releases/download/$latestVersion/$fileName"
 
@@ -50,14 +53,18 @@ internal object UpdateChecker {
             }
 
             // Download the new version
-            val downloadRequest = Request.Builder().url(downloadURL).build()
-            client.newCall(downloadRequest).execute().use { fileResponse ->
-                if (!fileResponse.isSuccessful) throw IOException("Unexpected code $fileResponse")
+            val downloadRequest = HttpRequest.newBuilder()
+                .uri(URI.create(downloadURL))
+                .GET()
+                .build()
 
-                FileOutputStream("./$fileName").use { fos ->
-                    Channels.newChannel(fileResponse.body!!.byteStream()).use { inputChannel ->
-                        fos.channel.transferFrom(inputChannel, 0, Long.MAX_VALUE)
-                    }
+            val fileResponse = client.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream())
+
+            if (fileResponse.statusCode() != 200) throw IOException("Unexpected code ${fileResponse.statusCode()}")
+
+            FileOutputStream("./$fileName").use { fos ->
+                Channels.newChannel(fileResponse.body()).use { inputChannel ->
+                    fos.channel.transferFrom(inputChannel, 0, Long.MAX_VALUE)
                 }
             }
 
@@ -66,8 +73,6 @@ internal object UpdateChecker {
         } catch (e: Exception) {
             logger.error("Error checking version.", e)
             exitProcess(1)
-        } finally {
-            response?.close()
         }
     }
 }

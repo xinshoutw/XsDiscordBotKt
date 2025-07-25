@@ -29,8 +29,7 @@ internal object Event : PluginEvent(true) {
 
     override fun load() {
         fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reloadAll()
-
+        reload(true)
         logger.info("DynamicVoiceChannel loaded.")
     }
 
@@ -38,12 +37,7 @@ internal object Event : PluginEvent(true) {
         logger.info("DynamicVoiceChannel unloaded.")
     }
 
-    override fun reloadConfigFile() {
-
-        logger.info("Data file loaded successfully.")
-    }
-
-    override fun reloadLang() {
+    override fun reload(init: Boolean) {
         fileGetter.exportDefaultDirectory("lang")
 
         DiscordLocalizationExporter(
@@ -53,6 +47,10 @@ internal object Event : PluginEvent(true) {
             clazzSerializer = CmdFileSerializer::class,
             clazzLocalization = CmdLocalizations::class
         )
+
+        if (!init) {
+            logger.info("Reloading DynamicVoiceChannel...")
+        }
     }
 
     override fun guildCommands(): Array<CommandData> = guildCommands
