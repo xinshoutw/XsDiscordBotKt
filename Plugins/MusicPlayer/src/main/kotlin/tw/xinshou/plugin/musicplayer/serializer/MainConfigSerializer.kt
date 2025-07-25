@@ -15,7 +15,8 @@ internal data class MainConfigSerializer(
     val features: FeaturesConfig,
     val performance: PerformanceConfig,
     val cache: CacheConfig,
-    val developer: DeveloperConfig
+    val developer: DeveloperConfig,
+    val emojis: EmojisConfig
 ) {
     @Serializable
     data class CommandMessageAcknowledges(
@@ -227,6 +228,28 @@ internal data class MainConfigSerializer(
         val logSearchQueries: Boolean = false,
         @SerialName("log_audio_events")
         val logAudioEvents: Boolean = false
+    )
+
+    @Serializable
+    data class EmojisConfig(
+        @SerialName("progress_white_start")
+        val progressWhiteStart: String = "<:music_player__line_white_start:1395405244929802240>",
+        @SerialName("progress_white_full")
+        val progressWhiteFull: String = "<:music_player__line_white_full:1395405230618972160>",
+        @SerialName("progress_white_end")
+        val progressWhiteEnd: String = "<:music_player__line_white_end:1395405218723664012>",
+        @SerialName("progress_black")
+        val progressBlack: String = "<:music_player__line_black:1395405206736470118>",
+        @SerialName("progress_black_end")
+        val progressBlackEnd: String = "<:music_player__line_black_end:1395405187069378560>",
+        @SerialName("media_play")
+        val mediaPlay: String = "<:music_player__media_play:1395593840500408421>",
+        @SerialName("media_pause")
+        val mediaPause: String = "<:music_player__media_pause:1395593832384565248>",
+        @SerialName("media_ordered")
+        val mediaOrdered: String = "<:music_player__media_ordered:1396616068679598120>",
+        @SerialName("media_repeat_once")
+        val mediaRepeatOnce: String = "<:music_player__media_repeat_once:1396395280236286063>"
     )
 
     /**

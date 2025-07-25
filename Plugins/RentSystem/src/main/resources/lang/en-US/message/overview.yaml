@@ -1,10 +1,11 @@
+# https://message.style/app/editor/share/JMKm3YT4
 embeds:
   - author:
       name: "Overview - 2025.05"
     color_code: "#4765A9"
     fields:
-      - name: "Water"
-        value: "```8 km³```"
+      - name: "Power"
+        value: "```350 kWh```"
         inline: true
       - name: " "
         value: "```$ 150 ```"
@@ -12,8 +13,8 @@ embeds:
       - name: " "
         value: " "
         inline: true
-      - name: "Power"
-        value: "```350 kWh```"
+      - name: "Water"
+        value: "```8 km³```"
         inline: true
       - name: " "
         value: "```$ 150 ```"
@@ -72,6 +73,21 @@ components:
   - !ButtonsComponent
     buttons:
       - uid:
+          action: "switch_view"
+          sub_action: "overview"
+        style: 3 # GREEN
+        emoji:
+          formatted: "🌏"
+      - uid:
+          action: "switch_view"
+          sub_action: "details"
+        style: 2 # GRAY
+        emoji:
+          formatted: "🚪"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
           action: "navigate_time"
           sub_action: "prev_month_3"
         style: 2 # GRAY
@@ -96,18 +112,3 @@ components:
           sub_action: "next_month_3"
         style: 2 # GRAY
         label: " >>>"
-
-  - !ButtonsComponent
-    buttons:
-      - uid:
-          action: "switch_view"
-          sub_action: "overview"
-        style: 3 # GREEN
-        emoji:
-          formatted: "🌏"
-      - uid:
-          action: "switch_view"
-          sub_action: "details"
-        style: 2 # GRAY
-        emoji:
-          formatted: "🚪"

@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.managers.AudioManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.builtin.placeholder.Substitutor
+import tw.xinshou.plugin.musicplayer.Event.config
 import tw.xinshou.plugin.musicplayer.model.EnhancedTrackInfo
 import tw.xinshou.plugin.musicplayer.model.MusicSource
 import tw.xinshou.plugin.musicplayer.music.GuildMusicManager
@@ -22,24 +23,20 @@ internal object MusicPlayerUtils {
     // 音樂播放器進度條相關常數
     private const val PROGRESS_BAR_LENGTH = 15
 
-    // 音樂播放器 Emoji 常數
-    private const val EMOJI_PROGRESS_WHITE_START = "<:music_player__line_white_start:1395405244929802240>"
-    private const val EMOJI_PROGRESS_WHITE_FULL = "<:music_player__line_white_full:1395405230618972160>"
-    private const val EMOJI_PROGRESS_WHITE_END = "<:music_player__line_white_end:1395405218723664012>"
-    private const val EMOJI_PROGRESS_BLACK = "<:music_player__line_black:1395405206736470118>"
-    private const val EMOJI_PROGRESS_BLACK_END = "<:music_player__line_black_end:1395405187069378560>"
-    private const val EMOJI_MEDIA_PLAY = "<:music_player__media_play:1395593840500408421>"
-    private const val EMOJI_MEDIA_PAUSE = "<:music_player__media_pause:1395593832384565248>"
-    private val BAR_ARRAY = arrayOf(
-        EMOJI_PROGRESS_WHITE_START + EMOJI_PROGRESS_BLACK.repeat(PROGRESS_BAR_LENGTH - 2) + EMOJI_PROGRESS_BLACK_END,
-        *((1..PROGRESS_BAR_LENGTH - 2).map {
-            EMOJI_PROGRESS_WHITE_START +
-                    EMOJI_PROGRESS_WHITE_FULL.repeat(it) +
-                    EMOJI_PROGRESS_BLACK.repeat(PROGRESS_BAR_LENGTH - 2 - it) +
-                    EMOJI_PROGRESS_BLACK_END
-        }.toTypedArray()),
-        EMOJI_PROGRESS_WHITE_START + EMOJI_PROGRESS_WHITE_FULL.repeat(PROGRESS_BAR_LENGTH - 2) + EMOJI_PROGRESS_WHITE_END,
-    )
+    // 音樂播放器進度條陣列（從配置讀取 Emoji）
+    private val BAR_ARRAY by lazy {
+        val emojis = config.emojis
+        arrayOf(
+            emojis.progressWhiteStart + emojis.progressBlack.repeat(PROGRESS_BAR_LENGTH - 2) + emojis.progressBlackEnd,
+            *((1..PROGRESS_BAR_LENGTH - 2).map {
+                emojis.progressWhiteStart +
+                        emojis.progressWhiteFull.repeat(it) +
+                        emojis.progressBlack.repeat(PROGRESS_BAR_LENGTH - 2 - it) +
+                        emojis.progressBlackEnd
+            }.toTypedArray()),
+            emojis.progressWhiteStart + emojis.progressWhiteFull.repeat(PROGRESS_BAR_LENGTH - 2) + emojis.progressWhiteEnd,
+        )
+    }
 
     /**
      * 檢查用戶是否在語音頻道中
@@ -111,14 +108,11 @@ internal object MusicPlayerUtils {
     ): String {
         // 如果是直播，返回簡單的播放/暫停狀態
         if (totalDuration == Long.MAX_VALUE || totalDuration <= 0) {
-            val playPauseEmoji = if (isPlaying) EMOJI_MEDIA_PLAY else EMOJI_MEDIA_PAUSE
+            val playPauseEmoji = if (isPlaying) config.emojis.mediaPlay else config.emojis.mediaPause
             return "$playPauseEmoji 直播中"
         }
-
-        val progress =
-            (currentPosition.toDouble() / totalDuration.toDouble()).coerceIn(0.0, PROGRESS_BAR_LENGTH.toDouble() - 1)
-                .toInt()
-        val playPauseEmoji = if (isPlaying) EMOJI_MEDIA_PLAY else EMOJI_MEDIA_PAUSE
+        val progress = ((currentPosition.toDouble() / totalDuration.toDouble()) * (PROGRESS_BAR_LENGTH - 1)).toInt()
+        val playPauseEmoji = if (isPlaying) config.emojis.mediaPlay else config.emojis.mediaPause
 
         return "$playPauseEmoji " +
                 formatTime(currentPosition) +
@@ -272,12 +266,12 @@ internal object MusicPlayerUtils {
             if (musicManager.scheduler.isSequentialPlayback()) {
                 put(
                     "music_player@player_currnet_loop_mode_emoji",
-                    "<:music_player__media_ordered:1396616068679598120>"
+                    config.emojis.mediaOrdered
                 )
             } else if (musicManager.scheduler.isSingleTrackLoop()) {
                 put(
                     "music_player@player_currnet_loop_mode_emoji",
-                    "<:music_player__media_repeat_once:1396395280236286063>"
+                    config.emojis.mediaRepeatOnce
                 )
             }
         }

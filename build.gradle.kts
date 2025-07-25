@@ -14,7 +14,6 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("com.gradleup.shadow")
-    java
 }
 
 java {
@@ -45,16 +44,6 @@ dependencies {
     api(libs.moshi.kotlin)
     api(libs.kotlinx.coroutines.core)
 
-    implementation(libs.udpqueue.native.linux.x86)
-    implementation(libs.udpqueue.native.linux.x64)
-    implementation(libs.udpqueue.native.linux.aarch64)
-    implementation(libs.udpqueue.native.linux.arm)
-    implementation(libs.udpqueue.native.linux.musl.x64)
-    implementation(libs.udpqueue.native.linux.musl.aarch64)
-    implementation(libs.udpqueue.native.win.x64)
-    implementation(libs.udpqueue.native.win.x86)
-    implementation(libs.udpqueue.native.darwin)
-
     implementation(libs.embed.mongo) // Embedded MongoDb
     implementation(libs.protobuf.java) // CVE fix
     implementation(libs.jline) // CLI
@@ -79,6 +68,7 @@ val outputPath = if (project.hasProperty("outputPath")) {
     file("${rootProject.projectDir}/DevServer")
 }
 
+
 extra["outputPath"] = outputPath
 tasks.named<ShadowJar>("shadowJar") {
     archiveFileName.set("${rootProject.name}-${properties["prefix"]}-$version.jar")
@@ -86,4 +76,8 @@ tasks.named<ShadowJar>("shadowJar") {
     manifest {
         attributes("Main-Class" to "tw.xinshou.loader.MainKt")
     }
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }

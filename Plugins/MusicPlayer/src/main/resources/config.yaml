@@ -89,3 +89,15 @@ developer:
   debug_mode: false          # 調試模式
   log_search_queries: false  # 記錄搜索查詢
   log_audio_events: false    # 記錄音頻事件
+
+# Emoji 設定
+emojis:
+  progress_white_start: "<:music_player__line_white_start:1395405244929802240>"
+  progress_white_full: "<:music_player__line_white_full:1395405230618972160>"
+  progress_white_end: "<:music_player__line_white_end:1395405218723664012>"
+  progress_black: "<:music_player__line_black:1395405206736470118>"
+  progress_black_end: "<:music_player__line_black_end:1395405187069378560>"
+  media_play: "<:music_player__media_play:1395593840500408421>"
+  media_pause: "<:music_player__media_pause:1395593832384565248>"
+  media_ordered: "<:music_player__media_ordered:1396616068679598120>"
+  media_repeat_once: "<:music_player__media_repeat_once:1396395280236286063>"

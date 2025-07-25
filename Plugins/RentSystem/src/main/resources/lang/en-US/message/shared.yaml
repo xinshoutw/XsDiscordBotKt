@@ -1,3 +1,4 @@
+# https://message.style/app/editor/share/5o5mDs7D
 embeds: # A list of embeds to display.
   - author:
       name: "Shared - 2025.05"
@@ -64,12 +65,6 @@ components: # A list of action rows.
         style: 2 # GRAY
         emoji:
           formatted: "🌏"
-      - uid:
-          action: "switch_view"
-          sub_action: "details"
-        style: 3 # GREEN
-        emoji:
-          formatted: "🚪"
       - uid:
           action: "switch_view"
           sub_action: "member_a"

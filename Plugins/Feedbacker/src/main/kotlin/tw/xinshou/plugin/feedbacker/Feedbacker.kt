@@ -33,8 +33,8 @@ internal object Feedbacker {
 
     private val messageCreator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
-        componentIdManager = componentIdManager,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        componentIdManager = componentIdManager,
     )
 
     private val modalCreator = ModalCreator(

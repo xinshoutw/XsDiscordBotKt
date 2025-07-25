@@ -37,9 +37,9 @@ expense_categories:
       - "Sam"
       - "Miller"
     share:
-      - 810822763601461318
-      - 519528961491992582
-      - 911505368096595999
+      - 810822763601461318 # xinshoutw
+      - 519528961491992582 # Sam
+      - 911505368096595999 # Miller
 
   Water:
     enabled: true
@@ -47,22 +47,22 @@ expense_categories:
     meters:
       - "public"
     share:
-      - 810822763601461318
-      - 519528961491992582
-      - 911505368096595999
+      - 810822763601461318 # xinshoutw
+      - 519528961491992582 # Sam
+      - 911505368096595999 # Miller
 
   Misc:
     enabled: true
     calculation_method: "average_split"
     share:
-      - 810822763601461318
-      - 519528961491992582
-      - 911505368096595999
+      - 810822763601461318 # xinshoutw
+      - 519528961491992582 # Sam
+      - 911505368096595999 # Miller
 
   Internet:
     enabled: true
     calculation_method: "fixed_cost_split"
     fixed_cost: 1200
     share:
-      - 810822763601461318
-      - 519528961491992582
+      - 810822763601461318 # xinshoutw
+      - 519528961491992582 # Sam

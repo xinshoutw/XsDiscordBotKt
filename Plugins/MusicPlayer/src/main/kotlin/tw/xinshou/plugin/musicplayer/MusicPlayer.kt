@@ -240,15 +240,15 @@ object MusicPlayer {
                                     track.uri
                                 )
                             }
-                            event.replyChoices(choices).queue()
+                            runCatching { event.replyChoices(choices).queue() }.onFailure { }
                         }
                         .exceptionally { throwable ->
                             logger.warn("Auto-complete search failed", throwable)
-                            event.replyChoices(emptyList()).queue()
+                            runCatching { event.replyChoices(emptyList()).queue() }.onFailure { }
                             null
                         }
                 } else {
-                    event.replyChoices(emptyList()).queue()
+                    runCatching { event.replyChoices(emptyList()).queue() }.onFailure { }
                 }
             }
 
@@ -409,7 +409,9 @@ object MusicPlayer {
                         getSubstitutor(Placeholder.get(member), track, musicManager)
                     ).build()
                 ).let {
-                    event.hook.editOriginal(it).queue()
+                    event.hook.editOriginal(it).queue {
+                        trackMessage(event.hook, "play", event.userLocale, member, musicManager)
+                    }
                 }
             }
 
@@ -443,7 +445,9 @@ object MusicPlayer {
                         getSubstitutor(Placeholder.get(member), tracks.first(), musicManager)
                     ).build()
                 ).let {
-                    event.hook.editOriginal(it).queue()
+                    event.hook.editOriginal(it).queue {
+                        trackMessage(event.hook, "play", event.userLocale, member, musicManager)
+                    }
                 }
             }
 
