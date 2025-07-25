@@ -25,10 +25,7 @@ internal object RentSystem {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val creator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "meter"
-        )
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN
     )
     private val scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler()
     private val guild = BotLoader.jdaBot.getGuildById(Event.config.guildId)

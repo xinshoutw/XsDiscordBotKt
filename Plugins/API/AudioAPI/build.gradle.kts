@@ -2,7 +2,7 @@ group = "tw.xinshou.plugin.api"
 version = "0.1.0"
 
 plugins {
-    id("xs-plugin")
+    id("xs-plugin-shadow")
 }
 
 dependencies {

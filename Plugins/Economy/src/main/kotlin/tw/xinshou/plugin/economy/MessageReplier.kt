@@ -14,21 +14,7 @@ import java.io.File
 internal object MessageReplier {
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
-        DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "no-permission",
-            "balance",
-
-            "add-money",
-            "remove-money",
-            "set-money",
-            "top-money",
-
-            "add-cost",
-            "remove-cost",
-            "set-cost",
-            "top-cost",
-        )
+        DiscordLocale.CHINESE_TAIWAN
     )
 
     fun getNoPermissionMessageData(

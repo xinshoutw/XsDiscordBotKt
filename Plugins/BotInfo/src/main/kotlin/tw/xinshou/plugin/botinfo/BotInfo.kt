@@ -11,10 +11,7 @@ import java.io.File
 internal object BotInfo {
     private val creator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "bot-info"
-        )
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {

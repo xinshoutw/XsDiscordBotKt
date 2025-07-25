@@ -12,10 +12,7 @@ import java.util.concurrent.TimeUnit
 internal object TicketAddons {
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
-        DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "not-online"
-        )
+        DiscordLocale.CHINESE_TAIWAN
     )
 
     fun onChannelCreate(event: ChannelCreateEvent) {

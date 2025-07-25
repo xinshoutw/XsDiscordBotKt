@@ -1,0 +1,12 @@
+ctcb-none-card:
+  name: "中國信託-無卡"
+  description: "取得訊息"
+
+ctcb-remit:
+  name: "中國信託-匯款"
+  description: "取得訊息"
+
+chpytwtp-remit:
+  name: "郵局-匯款"
+  description: "取得訊息"
+

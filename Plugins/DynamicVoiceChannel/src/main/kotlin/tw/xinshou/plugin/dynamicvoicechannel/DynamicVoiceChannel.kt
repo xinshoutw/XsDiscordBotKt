@@ -23,13 +23,7 @@ internal object DynamicVoiceChannel {
     private val generatedCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
-        DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "must-under-category",
-            "bind-success",
-            "unbind-success",
-            "unbind-fail",
-        )
+        DiscordLocale.CHINESE_TAIWAN
     )
 
     fun bind(event: SlashCommandInteractionEvent) {

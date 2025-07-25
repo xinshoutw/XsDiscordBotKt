@@ -53,16 +53,7 @@ internal object Ticket {
     val messageCreator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        componentIdManager = componentIdManager,
-        messageKeys = listOf(
-            "add-ticket",
-            "confirm-add",
-            "confirm-create",
-            "create-ticket",
-            "modify-admin-role",
-            "modify-category",
-            "modify-btn-color",
-        )
+        componentIdManager = componentIdManager
     )
     val modalCreator = ModalCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),

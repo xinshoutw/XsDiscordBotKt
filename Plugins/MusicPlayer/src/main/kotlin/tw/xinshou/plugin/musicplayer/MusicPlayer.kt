@@ -63,19 +63,10 @@ object MusicPlayer {
         )
     )
 
-    private val messageCreator = MessageCreator(
+    private val commandMessageCreator = MessageCreator(
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
-        messageKeys = listOf(
-            "now-playing",
-            "pause",
-            "play",
-            "queue",
-            "resume",
-            "skip",
-            "volume",
-        )
     )
 
     private val playerManager: AudioPlayerManager = DefaultAudioPlayerManager()
@@ -210,7 +201,7 @@ object MusicPlayer {
             val currentTrack = trackedMessage.musicManager.getCurrentTrack()
             if (currentTrack != null) {
                 MessageEditData.fromCreateData(
-                    messageCreator.getCreateBuilder(
+                    commandMessageCreator.getCreateBuilder(
                         trackedMessage.messageKey,
                         trackedMessage.locale,
                         getSubstitutor(
@@ -412,7 +403,7 @@ object MusicPlayer {
                 musicManager.playTrack(track, member)
 
                 MessageEditData.fromCreateData(
-                    messageCreator.getCreateBuilder(
+                    commandMessageCreator.getCreateBuilder(
                         "play",
                         event.userLocale,
                         getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -446,7 +437,7 @@ object MusicPlayer {
                 }
 
                 MessageEditData.fromCreateData(
-                    messageCreator.getCreateBuilder(
+                    commandMessageCreator.getCreateBuilder(
                         "play",
                         event.userLocale,
                         getSubstitutor(Placeholder.get(member), tracks.first(), musicManager)
@@ -485,7 +476,7 @@ object MusicPlayer {
         musicManager.pause()
 
         MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
+            commandMessageCreator.getCreateBuilder(
                 "pause",
                 event.userLocale,
                 getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -516,7 +507,7 @@ object MusicPlayer {
         musicManager.resume()
 
         MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
+            commandMessageCreator.getCreateBuilder(
                 "resume",
                 event.userLocale,
                 getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -586,7 +577,7 @@ object MusicPlayer {
             }
 
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
+                commandMessageCreator.getCreateBuilder(
                     "skip",
                     event.userLocale,
                     getSubstitutor(Placeholder.get(member), nextTrack, musicManager)
@@ -613,7 +604,7 @@ object MusicPlayer {
         musicManager.setVolume(afterVolume)
 
         MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
+            commandMessageCreator.getCreateBuilder(
                 "volume",
                 event.userLocale,
                 Placeholder.get(member).putAll(
@@ -660,7 +651,7 @@ object MusicPlayer {
         }.build()
 
         MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
+            commandMessageCreator.getCreateBuilder(
                 "queue",
                 event.userLocale,
                 getSubstitutor(Placeholder.get(member), currentTrack, musicManager),
@@ -688,7 +679,7 @@ object MusicPlayer {
         }
 
         MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
+            commandMessageCreator.getCreateBuilder(
                 "now-playing",
                 event.userLocale,
                 getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -802,7 +793,7 @@ object MusicPlayer {
                     // 重新開始當前歌曲
                     val track = result.track
                     MessageEditData.fromCreateData(
-                        messageCreator.getCreateBuilder(
+                        commandMessageCreator.getCreateBuilder(
                             "now-playing",
                             event.userLocale,
                             getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -816,7 +807,7 @@ object MusicPlayer {
                     // 播放上一首歌曲
                     val track = result.track
                     MessageEditData.fromCreateData(
-                        messageCreator.getCreateBuilder(
+                        commandMessageCreator.getCreateBuilder(
                             "now-playing",
                             event.userLocale,
                             getSubstitutor(Placeholder.get(member), track, musicManager)
@@ -863,7 +854,7 @@ object MusicPlayer {
         // Update the now-playing display with new pause/resume state
         event.deferEdit().flatMap {
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
+                commandMessageCreator.getCreateBuilder(
                     "now-playing",
                     event.userLocale,
                     getSubstitutor(Placeholder.get(member), currentTrack, musicManager)
@@ -893,7 +884,7 @@ object MusicPlayer {
 
         event.deferEdit().flatMap {
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
+                commandMessageCreator.getCreateBuilder(
                     "now-playing",
                     event.userLocale,
                     getSubstitutor(Placeholder.get(member), nextTrack, musicManager)
@@ -929,7 +920,7 @@ object MusicPlayer {
         if (currentTrack == null) return
         event.deferEdit().flatMap {
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
+                commandMessageCreator.getCreateBuilder(
                     "now-playing",
                     event.userLocale,
                     getSubstitutor(Placeholder.get(member), currentTrack, musicManager)

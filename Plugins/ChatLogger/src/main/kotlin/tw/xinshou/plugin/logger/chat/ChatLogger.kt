@@ -41,14 +41,6 @@ internal object ChatLogger {
         langDirFile = File(PLUGIN_DIR_FILE, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
-        messageKeys = listOf(
-            "chat-logger@setting",
-            "delete",
-            "modify-allow",
-            "modify-block",
-            "on-msg-delete",
-            "on-msg-update",
-        ),
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(

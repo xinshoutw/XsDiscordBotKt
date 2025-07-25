@@ -15,11 +15,7 @@ import java.util.*
 internal object BasicCalculator {
     private val creator = MessageCreator(
         File(PLUGIN_DIR_FILE, "lang"),
-        DiscordLocale.CHINESE_TAIWAN,
-        messageKeys = listOf(
-            "basic-calculate",
-            "error"
-        )
+        DiscordLocale.CHINESE_TAIWAN
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {

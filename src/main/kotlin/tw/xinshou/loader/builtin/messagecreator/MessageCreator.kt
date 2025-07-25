@@ -22,7 +22,7 @@ class MessageCreator(
     langDirFile: File,
     private val defaultLocale: DiscordLocale,
     private val componentIdManager: ComponentIdManager? = null,
-    private val messageKeys: List<String>,
+    private val directoryRelativePath: String = "./message/"
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -45,7 +45,7 @@ class MessageCreator(
         )
 
         langDirFile.listFiles()?.filter { it.isDirectory }?.forEach { directory ->
-            File(directory, "./message/").listFiles()
+            File(directory, directoryRelativePath).listFiles()
                 ?.filter { it.isFile && it.extension in listOf("yml", "yaml") }
                 ?.forEach { file ->
                     messageLocaleMapper.getOrPut(DiscordLocale.from(directory.name)) { mutableMapOf() }[file.nameWithoutExtension] =
@@ -108,13 +108,7 @@ class MessageCreator(
             getCreateBuilder(key, locale, Placeholder.globalSubstitutor.putAll(replaceMap), modelMapper).build()
         )
 
-    fun getMessageData(key: String, locale: DiscordLocale, fuzzy: Boolean = false): MessageDataSerializer {
-        if (key !in messageKeys) {
-            if (fuzzy)
-                return getMessageData(key.replace('_', '-'), locale)
-            throw IllegalStateException("Message data not found for key: $key")
-        }
-
+    fun getMessageData(key: String, locale: DiscordLocale): MessageDataSerializer {
         return messageLocaleMapper.getOrDefault(locale, messageLocaleMapper[defaultLocale])
             ?.get(key)
             ?: throw IllegalStateException("Message data not found for command: $key")

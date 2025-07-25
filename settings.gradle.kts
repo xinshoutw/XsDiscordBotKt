@@ -60,3 +60,5 @@ project(":Plugins:MusicPlayer").name = "MusicPlayer"
 
 include("Plugins:API:AudioAPI")
 project(":Plugins:API:AudioAPI").name = "AudioAPI"
+
+include("Plugins:SimpleCommand")
