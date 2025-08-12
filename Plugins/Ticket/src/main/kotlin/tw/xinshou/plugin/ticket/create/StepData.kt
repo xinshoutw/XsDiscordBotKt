@@ -111,7 +111,6 @@ internal class Step(
                     "tt@embed" to previewEmbed,
                     "tt@btn" to ButtonImpl(
                         componentIdManager.build(
-                            ComponentField("action", "press"),
                             ComponentField("btn_index", "0"),
                         ),
                         data.btnText,
@@ -137,7 +136,6 @@ internal class Step(
                     add(
                         ButtonImpl(
                             componentIdManager.build(
-                                ComponentField("action", "press"),
                                 ComponentField("btn_index", size.toString()),
                             ),
                             data.btnText,
@@ -168,7 +166,6 @@ internal class Step(
     val previewComponent: ButtonImpl
         get() = ButtonImpl(
             componentIdManager.build(
-                ComponentField("action", "create"),
                 ComponentField("sub_action", "prev"),
             ), data.btnText, data.btnStyle, false, data.btnEmoji
         )

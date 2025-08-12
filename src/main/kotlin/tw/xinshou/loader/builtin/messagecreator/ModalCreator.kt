@@ -21,7 +21,6 @@ class ModalCreator(
     langDirFile: File,
     private val componentIdManager: ComponentIdManager,
     private val defaultLocale: DiscordLocale,
-    private val modalKeys: List<String>,
 ) {
 
     companion object {
@@ -66,10 +65,6 @@ class ModalCreator(
     }
 
     fun getModalData(key: String, locale: DiscordLocale): ModalDataSerializer {
-        if (key !in modalKeys) {
-            throw IllegalStateException("Modal data not found for key: $key")
-        }
-
         return modalLocaleMapper.getOrDefault(locale, modalLocaleMapper[defaultLocale])
             ?.get(key)
             ?: throw RuntimeException("Bad modal key: $key")

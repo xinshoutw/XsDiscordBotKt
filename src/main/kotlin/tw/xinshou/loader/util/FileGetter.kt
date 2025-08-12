@@ -8,13 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 
-/**
- * Provides functionalities to interact with files and resources, supporting operations
- * such as reading, exporting, and listing files and resources, especially within JAR files.
- */
 class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -32,10 +26,15 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
      * @throws IOException if the file cannot be read.
      */
     @Throws(IOException::class)
-    fun readInputStream(fileName: String): InputStream {
+    fun readOrExportInputStream(fileName: String): InputStream {
         val file = File(pluginDirFile, fileName)
+
         try {
-            initFile(resourceFilePath = fileName, exportFile = file)
+            if (!file.exists()) {
+                logger.info("The file is not found, try to export from resources: {}.", file.name)
+                export(fileName, file)
+            }
+
             logger.info("Loaded file: {}.", file.canonicalPath)
             return file.inputStream()
         } catch (e: IOException) {
@@ -45,106 +44,79 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     }
 
     /**
-     * Exports a resource from within the JAR to the filesystem.
+     * Exports a resource or a directory of resources from within the JAR/classpath to the filesystem.
+     * This method is optimized to handle both single files and directories efficiently.
      *
-     * @param resourceFilePath The internal path to the resource.
-     * @param outputFile The File where the resource will be written to.
-     * @return A File object representing the copied file.
-     * @throws IOException if an I/O error occurs during the export.
+     * @param resourcePath The internal path to the resource or directory.
+     * For a directory, it's recommended to end with a '/'. Ex: "lang/".
+     * For a file, the path should be exact. Ex: "config.yml".
+     * @param destination The destination file or directory.
+     * If null, it defaults to a file or directory with the same name inside `pluginDirFile`.
+     * @param replace If true, existing files will be overwritten.
+     * @throws IOException if an I/O error occurs.
+     * @throws FileNotFoundException if the base resource path does not exist.
      */
     @Throws(IOException::class)
-    fun exportResource(resourceFilePath: String, outputFile: File = File(resourceFilePath)): File {
-        val inputStream: InputStream = clazz.getResourceAsStream(resourceFilePath.removePrefix("/"))
-            ?: throw FileNotFoundException("Resource not found: $resourceFilePath")
-        logger.debug("Output file: {}.", outputFile.canonicalPath)
-        inputStream.use { fileInJar ->
-            Files.createDirectories(outputFile.parentFile.toPath()) // init directories
-            Files.copy(fileInJar, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            return outputFile
+    fun export(resourcePath: String, destination: File? = null, replace: Boolean = false) {
+        val cleanPath = resourcePath.removePrefix("/").let { it.ifEmpty { "" } }
+        val resourceUrl = clazz.getResource("/$cleanPath")
+            ?: throw FileNotFoundException("Resource path not found: /$cleanPath")
+
+        val jarConnection = resourceUrl.openConnection()
+
+        if (jarConnection !is java.net.JarURLConnection) {
+            logger.error("Export target is not in a JAR. Skipping export for resource: {}", resourceUrl)
+            assert(false)
         }
-    }
 
-    /**
-     * Lists resources located under a specific path within the JAR.
-     *
-     * @param path The internal path within the JAR.
-     * @return An array of resource names under the specified path.
-     * @throws IOException if an error occurs during resource listing.
-     */
-    @Throws(IOException::class)
-    fun getResourceList(path: String): Array<ZipEntry> {
-        val adjustedPath = path.removePrefix(".").removePrefix("/")
-        val jarUrl = clazz.protectionDomain.codeSource.location
-        val filenames = mutableListOf<ZipEntry>()
+        (jarConnection as java.net.JarURLConnection).jarFile.use { jarFile ->
+            val entries = jarFile.entries()
 
-        jarUrl.openStream().use { inputStream ->
-            ZipInputStream(inputStream).use { zip ->
-                var entry: ZipEntry?
-                while (zip.nextEntry.also { entry = it } != null) {
-                    val entryName = entry!!.name
-                    if (entryName.startsWith(adjustedPath) && !entryName.endsWith("/")) {
-                        filenames.add(entry)
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                if (!entry.name.startsWith(cleanPath)) {
+                    continue
+                }
+
+                val relativePath = entry.name.removePrefix(cleanPath).removePrefix("/")
+                val destFile = when {
+                    destination != null && cleanPath == entry.name -> destination
+                    destination != null -> File(destination, relativePath)
+                    else -> File(pluginDirFile, entry.name)
+                }
+
+                if (entry.isDirectory) {
+                    Files.createDirectories(destFile.toPath())
+                } else {
+                    if (relativePath.isEmpty() && destFile.isDirectory) continue
+                    if (destFile.exists() && !replace) continue
+
+                    Files.createDirectories(destFile.parentFile.toPath())
+                    jarFile.getInputStream(entry).use { input ->
+                        Files.copy(input, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
                     }
                 }
             }
         }
 
-        return filenames.toTypedArray()
-    }
 
-
-    /**
-     * Exports default language files from the resources to the language folder.
-     *
-     * @throws IOException if default language files are not found or cannot be exported.
-     */
-    @Throws(IOException::class)
-    fun exportDefaultDirectory(
-        resourcePath: String,
-        destDirectory: File = File(pluginDirFile, resourcePath),
-        forceReplace: Boolean = Arguments.forceReplaceLangResources
-    ) {
-        if (Arguments.forceRenewLangResources) {
-            val success = destDirectory.deleteRecursively()
-            if (!success) {
-                logger.warn("Failed to delete directory: {}.", destDirectory.canonicalPath)
-            }
-
-            Files.createDirectories(destDirectory.toPath())
-            logger.info("Directory modified: {}.", success)
-        }
-
-        val filenames = getResourceList(resourcePath)
-//        require(filenames.isNotEmpty()) { "No default resource files found in $resourcePath." }
-        if (filenames.isEmpty()) {
-            logger.warn("No default resource files found in {}.", resourcePath)
-            return
-        }
-        
-        filenames.forEach { zipEntry ->
-            val outputFile = File(destDirectory, zipEntry.name.removePrefix(resourcePath).removePrefix("/"))
-            if (forceReplace || !outputFile.exists())
-                exportResource(zipEntry.name, outputFile)
-        }
-    }
-
-    /**
-     * Checks if a file is available; if not, it tries to export it.
-     *
-     * @param resourceFilePath Export from where.
-     * @param exportFile The file to check.
-     * @return A File object pointing to the existing or newly created file.
-     * @throws IOException if the file cannot be created.
-     */
-    @Throws(IOException::class)
-    private fun initFile(
-        resourceFilePath: String,
-        exportFile: File,
-        forceReplace: Boolean = false
-    ) {
-        if (forceReplace || !exportFile.exists()) {
-            logger.info("Creating default file: {}.", exportFile.path)
-            exportResource(resourceFilePath, exportFile)
-        }
+//        logger.info("Exporting resources from filesystem for path: {}", cleanPath)
+//        val sourceFile = File(resourceUrl.toURI())
+//        val baseDest = destination ?: File(pluginDirFile, cleanPath)
+//
+//        sourceFile.walkTopDown().forEach { file ->
+//            val relativePath = file.toRelativeString(sourceFile)
+//            val destFile = File(baseDest, relativePath)
+//
+//            if (file.isDirectory) {
+//                Files.createDirectories(destFile.toPath())
+//            } else {
+//                if (destFile.exists() && !replace) {
+//                    return@forEach // continue
+//                }
+//                Files.createDirectories(destFile.parentFile.toPath())
+//                Files.copy(file.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+//            }
+//        }
     }
 }

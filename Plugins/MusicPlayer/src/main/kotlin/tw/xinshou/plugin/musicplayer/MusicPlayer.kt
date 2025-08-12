@@ -29,9 +29,9 @@ import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.util.ComponentIdManager
 import tw.xinshou.loader.util.FieldType
-import tw.xinshou.plugin.musicplayer.Event.COMPONENT_PREFIX
-import tw.xinshou.plugin.musicplayer.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.musicplayer.Event.componentPrefix
 import tw.xinshou.plugin.musicplayer.Event.config
+import tw.xinshou.plugin.musicplayer.Event.pluginDirectory
 import tw.xinshou.plugin.musicplayer.model.EnhancedTrackInfo
 import tw.xinshou.plugin.musicplayer.music.GuildMusicManager
 import tw.xinshou.plugin.musicplayer.music.HistoryIndexManager
@@ -41,7 +41,6 @@ import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.extractEnhancedInfo
 import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.formatTime
 import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.getSubstitutor
 import tw.xinshou.plugin.musicplayer.util.MusicPlayerUtils.isUserInVoiceChannel
-import java.io.File
 import java.util.*
 import java.util.concurrent.*
 
@@ -57,14 +56,14 @@ data class TrackedMessage(
 object MusicPlayer {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val componentIdManager = ComponentIdManager(
-        prefix = COMPONENT_PREFIX,
+        prefix = componentPrefix,
         idKeys = mapOf(
             "action" to FieldType.STRING,
         )
     )
 
     private val commandMessageCreator = MessageCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )

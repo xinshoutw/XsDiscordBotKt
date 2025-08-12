@@ -1,9 +1,9 @@
 language: "zh-TW"
-guild_id: 817940392418607124
+guild_id: 1267003970757591081
 allow_role_id:
-  - 817940392451506206
+  - 1398541616225980476
 
-submit_channel_id: 1303465499577024514
+submit_channel_id: 1269975160350576664
 
 form_warning: "請先選擇星等再提交！"
 form_no_permission: "您沒有權限！"

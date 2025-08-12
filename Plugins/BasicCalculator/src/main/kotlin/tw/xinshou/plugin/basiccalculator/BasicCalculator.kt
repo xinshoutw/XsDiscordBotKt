@@ -5,8 +5,7 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.plugin.basiccalculator.Event.PLUGIN_DIR_FILE
-import java.io.File
+import tw.xinshou.plugin.basiccalculator.Event.pluginDirectory
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
@@ -14,7 +13,7 @@ import java.util.*
 
 internal object BasicCalculator {
     private val creator = MessageCreator(
-        File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
 

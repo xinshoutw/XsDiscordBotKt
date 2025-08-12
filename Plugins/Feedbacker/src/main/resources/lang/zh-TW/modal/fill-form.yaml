@@ -1,10 +1,10 @@
 title: "您覺得今天的服務怎麼樣呢？ :D" # Nonnull, 100 length limit
 uid:
-  action: "submit"
+  action: "submit_form"
   star_count: "%fb_star_count%"
 
 text_inputs:
-  - uid: "submit_form"
+  - uid: "form"
     label: "請簡述評價內容" # Nonnull, 45 length limit
     placeholder: "超讚" # Ignorable, 100 length limit
     min_length: -1 # Ignorable, default: -1

@@ -29,7 +29,7 @@ import java.time.temporal.TemporalAccessor
 
 internal class MessageBuilder(
     private val messageData: MessageDataSerializer,
-    private val substitutor: Substitutor? = Placeholder.globalSubstitutor,
+    private val substitutor: Substitutor = Placeholder.globalSubstitutor,
     private val componentIdManager: ComponentIdManager?,
     private val modelMapper: Map<String, Any>?,
 ) {
@@ -270,7 +270,7 @@ internal class MessageBuilder(
 
             finalButtons.add(
                 ButtonImpl(
-                    /* id = */ buttonSetting.uid?.let { componentIdManager.build(it) }
+                    /* id = */ buttonSetting.uid?.let { componentIdManager.build(substitutor, it) }
                         ?: buttonSetting.url?.let { strKey ->
                             parsePlaceholder(strKey)
                         } ?: throw NullPointerException("Either uid or url must be provided!"),
@@ -374,7 +374,7 @@ internal class MessageBuilder(
      * 嘗試使用 substitutor 解析文字；若 substitutor == null，回傳原值。
      */
     private fun parsePlaceholder(text: String): String {
-        return substitutor?.parse(text) ?: text
+        return substitutor.parse(text)
     }
 
     /**

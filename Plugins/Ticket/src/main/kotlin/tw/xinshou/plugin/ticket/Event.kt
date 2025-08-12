@@ -7,47 +7,38 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import tw.xinshou.loader.localizations.DiscordLocalizationExporter
+import tw.xinshou.loader.localizations.StringLocalizer
 import tw.xinshou.loader.plugin.PluginEvent
-import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.plugin.ticket.command.CmdFileSerializer
 import tw.xinshou.plugin.ticket.command.commandNameSet
 import tw.xinshou.plugin.ticket.command.guildCommands
-import tw.xinshou.plugin.ticket.command.lang.CmdFileSerializer
-import tw.xinshou.plugin.ticket.command.lang.CmdLocalizations
-import java.io.File
 
 object Event : PluginEvent(true) {
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    internal const val COMPONENT_PREFIX = "ticket@"
-    internal val PLUGIN_DIR_FILE = File("plugins/Ticket")
+    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
 
     override fun load() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reload(true)
+        super.load()
 
-        logger.info("Ticket loaded.")
-    }
-
-    override fun unload() {
-        logger.info("Ticket unloaded.")
-    }
-
-    override fun reload(init: Boolean) {
-        fileGetter.exportDefaultDirectory("lang")
-
-        DiscordLocalizationExporter(
-            pluginDirFile = PLUGIN_DIR_FILE,
-            fileName = "register.yaml",
+        localizer = StringLocalizer(
+            pluginDirFile = pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
-            clazzLocalization = CmdLocalizations::class
+        )
+
+    }
+
+    override fun reload() {
+        super.reload()
+
+        localizer = StringLocalizer(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = CmdFileSerializer::class,
         )
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands
+    override fun guildCommands(): Array<CommandData> = guildCommands(localizer)
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
@@ -55,17 +46,17 @@ object Event : PluginEvent(true) {
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         Ticket.onButtonInteraction(event)
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         Ticket.onEntitySelectInteraction(event)
     }
 
     override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (GlobalUtil.checkModalIdPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
         Ticket.onModalInteraction(event)
     }
 

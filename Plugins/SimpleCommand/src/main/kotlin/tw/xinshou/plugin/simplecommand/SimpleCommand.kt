@@ -3,13 +3,12 @@ package tw.xinshou.plugin.simplecommand
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.plugin.simplecommand.Event.PLUGIN_DIR_FILE
-import java.io.File
+import tw.xinshou.plugin.simplecommand.Event.pluginDirectory
 
 internal object SimpleCommand {
     private val creator = MessageCreator(
-        File(PLUGIN_DIR_FILE, "lang"),
-        DiscordLocale.CHINESE_TAIWAN
+        pluginDirFile = pluginDirectory,
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {

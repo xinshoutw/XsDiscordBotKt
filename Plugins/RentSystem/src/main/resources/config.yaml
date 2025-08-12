@@ -1,68 +1,110 @@
+# RentSystem Plugin Configuration
+# 插件是否啟用 (強制使用者必須配置，默認為 false)
+enabled: true
+
+# 全域語言設定 (無法根據使用者地區調整的語言資訊)
+global_messages:
+  time_not_yet_title: "時間未到 It's not time yet."
+  forum_channel_name_format: "〔%rs@yyyy%.%rs@MM%〕"
+  rent_reminder_message: "🏠 租金繳納提醒 Rent Payment Reminder"
+  water_power_reminder_message: "💧⚡ 水電費統計提醒 Utility Bill Statistics Reminder"
+
+# 生效伺服器設定
 guild_id: 1390682572429856841
 forum_channel_id: 1391067942266867853
-forum_channel_name_format: "〔 %rs@yyyy%.%rs@MM% 〕"
 
-time:
-  start_time:
-    year: 2025
-    month: 6
-  end_time:
-    year: 2026
-    month: 5
+# 紀錄時間範圍
+time_range:
+  start_year: 2025
+  start_month: 6
+  end_year: 2026
+  end_month: 5
 
+# 排程設定
+schedule:
+  rent_reminder_day: 25  # 每月25日發送租金提醒
+  rent_reminder_hour: 9
+  rent_reminder_minute: 0
+  utility_reminder_day: 20  # 每月20日發送水電費提醒
+  utility_reminder_hour: 20
+  utility_reminder_minute: 0
+
+# 成員列表
 members:
-  - room: "A"
-    name: "xinshoutw"
-    id: 810822763601461318
-    rent: 11000
+  - room_id: "A"
+    room_owner_name: "xinshoutw"
+    room_owner_discord_id: 810822763601461318
+    monthly_rent: 11000
 
-  - room: "B"
-    name: "Sam"
-    id: 519528961491992582
-    rent: 11000
+  - room_id: "B"
+    room_owner_name: "Sam"
+    room_owner_discord_id: 519528961491992582
+    monthly_rent: 11000
 
-  - room: "C"
-    name: "Miller"
-    id: 911505368096595999
-    rent: 8000
+  - room_id: "C"
+    room_owner_name: "Miller"
+    room_owner_discord_id: 911505368096595999
+    monthly_rent: 8000
 
-
+# 支出項目列表
 expense_categories:
   Power:
     enabled: true
-    calculation_method: "progressive_contribution"
+    item_type_name: "電費"
+    calculation_method: "usage_weighted"  # 用量權重計價
+    requires_usage_data: true
     meters:
-      - "public"
-      - "xinshoutw"
-      - "Sam"
-      - "Miller"
-    share:
+      - meter_id: "public"
+        meter_name: "公用電表"
+        meter_type: "electricity"
+      - meter_id: "room_a"
+        meter_name: "A房電表"
+        meter_type: "electricity"
+        owner_id: 810822763601461318
+      - meter_id: "room_b"
+        meter_name: "B房電表"
+        meter_type: "electricity"
+        owner_id: 519528961491992582
+      - meter_id: "room_c"
+        meter_name: "C房電表"
+        meter_type: "electricity"
+        owner_id: 911505368096595999
+    share_members:
       - 810822763601461318 # xinshoutw
       - 519528961491992582 # Sam
       - 911505368096595999 # Miller
 
   Water:
     enabled: true
-    calculation_method: "average_split"
+    item_type_name: "水費"
+    calculation_method: "average_split"  # 完全平均計價
+    requires_usage_data: false
     meters:
-      - "public"
-    share:
+      - meter_id: "public_water"
+        meter_name: "公用水表"
+        meter_type: "water"
+    share_members:
       - 810822763601461318 # xinshoutw
       - 519528961491992582 # Sam
       - 911505368096595999 # Miller
 
   Misc:
     enabled: true
-    calculation_method: "average_split"
-    share:
+    item_type_name: "雜費"
+    calculation_method: "average_split"  # 完全平均計價
+    requires_usage_data: false
+    share_members:
       - 810822763601461318 # xinshoutw
       - 519528961491992582 # Sam
       - 911505368096595999 # Miller
 
   Internet:
     enabled: true
-    calculation_method: "fixed_cost_split"
+    item_type_name: "網路費"
+    calculation_method: "fixed_cost_split"  # 固定費用分攤
+    requires_usage_data: false
     fixed_cost: 1200
-    share:
+    share_members:
       - 810822763601461318 # xinshoutw
       - 519528961491992582 # Sam
+      - 911505368096595999 # Miller

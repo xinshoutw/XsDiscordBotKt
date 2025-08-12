@@ -8,7 +8,7 @@ import tw.xinshou.loader.base.BotLoader.jdaBot
 import tw.xinshou.loader.json.JsonFileManager
 import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.json.JsonGuildFileManager
-import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.logger.chat.Event.pluginDirectory
 import tw.xinshou.plugin.logger.chat.json.DataContainer
 import tw.xinshou.plugin.logger.chat.json.JsonDataClass
 import java.io.File
@@ -18,7 +18,7 @@ internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     private val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
-        dataDirectory = File(PLUGIN_DIR_FILE, "setting"),
+        dataDirectory = File(pluginDirectory, "setting"),
         adapter = jsonAdapter,
         defaultInstance = mutableMapOf()
     )
@@ -27,7 +27,7 @@ internal object JsonManager {
     val dataMap: MutableMap<Long, ChannelData> = HashMap()
 
     init {
-        val settingFolder = File(PLUGIN_DIR_FILE, "setting")
+        val settingFolder = File(pluginDirectory, "setting")
         Files.createDirectories(settingFolder.toPath())
 
         jsonGuildManager.mapper.forEach { guildId, jsonManager ->

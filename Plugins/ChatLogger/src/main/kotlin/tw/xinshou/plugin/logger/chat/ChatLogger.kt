@@ -20,25 +20,24 @@ import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.builtin.placeholder.Substitutor
 import tw.xinshou.loader.util.ComponentIdManager
 import tw.xinshou.loader.util.FieldType
-import tw.xinshou.plugin.logger.chat.Event.COMPONENT_PREFIX
-import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.logger.chat.Event.componentPrefix
 import tw.xinshou.plugin.logger.chat.Event.config
+import tw.xinshou.plugin.logger.chat.Event.placeholderLocalizer
+import tw.xinshou.plugin.logger.chat.Event.pluginDirectory
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
-import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderLocalizations
-import java.io.File
 import java.util.stream.Collectors
 
 
 internal object ChatLogger {
     private val componentIdManager = ComponentIdManager(
-        prefix = COMPONENT_PREFIX,
+        prefix = componentPrefix,
         idKeys = mapOf(
             "action" to FieldType.STRING,
         )
     )
 
     private val creator = MessageCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
@@ -94,7 +93,7 @@ internal object ChatLogger {
                 )
             }
 
-            else -> throw Exception("Unknown key ${event.componentId.removePrefix(COMPONENT_PREFIX)}")
+            else -> throw Exception("Unknown key ${event.componentId.removePrefix(componentPrefix)}")
         }
 
         // reply
@@ -304,12 +303,12 @@ internal object ChatLogger {
         locale: DiscordLocale,
         substitutor: Substitutor
     ): MessageEditData {
-        val allowListFormat = PlaceholderLocalizations.allowListFormat[locale]
-        val blockListFormat = PlaceholderLocalizations.blockListFormat[locale]
+        val allowListFormat = placeholderLocalizer.get("allowListFormat", locale)
+        val blockListFormat = placeholderLocalizer.get("blockListFormat", locale)
 
         val allowString = StringBuilder().apply {
             if (channelData.getAllow().isEmpty()) {
-                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+                append(substitutor.parse(placeholderLocalizer.get("empty", locale)))
             } else {
                 channelData.getAllow()
                     .map { it.toString() }
@@ -325,7 +324,7 @@ internal object ChatLogger {
 
         val blockString = StringBuilder().apply {
             if (channelData.getBlock().isEmpty()) {
-                append(substitutor.parse(PlaceholderLocalizations.empty[locale]))
+                append(substitutor.parse(placeholderLocalizer.get("empty", locale)))
             } else {
                 channelData.getBlock()
                     .map { it.toString() }

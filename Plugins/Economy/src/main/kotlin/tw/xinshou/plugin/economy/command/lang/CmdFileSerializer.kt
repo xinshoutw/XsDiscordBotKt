@@ -9,10 +9,10 @@ internal data class CmdFileSerializer(
     val balance: CommandMember,
 
     @SerialName("top-money")
-    val topMoney: LocalTemplate.NDString,
+    val topMoney: LocalTemplate.NameDescriptionString,
 
     @SerialName("top-cost")
-    val topCost: LocalTemplate.NDString,
+    val topCost: LocalTemplate.NameDescriptionString,
 
     @SerialName("add-money")
     val addMoney: CommandMemberValue,
@@ -35,7 +35,7 @@ internal data class CmdFileSerializer(
     ) {
         @Serializable
         internal data class Options(
-            val member: LocalTemplate.NDString
+            val member: LocalTemplate.NameDescriptionString
         )
     }
 
@@ -47,8 +47,8 @@ internal data class CmdFileSerializer(
     ) {
         @Serializable
         internal data class Options(
-            val member: LocalTemplate.NDString,
-            val value: LocalTemplate.NDString
+            val member: LocalTemplate.NameDescriptionString,
+            val value: LocalTemplate.NameDescriptionString
         )
     }
 }

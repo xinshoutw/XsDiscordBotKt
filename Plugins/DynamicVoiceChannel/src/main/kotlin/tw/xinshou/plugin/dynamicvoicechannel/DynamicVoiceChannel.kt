@@ -12,17 +12,16 @@ import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.mongodb.CacheDbManager
 import tw.xinshou.loader.mongodb.ICacheDb
-import tw.xinshou.plugin.dynamicvoicechannel.Event.PLUGIN_DIR_FILE
-import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.DataContainer
-import java.io.File
+import tw.xinshou.plugin.dynamicvoicechannel.Event.pluginDirectory
+import tw.xinshou.plugin.dynamicvoicechannel.json.DataContainer
 
 
 internal object DynamicVoiceChannel {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val cacheDbManager: CacheDbManager = CacheDbManager(Event.PLUGIN_NAME)
+    private val cacheDbManager: CacheDbManager = CacheDbManager(Event.pluginName)
     private val generatedCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
     private val creator = MessageCreator(
-        File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
 

@@ -5,10 +5,10 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
 import tw.xinshou.loader.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.api.google.sheet.SheetsService
-import tw.xinshou.plugin.api.google.sheet.serializer.AuthConfigSerializer
+import tw.xinshou.plugin.api.google.sheet.config.ConfigSerializer
 import tw.xinshou.plugin.economy.Economy.Type
-import tw.xinshou.plugin.economy.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.economy.Event.config
+import tw.xinshou.plugin.economy.Event.pluginDirectory
 import tw.xinshou.plugin.economy.UserData
 import tw.xinshou.plugin.economy.json.DataContainer
 import kotlin.math.min
@@ -18,7 +18,7 @@ import kotlin.math.min
  */
 internal object SheetImpl : IStorage {
     private val spreadsheet = SheetsService(
-        AuthConfigSerializer(config.clientId, config.clientSecret, config.port), PLUGIN_DIR_FILE
+        ConfigSerializer(config.clientId, config.clientSecret, config.port), pluginDirectory
     ).sheets.spreadsheets().values()
 
     override fun init() {}
@@ -71,7 +71,7 @@ internal object SheetImpl : IStorage {
             Type.Cost -> queryAll().sortedByDescending { it.data.cost }
         }
 
-        val count = min(board.size, min(config.boardUserShowLimit, 25))
+        val count = min(board.size, config.boardUserShowLimit)
 
         return embedBuilder.apply {
             setDescription("")

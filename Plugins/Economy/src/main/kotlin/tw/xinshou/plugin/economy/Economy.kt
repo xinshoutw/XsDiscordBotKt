@@ -9,6 +9,12 @@ import tw.xinshou.loader.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.economy.Event.config
 import tw.xinshou.plugin.economy.Event.storageManager
 
+
+internal enum class Mode {
+    Json,
+    GoogleSheet,
+}
+
 internal object Economy {
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (event.name.startsWith("top-")) {

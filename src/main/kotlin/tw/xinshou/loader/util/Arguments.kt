@@ -9,18 +9,11 @@ import tw.xinshou.loader.logger.LogBackManager
 
 
 internal object Arguments : CliktCommand() {
-    val forceReplaceLangResources: Boolean
-            by option(
-                "-F",
-                "--force-export-lang-resources",
-                help = "Force all plugins export theirs language resources"
-            ).flag(default = false)
-
     val forceRenewLangResources: Boolean
             by option(
-                "-FF",
+                "-Flang",
                 "--force-renew-lang-resources",
-                help = "Force all plugins delete lang directory, then export theirs language resources"
+                help = "WARNING, Force re-export all plugin lang resource files, overwriting existing files.",
             ).flag(default = false)
 
 

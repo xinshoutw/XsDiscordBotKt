@@ -3,45 +3,34 @@ package tw.xinshou.plugin.simplecommand
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import tw.xinshou.loader.localizations.DiscordLocalizationExporter
+import tw.xinshou.loader.localizations.StringLocalizer
 import tw.xinshou.loader.plugin.PluginEvent
-import tw.xinshou.loader.util.FileGetter
 import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.plugin.simplecommand.command.CmdFileSerializer
 import tw.xinshou.plugin.simplecommand.command.commandStringSet
 import tw.xinshou.plugin.simplecommand.command.guildCommands
-import tw.xinshou.plugin.simplecommand.command.lang.CmdFileSerializer
-import tw.xinshou.plugin.simplecommand.command.lang.CmdLocalizations
-import java.io.File
 
 object Event : PluginEvent(true) {
-    internal val PLUGIN_DIR_FILE = File("plugins/SimpleCommand")
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
 
     override fun load() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reload(true)
+        super.load()
 
-        logger.info("SimpleCommand loaded.")
-    }
-
-    override fun unload() {
-        logger.info("SimpleCommand unloaded.")
-    }
-
-    override fun reload(init: Boolean) {
-        fileGetter.exportDefaultDirectory("lang")
-
-        DiscordLocalizationExporter(
-            pluginDirFile = PLUGIN_DIR_FILE,
-            fileName = "register.yaml",
+        localizer = StringLocalizer(
+            pluginDirFile = pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
-            clazzLocalization = CmdLocalizations::class
         )
+    }
 
-        logger.info("Setting file loaded successfully.")
+    override fun reload() {
+        super.reload()
+
+        localizer = StringLocalizer(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = CmdFileSerializer::class,
+        )
     }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
@@ -49,5 +38,5 @@ object Event : PluginEvent(true) {
         SimpleCommand.onSlashCommandInteraction(event)
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands
+    override fun guildCommands(): Array<CommandData> = guildCommands(localizer)
 }

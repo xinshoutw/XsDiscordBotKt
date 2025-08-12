@@ -14,36 +14,33 @@ import tw.xinshou.loader.builtin.messagecreator.ModalCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.util.ComponentIdManager
 import tw.xinshou.loader.util.FieldType
-import tw.xinshou.plugin.feedbacker.Event.COMPONENT_PREFIX
-import tw.xinshou.plugin.feedbacker.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.feedbacker.Event.componentPrefix
 import tw.xinshou.plugin.feedbacker.Event.config
 import tw.xinshou.plugin.feedbacker.Event.globalLocale
+import tw.xinshou.plugin.feedbacker.Event.pluginDirectory
 import java.io.File
 import java.util.*
 
 internal object Feedbacker {
     private val componentIdManager = ComponentIdManager(
-        prefix = COMPONENT_PREFIX,
+        prefix = componentPrefix,
         idKeys = mapOf(
             "action" to FieldType.STRING,
-            "user_id" to FieldType.LONG_HEX,
-            "star_count" to FieldType.INT_HEX,
+            "user_id" to FieldType.STRING, // placeholder
+            "star_count" to FieldType.STRING, // placeholder
         )
     )
 
     private val messageCreator = MessageCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
 
     private val modalCreator = ModalCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        langDirFile = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
-        modalKeys = listOf(
-            "fill-form",
-        ),
     )
 
     lateinit var guild: Guild
@@ -84,7 +81,7 @@ internal object Feedbacker {
     }
 
     fun handleStarBtn(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        if (idMap["user_id"] as Long != event.user.idLong) {
+        if (idMap["user_id"] as String != event.user.id) {
             event.reply(config.formNotYou).setEphemeral(true).queue()
             return
         }
@@ -111,7 +108,7 @@ internal object Feedbacker {
 
 
     fun handleFormBtn(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        if (idMap["user_id"] as Long != event.user.idLong) {
+        if (idMap["user_id"] as String != event.user.id) {
             event.reply(config.formNotYou).setEphemeral(true).queue()
             return
         }
@@ -140,7 +137,7 @@ internal object Feedbacker {
     }
 
     fun handleFormSubmit(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val stars = idMap["star_count"] as Int
+        val stars = (idMap["star_count"] as String).toInt()
         val substitutor = Placeholder.get(event.member!!)
             .putAll(
                 "fb_stars" to "${"★ ".repeat(stars)}${"☆ ".repeat(5 - stars)}",

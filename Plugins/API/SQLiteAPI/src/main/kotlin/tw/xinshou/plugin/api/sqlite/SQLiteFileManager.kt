@@ -11,7 +11,7 @@ object SQLiteFileManager {
     fun getConnection(uniqueKey: String): Connection? = dbConn[uniqueKey]?.connection
 
     @Synchronized
-    fun addConnection(uniqueKey: String, file: File): Connection {
+    fun connect(uniqueKey: String, file: File): Connection {
         if (uniqueKey in dbConn) {
             throw KeyAlreadyExistsException("Connection key $uniqueKey already exists.")
         }
@@ -22,18 +22,7 @@ object SQLiteFileManager {
         return connection
     }
 
-    @Synchronized
-    fun removeConnection(uniqueKey: String) = disconnect(uniqueKey)
-
-    @Synchronized
-    fun tryDisconnect(uniqueKey: String) {
-        dbConn[uniqueKey]?.let {
-            it.connection.close()
-            dbConn.remove(uniqueKey)
-        }
-    }
-
-
+    @Throws(NoSuchElementException::class)
     @Synchronized
     fun disconnect(uniqueKey: String) {
         dbConn[uniqueKey]?.let {

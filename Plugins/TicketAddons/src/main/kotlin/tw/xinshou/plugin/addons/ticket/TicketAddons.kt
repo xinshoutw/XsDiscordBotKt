@@ -4,14 +4,13 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.plugin.addons.ticket.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.addons.ticket.Event.config
-import java.io.File
+import tw.xinshou.plugin.addons.ticket.Event.pluginDirectory
 import java.util.concurrent.TimeUnit
 
 internal object TicketAddons {
     private val creator = MessageCreator(
-        File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
 

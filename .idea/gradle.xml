@@ -31,6 +31,7 @@
             <option value="$PROJECT_DIR$/Plugins/DynamicVoiceChannel" />
             <option value="$PROJECT_DIR$/Plugins/Economy" />
             <option value="$PROJECT_DIR$/Plugins/Feedbacker" />
+            <option value="$PROJECT_DIR$/Plugins/Giveaway" />
             <option value="$PROJECT_DIR$/Plugins/IntervalPusher" />
             <option value="$PROJECT_DIR$/Plugins/MusicPlayer" />
             <option value="$PROJECT_DIR$/Plugins/RentSystem" />

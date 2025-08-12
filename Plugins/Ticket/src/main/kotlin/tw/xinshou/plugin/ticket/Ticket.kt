@@ -25,8 +25,8 @@ import tw.xinshou.loader.util.ComponentField
 import tw.xinshou.loader.util.ComponentIdManager
 import tw.xinshou.loader.util.FieldType
 import tw.xinshou.loader.util.GlobalUtil
-import tw.xinshou.plugin.ticket.Event.COMPONENT_PREFIX
-import tw.xinshou.plugin.ticket.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.ticket.Event.componentPrefix
+import tw.xinshou.plugin.ticket.Event.pluginDirectory
 import tw.xinshou.plugin.ticket.create.StepManager
 import tw.xinshou.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
@@ -34,13 +34,13 @@ import java.io.File
 internal object Ticket {
     val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
-        dataDirectory = File(PLUGIN_DIR_FILE, "data"),
+        dataDirectory = File(pluginDirectory, "data"),
         adapter = jsonAdapter,
         defaultInstance = mutableMapOf()
     )
 
     val componentIdManager = ComponentIdManager(
-        prefix = COMPONENT_PREFIX,
+        prefix = componentPrefix,
         idKeys = mapOf(
             "action" to FieldType.STRING,
             "sub_action" to FieldType.STRING,
@@ -51,23 +51,14 @@ internal object Ticket {
         )
     )
     val messageCreator = MessageCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager
     )
     val modalCreator = ModalCreator(
-        langDirFile = File(PLUGIN_DIR_FILE, "lang"),
+        langDirFile = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        componentIdManager = componentIdManager,
-        modalKeys = listOf(
-            "modify-author",
-            "modify-content",
-            "modify-btn-text",
-            "modify-embed-color",
-            "modify-reason-title",
-            "preview-reason",
-            "press-ticket",
-        )
+        componentIdManager = componentIdManager
     )
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
@@ -75,7 +66,7 @@ internal object Ticket {
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
-        GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)
+        GlobalUtil.checkComponentIdPrefix(event, componentPrefix)
         val idMap = componentIdManager.parse(event.componentId)
         val guild = event.guild!!
 
@@ -120,18 +111,12 @@ internal object Ticket {
                                 Button.of(
                                     ButtonStyle.SUCCESS,
                                     componentIdManager.build(
-                                        ComponentField("action", "unlock"),
-                                        ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as String),
                                         ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "開啟", Emoji.fromUnicode("🔓")
                                 ),
                                 Button.of(
                                     ButtonStyle.DANGER,
                                     componentIdManager.build(
-                                        ComponentField("action", "delete"),
-                                        ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as String),
                                         ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
@@ -151,18 +136,12 @@ internal object Ticket {
                                 Button.of(
                                     ButtonStyle.SECONDARY,
                                     componentIdManager.build(
-                                        ComponentField("action", "lock"),
-                                        ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as String),
                                         ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "關閉", Emoji.fromUnicode("🔒")
                                 ),
                                 Button.of(
                                     ButtonStyle.DANGER,
                                     componentIdManager.build(
-                                        ComponentField("action", "delete"),
-                                        ComponentField("user_id", idMap["user_id"] as Long),
-                                        ComponentField("msg_id", idMap["msg_id"] as String),
                                         ComponentField("btn_index", idMap["btn_index"] as String),
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
@@ -257,18 +236,12 @@ internal object Ticket {
                 Button.of(
                     ButtonStyle.SECONDARY,
                     componentIdManager.build(
-                        ComponentField("action", "lock"),
-                        ComponentField("user_id", event.user.idLong),
-                        ComponentField("msg_id", idMap["msg_id"] as String),
                         ComponentField("btn_index", idMap["btn_index"] as String),
                     ), "關閉", Emoji.fromUnicode("🔒")
                 ),
                 Button.of(
                     ButtonStyle.DANGER,
                     componentIdManager.build(
-                        ComponentField("action", "delete"),
-                        ComponentField("user_id", event.user.idLong),
-                        ComponentField("msg_id", idMap["msg_id"] as String),
                         ComponentField("btn_index", idMap["btn_index"] as String),
                     ), "刪除", Emoji.fromUnicode("🗑")
                 )

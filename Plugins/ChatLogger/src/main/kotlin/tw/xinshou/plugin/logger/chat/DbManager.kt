@@ -5,8 +5,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
 import tw.xinshou.plugin.api.sqlite.SQLiteFileManager
-import tw.xinshou.plugin.logger.chat.Event.PLUGIN_DIR_FILE
 import tw.xinshou.plugin.logger.chat.Event.config
+import tw.xinshou.plugin.logger.chat.Event.pluginDirectory
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
 import java.io.File
 import java.nio.file.Files
@@ -20,7 +20,7 @@ internal object DbManager {
     private val channelTableCache: MutableSet<Long> = mutableSetOf() // Avoid multiple database exist query
 
     init {
-        val dataFolder = File(PLUGIN_DIR_FILE, "data")
+        val dataFolder = File(pluginDirectory, "data")
         Files.createDirectories(dataFolder.toPath())
 
         dataFolder.listFiles()?.filter { it.isFile && it.extension == "db" }?.forEach fileLoop@{ file ->
@@ -133,7 +133,10 @@ internal object DbManager {
 
     fun disconnect() {
         dataMap.keys.forEach { channelId ->
-            SQLiteFileManager.tryDisconnect("CL:$channelId")
+            try {
+                SQLiteFileManager.disconnect("CL:$channelId")
+            } catch (_: NoSuchElementException) {
+            }
         }
     }
 
@@ -160,7 +163,7 @@ internal object DbManager {
 
     private fun getConnection(guildId: String): Connection =
         SQLiteFileManager.getConnection("CL:$guildId")
-            ?: SQLiteFileManager.addConnection("CL:$guildId", File(PLUGIN_DIR_FILE, "data/$guildId.db"))
+            ?: SQLiteFileManager.connect("CL:$guildId", File(pluginDirectory, "data/$guildId.db"))
 
     private fun initChannelTable(
         conn: Connection,

@@ -8,9 +8,9 @@ import tw.xinshou.loader.base.BotLoader.jdaBot
 import tw.xinshou.loader.json.JsonFileManager
 import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.json.JsonGuildFileManager
-import tw.xinshou.plugin.dynamicvoicechannel.Event.PLUGIN_DIR_FILE
-import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.DataContainer
-import tw.xinshou.plugin.dynamicvoicechannel.json.serializer.JsonDataClass
+import tw.xinshou.plugin.dynamicvoicechannel.Event.pluginDirectory
+import tw.xinshou.plugin.dynamicvoicechannel.json.DataContainer
+import tw.xinshou.plugin.dynamicvoicechannel.json.JsonDataClass
 import java.io.File
 
 
@@ -30,7 +30,7 @@ internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
-        dataDirectory = File(PLUGIN_DIR_FILE, "data"),
+        dataDirectory = File(pluginDirectory, "data"),
         adapter = jsonAdapter,
         defaultInstance = mutableListOf()
     )

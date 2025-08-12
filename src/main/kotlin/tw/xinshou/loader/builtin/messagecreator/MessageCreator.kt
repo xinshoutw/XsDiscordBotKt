@@ -19,15 +19,16 @@ import java.io.File
 import java.util.*
 
 class MessageCreator(
-    langDirFile: File,
+    val pluginDirFile: File,
     private val defaultLocale: DiscordLocale,
     private val componentIdManager: ComponentIdManager? = null,
-    private val directoryRelativePath: String = "./message/"
+    private val directoryRelativePath: String = "message/"
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     }
 
+    private val langDirFile = File(pluginDirFile, "lang")
     private val messageLocaleMapper: MutableMap<DiscordLocale, MutableMap<String, MessageDataSerializer>> =
         EnumMap(DiscordLocale::class.java)
 

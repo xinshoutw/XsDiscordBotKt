@@ -6,20 +6,18 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
-import tw.xinshou.plugin.api.google.sheet.serializer.AuthConfigSerializer
+import tw.xinshou.plugin.api.google.sheet.config.ConfigSerializer
 import java.io.File
 
-class SheetsService(private val config: AuthConfigSerializer, private val pluginDirFile: File) {
+class SheetsService(private val config: ConfigSerializer, private val pluginDirFile: File) {
     private val httpTransport by lazy { GoogleNetHttpTransport.newTrustedTransport() }
-    private val jsonFactory: JsonFactory by lazy { GsonFactory.getDefaultInstance() }
+    private val jsonFactory by lazy { GsonFactory.getDefaultInstance() }
     private val credential by lazy { credential(httpTransport) }
     private val scopes by lazy { listOf(SheetsScopes.SPREADSHEETS) }
-
     val sheets: Sheets by lazy {
         Sheets.Builder(httpTransport, jsonFactory, credential)
             .setApplicationName("SheetsDSL")
@@ -28,14 +26,16 @@ class SheetsService(private val config: AuthConfigSerializer, private val plugin
 
     private fun credential(httpTransport: NetHttpTransport): Credential {
         val flow = GoogleAuthorizationCodeFlow.Builder(
-            httpTransport, jsonFactory, config.clientId, config.clientSecret, scopes
-        )
-            .setDataStoreFactory(FileDataStoreFactory(File(pluginDirFile, "tokens")))
+            httpTransport,
+            jsonFactory,
+            config.clientId,
+            config.clientSecret,
+            scopes
+        ).setDataStoreFactory(FileDataStoreFactory(File(pluginDirFile, "tokens")))
             .setAccessType("offline")
             .build()
 
-        val receiver = LocalServerReceiver.Builder()
-            .setPort(config.port).build()
+        val receiver = LocalServerReceiver.Builder().setPort(config.port).build()
 
         return AuthorizationCodeInstalledApp(flow, receiver).authorize("user")
     }

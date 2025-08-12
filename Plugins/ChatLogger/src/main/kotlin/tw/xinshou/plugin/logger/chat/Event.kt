@@ -1,8 +1,5 @@
 package tw.xinshou.plugin.logger.chat
 
-
-import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.decodeFromStream
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
@@ -12,38 +9,37 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
-import tw.xinshou.loader.localizations.DiscordLocalizationExporter
-import tw.xinshou.loader.plugin.PluginEvent
-import tw.xinshou.loader.util.FileGetter
+import tw.xinshou.loader.localizations.StringLocalizer
+import tw.xinshou.loader.plugin.PluginEventConfigure
 import tw.xinshou.loader.util.GlobalUtil
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
+import tw.xinshou.plugin.logger.chat.command.CmdFileSerializer
+import tw.xinshou.plugin.logger.chat.command.PlaceholderSerializer
 import tw.xinshou.plugin.logger.chat.command.guildCommands
-import tw.xinshou.plugin.logger.chat.command.lang.CmdFileSerializer
-import tw.xinshou.plugin.logger.chat.command.lang.CmdLocalizations
-import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderLocalizations
-import tw.xinshou.plugin.logger.chat.command.lang.PlaceholderSerializer
-import tw.xinshou.plugin.logger.chat.serializer.MainConfigSerializer
-import java.io.File
+import tw.xinshou.plugin.logger.chat.config.ConfigSerializer
 
 
-/**
- * Main class for the Economy plugin managing configurations, commands, and data handling.
- */
-object Event : PluginEvent(true) {
-    internal const val COMPONENT_PREFIX = "chat-logger@"
-    internal val PLUGIN_DIR_FILE = File("plugins/ChatLogger")
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    internal lateinit var config: MainConfigSerializer
-        private set
+object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
+    private lateinit var registerLocalizer: StringLocalizer<CmdFileSerializer>
+    internal lateinit var placeholderLocalizer: StringLocalizer<PlaceholderSerializer>
 
     override fun load() {
-        fileGetter = FileGetter(PLUGIN_DIR_FILE, this::class.java)
-        reload(true)
+        super.load()
 
-        logger.info("ChatLogger loaded.")
+        registerLocalizer = StringLocalizer(
+            pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = CmdFileSerializer::class,
+            fileName = "register.yaml"
+        )
+
+        placeholderLocalizer = StringLocalizer(
+            pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = PlaceholderSerializer::class,
+            fileName = "placeholder.yaml"
+        )
     }
 
     override fun unload() {
@@ -53,32 +49,26 @@ object Event : PluginEvent(true) {
         logger.info("ChatLogger unloaded.")
     }
 
-    override fun reload(init: Boolean) {
-        fileGetter.readInputStream("config.yaml").use {
-            config = Yaml().decodeFromStream<MainConfigSerializer>(it)
-        }
-        logger.info("Data file loaded successfully.")
+    override fun reload() {
+        super.reload()
 
-        fileGetter.exportDefaultDirectory("lang")
-        DiscordLocalizationExporter(
-            PLUGIN_DIR_FILE,
-            "register.yaml",
+        registerLocalizer = StringLocalizer(
+            pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
-            clazzLocalization = CmdLocalizations::class
-        )
-        DiscordLocalizationExporter(
-            PLUGIN_DIR_FILE,
-            "placeholder.yaml",
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = PlaceholderSerializer::class,
-            clazzLocalization = PlaceholderLocalizations::class
+            fileName = "register.yaml"
         )
 
+        placeholderLocalizer = StringLocalizer(
+            pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = PlaceholderSerializer::class,
+            fileName = "placeholder.yaml"
+        )
     }
 
 
-    override fun guildCommands(): Array<CommandData> = guildCommands
+    override fun guildCommands(): Array<CommandData> = guildCommands(registerLocalizer)
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (GlobalUtil.checkCommandString(event, "chat-logger setting")) return
@@ -86,12 +76,12 @@ object Event : PluginEvent(true) {
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         ChatLogger.onEntitySelectInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (GlobalUtil.checkComponentIdPrefix(event, COMPONENT_PREFIX)) return
+        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         ChatLogger.onButtonInteraction(event)
     }
 

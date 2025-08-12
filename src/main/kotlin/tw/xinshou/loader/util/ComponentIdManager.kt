@@ -1,6 +1,8 @@
 package tw.xinshou.loader.util
 
 import net.dv8tion.jda.api.interactions.components.buttons.Button.ID_MAX_LENGTH
+import tw.xinshou.loader.builtin.placeholder.Placeholder
+import tw.xinshou.loader.builtin.placeholder.Substitutor
 
 /**
  * 定義欄位型別:
@@ -89,9 +91,22 @@ class ComponentIdManager(
     // --------------------------------------------------
 
     fun build(fieldMap: Map<String, Any>): String = build(
+        Placeholder.globalSubstitutor,
         *fieldMap.entries.map { (key, value) ->
             ComponentField(key, value)
-        }.toTypedArray()
+        }.toTypedArray(),
+    )
+
+    fun build(substitutor: Substitutor, fieldMap: Map<String, Any>): String = build(
+        substitutor,
+        *fieldMap.entries.map { (key, value) ->
+            ComponentField(key, value)
+        }.toTypedArray(),
+    )
+
+    fun build(field: ComponentField): String = build(
+        Placeholder.globalSubstitutor,
+        field
     )
 
     /**
@@ -106,16 +121,15 @@ class ComponentIdManager(
      *   1. 欄位名稱不在 idKeys 裡面
      *   2. 產生的字串超過 maxLength
      */
-    fun build(vararg fields: ComponentField): String {
+    fun build(substitutor: Substitutor, vararg fields: ComponentField): String {
         // 1) 先轉成「(名稱, 型別)」並取得對應 shortKey
         val pairs = fields.map { cf ->
             val fieldType = idKeys[cf.name] ?: error("Invalid field name '${cf.name}' - not in idKeys.")
             val shortKey = keyMapper[cf.name] as? String
                 ?: error("No mapped shortKey for field '${cf.name}' with type '$fieldType'")
-
             // 2) 檢查型別 & 轉成字串
             checkValueType(cf.name, cf.value)
-            val encodedValue = convertToString(fieldType, cf.value)
+            val encodedValue = substitutor.parse(convertToString(fieldType, cf.value))
 
             "$shortKey:$encodedValue"
         }

@@ -7,13 +7,12 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData
 import tw.xinshou.loader.builtin.messagecreator.MessageCreator
 import tw.xinshou.loader.builtin.placeholder.Placeholder
 import tw.xinshou.loader.builtin.placeholder.Substitutor
-import tw.xinshou.plugin.economy.Event.PLUGIN_DIR_FILE
+import tw.xinshou.plugin.economy.Event.pluginDirectory
 import tw.xinshou.plugin.economy.Event.storageManager
-import java.io.File
 
 internal object MessageReplier {
     private val creator = MessageCreator(
-        File(PLUGIN_DIR_FILE, "lang"),
+        pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
 
