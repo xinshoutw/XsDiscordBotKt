@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import tw.xinshou.loader.localizations.StringLocalizer
 
 private object Keys {
-    const val BASE = "basic-calculate"
+    const val BASE = "basicCalculate"
     const val NAME = "$BASE.name"
     const val DESCRIPTION = "$BASE.description"
     const val OPT_FORMULA = "$BASE.options.formula"

@@ -1,11 +1,11 @@
 create_ticket:
-  name: "Create Ticket Button"
+  name: "create-ticket"
   description: "Create a message with ticket button."
 
 add_ticket:
-  name: "Add Ticket Button to Message"
+  name: "add-ticket"
   description: "Limit 1 Action, 5 buttons at most."
   options:
     message_id:
-      name: "message Id"
+      name: "message-id"
       description: "The message id which button will be added."

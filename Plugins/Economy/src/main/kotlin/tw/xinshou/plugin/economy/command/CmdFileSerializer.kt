@@ -1,4 +1,4 @@
-package tw.xinshou.plugin.economy.command.lang
+package tw.xinshou.plugin.economy.command
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,6 +22,12 @@ internal data class CmdFileSerializer(
 
     @SerialName("set-money")
     val setMoney: CommandMemberValue,
+
+    @SerialName("add-cost")
+    val addCost: CommandMemberValue,
+
+    @SerialName("remove-cost")
+    val removeCost: CommandMemberValue,
 
     @SerialName("set-cost")
     val setCost: CommandMemberValue

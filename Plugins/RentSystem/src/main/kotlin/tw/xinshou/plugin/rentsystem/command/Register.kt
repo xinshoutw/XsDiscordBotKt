@@ -16,18 +16,18 @@ internal val commandStringSet: Set<String> = setOf(
 
 private object Keys {
     // Daily Electricity Command
-    const val DAILY_ELECTRICITY = "daily-electricity"
+    const val DAILY_ELECTRICITY = "dailyElectricity"
     const val DAILY_ELECTRICITY_NAME = "$DAILY_ELECTRICITY.name"
     const val DAILY_ELECTRICITY_DESC = "$DAILY_ELECTRICITY.description"
     private const val DE_OPTIONS = "$DAILY_ELECTRICITY.options"
     const val DE_OPT_PUBLIC_NAME = "$DE_OPTIONS.public.name"
     const val DE_OPT_PUBLIC_DESC = "$DE_OPTIONS.public.description"
-    const val DE_OPT_ROOM_A_NAME = "$DE_OPTIONS.room-a.name"
-    const val DE_OPT_ROOM_A_DESC = "$DE_OPTIONS.room-a.description"
-    const val DE_OPT_ROOM_B_NAME = "$DE_OPTIONS.room-b.name"
-    const val DE_OPT_ROOM_B_DESC = "$DE_OPTIONS.room-b.description"
-    const val DE_OPT_ROOM_C_NAME = "$DE_OPTIONS.room-c.name"
-    const val DE_OPT_ROOM_C_DESC = "$DE_OPTIONS.room-c.description"
+    const val DE_OPT_ROOM_A_NAME = "$DE_OPTIONS.roomA.name"
+    const val DE_OPT_ROOM_A_DESC = "$DE_OPTIONS.roomA.description"
+    const val DE_OPT_ROOM_B_NAME = "$DE_OPTIONS.roomB.name"
+    const val DE_OPT_ROOM_B_DESC = "$DE_OPTIONS.roomB.description"
+    const val DE_OPT_ROOM_C_NAME = "$DE_OPTIONS.roomC.name"
+    const val DE_OPT_ROOM_C_DESC = "$DE_OPTIONS.roomC.description"
     const val DE_OPT_DATE_NAME = "$DE_OPTIONS.date.name"
     const val DE_OPT_DATE_DESC = "$DE_OPTIONS.date.description"
 

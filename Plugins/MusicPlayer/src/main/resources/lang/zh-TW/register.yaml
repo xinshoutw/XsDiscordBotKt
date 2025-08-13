@@ -46,6 +46,10 @@ queue:
   name: "待播清單"
   description: "查看目前的歌曲播放佇列"
 
+shuffle:
+  name: "打亂播放清單"
+  description: "打亂目前的歌曲播放佇列"
+
 now_playing:
   name: "正在播放"
   description: "顯示目前正在播放的歌曲資訊"

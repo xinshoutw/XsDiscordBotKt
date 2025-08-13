@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands
 import tw.xinshou.loader.localizations.StringLocalizer
 
 private object Keys {
-    const val BASE = "bot-info"
+    const val BASE = "botInfo"
     const val NAME = "$BASE.name"
     const val DESCRIPTION = "$BASE.description"
 }

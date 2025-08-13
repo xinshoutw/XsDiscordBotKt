@@ -7,5 +7,5 @@ add_ticket:
   description: "第一行 ActionRow 至多 5 個按鈕"
   options:
     message_id:
-      name: "訊息Id"
+      name: "訊息id"
       description: "要添加按鈕的訊息Id"

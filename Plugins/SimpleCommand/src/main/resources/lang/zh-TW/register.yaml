@@ -1,3 +1,11 @@
+cub-none-card:
+  name: "國泰世華-無卡"
+  description: "取得訊息"
+
+tsib-none-card:
+  name: "台新銀行-無卡"
+  description: "取得訊息"
+
 ctcb-none-card:
   name: "中國信託-無卡"
   description: "取得訊息"

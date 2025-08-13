@@ -25,7 +25,6 @@ object Event : PluginEvent(true) {
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
         )
-
     }
 
     override fun reload() {

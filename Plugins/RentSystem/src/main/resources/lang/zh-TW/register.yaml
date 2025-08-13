@@ -6,11 +6,11 @@ meter:
       name: "公共電表"
       description: "公共電表數值"
     roomA:
-      name: "房間 A"
+      name: "房間a"
       description: "房間 A 的電表數值"
     roomB:
-      name: "房間 B"
+      name: "房間b"
       description: "房間 B 的電表數值"
     roomC:
-      name: "房間 C"
+      name: "房間c"
       description: "房間 C 的電表數值"

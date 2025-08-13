@@ -87,14 +87,8 @@ internal object PluginLoader {
             }
         }
 
-        pluginQueue.values.forEach { plugin ->
-            plugin.guildCommands()?.let { guildCommands.addAll(it) }
-            plugin.globalCommands()?.let { globalCommands.addAll(it) }
-            if (plugin.listener) listenersQueue.add(plugin)
-        }
-
-        if (fail > 0) logger.error("{} plugin(s) failed to load.", fail)
-        logger.info("{} plugin(s) loaded successfully.", success)
+        if (fail > 0) logger.error("{} plugin(s) failed to find.", fail)
+        logger.info("{} plugin(s) found successfully.", success)
     }
 
     /**
@@ -103,6 +97,9 @@ internal object PluginLoader {
     fun run() {
         pluginQueue.values.reversed().forEach { plugin ->
             plugin.load()
+            plugin.guildCommands()?.let { guildCommands.addAll(it) }
+            plugin.globalCommands()?.let { globalCommands.addAll(it) }
+
             logger.info("{} load successfully.", plugin.pluginName)
             if (plugin.listener) listenersQueue.add(plugin)
         }

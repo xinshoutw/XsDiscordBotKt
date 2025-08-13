@@ -10,11 +10,11 @@ dynamic-voice-channel:
           name: "頻道"
           description: "語音頻道"
         format-name-1:
-          name: "名稱格式 1"
-          description: "名稱格式 1"
+          name: "名稱格式1"
+          description: "名稱格式1"
         format-name-2:
-          name: "名稱格式 2"
-          description: "名稱格式 2"
+          name: "名稱格式2"
+          description: "名稱格式2"
     unbind:
       name: "解綁"
       description: "解綁語音頻道"

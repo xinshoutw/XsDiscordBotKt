@@ -9,7 +9,7 @@ import tw.xinshou.loader.localizations.StringLocalizer
 
 
 private object Keys {
-    const val BASE = "chat-logger"
+    const val BASE = "chatLogger"
     const val NAME = "$BASE.name"
     const val DESCRIPTION = "$BASE.description"
 
@@ -20,7 +20,7 @@ private object Keys {
 }
 
 internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
-    Commands.slash("basic-calculate", "calculate + - * / ^ ( ) math problem")
+    Commands.slash("chat-logger", "commands about chat logger")
         .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
         .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))

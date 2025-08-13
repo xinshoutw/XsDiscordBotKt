@@ -63,9 +63,16 @@ object BotLoader {
 
         bot = jdaBot.selfUser
 
+        PluginLoader.run()
+
         jdaBot.apply {
             // Register Builtin Tool
             addEventListener(InteractionLogger)
+
+            // printout PluginLoader.guildCommands for debug
+            if (PluginLoader.guildCommands.isNotEmpty()) {
+                logger.info("Guild Commands: {}", PluginLoader.guildCommands.joinToString(", ") { it.name })
+            }
 
             // Register Plugins' Event Listener
             addEventListener(ListenerManager(PluginLoader.guildCommands))
@@ -77,7 +84,6 @@ object BotLoader {
             updateCommands().addCommands(PluginLoader.globalCommands).queue()
         }
 
-        PluginLoader.run()
         logger.info("Bot initialized.")
     }
 

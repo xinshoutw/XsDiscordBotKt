@@ -11,7 +11,7 @@ import tw.xinshou.loader.localizations.StringLocalizer
 
 
 private object Keys {
-    const val BASE = "dynamic-voice-channel"
+    const val BASE = "dynamicvc"
     const val NAME = "$BASE.name"
     const val DESCRIPTION = "$BASE.description"
 
@@ -23,10 +23,10 @@ private object Keys {
     private const val SUB_BIND_OPTIONS = "$SUB_BIND.options"
     const val SUB_BIND_OPT_CHANNEL_NAME = "$SUB_BIND_OPTIONS.channel.name"
     const val SUB_BIND_OPT_CHANNEL_DESC = "$SUB_BIND_OPTIONS.channel.description"
-    const val SUB_BIND_OPT_FMT1_NAME = "$SUB_BIND_OPTIONS.format-name-1.name"
-    const val SUB_BIND_OPT_FMT1_DESC = "$SUB_BIND_OPTIONS.format-name-1.description"
-    const val SUB_BIND_OPT_FMT2_NAME = "$SUB_BIND_OPTIONS.format-name-2.name"
-    const val SUB_BIND_OPT_FMT2_DESC = "$SUB_BIND_OPTIONS.format-name-2.description"
+    const val SUB_BIND_OPT_FMT1_NAME = "$SUB_BIND_OPTIONS.formatName1.name"
+    const val SUB_BIND_OPT_FMT1_DESC = "$SUB_BIND_OPTIONS.formatName1.description"
+    const val SUB_BIND_OPT_FMT2_NAME = "$SUB_BIND_OPTIONS.formatName2.name"
+    const val SUB_BIND_OPT_FMT2_DESC = "$SUB_BIND_OPTIONS.formatName2.description"
 
     const val SUB_UNBIND = "$SUBCOMMANDS.unbind"
     const val SUB_UNBIND_NAME = "$SUB_UNBIND.name"

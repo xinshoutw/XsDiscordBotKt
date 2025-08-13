@@ -1,24 +1,24 @@
 dynamic-voice-channel:
-  name: "Dynamic Voice Channel"
+  name: "dynamic-voice-channel"
   description: "Dynamic Voice Channel"
   subcommands:
     bind:
-      name: "Bind"
+      name: "bind"
       description: "Bind a voice channel"
       options:
         channel:
-          name: "Channel"
+          name: "channel"
           description: "Voice channel"
         format-name-1:
-          name: "Name format 1"
+          name: "name-format-1"
           description: "Name format 1"
         format-name-2:
-          name: "Name format 2"
+          name: "name-format-2"
           description: "Name format 2"
     unbind:
-      name: "Unbind"
+      name: "unbind"
       description: "Unbind a voice channel"
       options:
         channel:
-          name: "Channel"
+          name: "channel"
           description: "Voice channel"

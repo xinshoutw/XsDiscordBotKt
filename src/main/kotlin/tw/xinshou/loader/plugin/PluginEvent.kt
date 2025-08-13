@@ -24,7 +24,7 @@ abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     }
 
     open fun load() {
-        javaClass.getResource("/lang")?.let {
+        javaClass.getResource("lang")?.let {
             fileGetter.export(resourcePath = "lang/", replace = Arguments.forceRenewLangResources)
         }
 
@@ -36,7 +36,7 @@ abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     }
 
     open fun reload() {
-        javaClass.getResource("/lang")?.let {
+        javaClass.getResource("lang")?.let {
             fileGetter.export(resourcePath = "lang/", replace = Arguments.forceRenewLangResources)
         }
     }

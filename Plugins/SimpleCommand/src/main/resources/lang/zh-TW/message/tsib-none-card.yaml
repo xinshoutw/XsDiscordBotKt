@@ -1,0 +1,16 @@
+embeds:
+  - title:
+      text: "台新銀行 - 無卡"
+
+    thumbnail_url: "https://i.meee.com.tw/JVTYdRJ.png"
+
+    fields:
+      - name: "請配合三方驗證"
+        value: |-
+          在明細寫您的 Discord ID 以及 storA 商城，然後拍照上傳明細
+          教學 https://youtu.be/s52-kgtvgCs
+
+      - name: "銀行帳號"
+        value: "`28881016865386`"
+
+    color_code: "0x9bd9d5"

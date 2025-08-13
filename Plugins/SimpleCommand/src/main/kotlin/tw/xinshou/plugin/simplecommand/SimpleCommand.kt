@@ -13,6 +13,20 @@ internal object SimpleCommand {
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         when (event.name) {
+            "cub-none-card" -> {
+                event.hook.deleteOriginal().queue()
+                event.channel.sendMessage(
+                    creator.getCreateBuilder("cub-none-card").build()
+                ).queue()
+            }
+
+            "tsib-none-card" -> {
+                event.hook.deleteOriginal().queue()
+                event.channel.sendMessage(
+                    creator.getCreateBuilder("tsib-none-card").build()
+                ).queue()
+            }
+
             "ctcb-none-card" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(

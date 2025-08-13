@@ -47,6 +47,28 @@ set-money:
       name: "金額"
       description: "多少"
 
+add-cost:
+  name: "增加消費紀錄"
+  description: "增加成員消費紀錄"
+  options:
+    member:
+      name: "成員"
+      description: "誰"
+    value:
+      name: "金額"
+      description: "多少"
+
+remove-cost:
+  name: "移除消費紀錄"
+  description: "移除成員消費紀錄"
+  options:
+    member:
+      name: "成員"
+      description: "誰"
+    value:
+      name: "金額"
+      description: "多少"
+
 set-cost:
   name: "設定消費紀錄"
   description: "設定成員消費紀錄"

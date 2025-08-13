@@ -47,6 +47,28 @@ set-money:
       name: "value"
       description: "how much"
 
+add-cost:
+  name: "add-cost"
+  description: "add cost to member"
+  options:
+    member:
+      name: "member"
+      description: "who"
+    value:
+      name: "value"
+      description: "how much"
+
+remove-cost:
+  name: "remove-cost"
+  description: "remove cost from member"
+  options:
+    member:
+      name: "member"
+      description: "who"
+    value:
+      name: "value"
+      description: "how much"
+
 set-cost:
   name: "set-cost"
   description: "set cost to member"

@@ -15,7 +15,7 @@ internal data class CmdFileSerializer(
     val skip: CommandSkip,
     val volume: CommandVolume,
     val queue: LocalTemplate.NameDescriptionString,
-
+    val shuffle: LocalTemplate.NameDescriptionString,
     @SerialName("now_playing")
     val nowPlaying: LocalTemplate.NameDescriptionString,
 ) {

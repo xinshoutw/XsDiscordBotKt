@@ -1,0 +1,5 @@
+author: "xinshoutw"
+main: "tw.xinshou.plugin.giveaway.Event"
+name: "Giveaway"
+version: "0.1.0"
+component_prefix: "giveaway@"

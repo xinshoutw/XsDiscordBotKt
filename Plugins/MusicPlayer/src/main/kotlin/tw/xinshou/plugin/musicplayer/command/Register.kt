@@ -65,6 +65,10 @@ private object Keys {
     const val QUEUE_NAME = "$QUEUE.name"
     const val QUEUE_DESC = "$QUEUE.description"
 
+    const val SHUFFLE = "shuffle"
+    const val SHUFFLE_NAME = "$SHUFFLE.name"
+    const val SHUFFLE_DESC = "$SHUFFLE.description"
+
     // The key is based on the Kotlin property name 'nowPlaying', not the YAML 'now_playing'
     const val NOW_PLAYING = "nowPlaying"
     const val NOW_PLAYING_NAME = "$NOW_PLAYING.name"
@@ -139,9 +143,9 @@ internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array
         .setDescriptionLocalizations(localizer.getLocaleData(Keys.QUEUE_DESC))
         .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
 
-    // !! 注意: 'shuffle' 指令未在 CmdFileSerializer.kt 中定義，因此無法使用本地化。
-    // !! 若要為它加上多國語言，請先在 CmdFileSerializer.kt 中加入它的結構。
     Commands.slash("shuffle", "Shuffle the current playlist once")
+        .setNameLocalizations(localizer.getLocaleData(Keys.SHUFFLE_NAME))
+        .setDescriptionLocalizations(localizer.getLocaleData(Keys.SHUFFLE_DESC))
         .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
 
     Commands.slash("now-playing", "View detailed information of the currently playing song")

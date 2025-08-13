@@ -10,9 +10,9 @@ import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.loader.localizations.StringLocalizer
 import tw.xinshou.loader.plugin.PluginEventConfigure
 import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.plugin.economy.command.CmdFileSerializer
 import tw.xinshou.plugin.economy.command.commandStringSet
 import tw.xinshou.plugin.economy.command.guildCommands
-import tw.xinshou.plugin.economy.command.lang.CmdFileSerializer
 import tw.xinshou.plugin.economy.config.ConfigSerializer
 import tw.xinshou.plugin.economy.json.JsonDataClass
 import tw.xinshou.plugin.economy.storage.IStorage
