@@ -34,6 +34,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 internal object Giveaway {
+    // https://message.style/app/editor/share/X850kw8C
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     // Component ID manager for handling button and select menu interactions
