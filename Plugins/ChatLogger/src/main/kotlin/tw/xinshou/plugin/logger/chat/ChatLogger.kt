@@ -140,12 +140,17 @@ internal object ChatLogger {
             if (listenChannelIds.isEmpty()) return
             val substitutor = Placeholder.get(event.member!!).putAll(
                 "cl_msg_after_url" to event.message.jumpUrl,
-                "cl_category_mention" to channel.asStandardGuildChannel().parentCategory!!.asMention,
                 "cl_channel_mention" to channel.asMention,
                 "cl_change_count" to updateCount.toString(),
                 "cl_msg_before" to oldMessage,
                 "cl_msg_after" to newMessage
             )
+
+            channel.asStandardGuildChannel().parentCategory?.let { category ->
+                substitutor.put(
+                    "cl_category_mention" to category.asMention,
+                )
+            }
 
             sendListenChannel(
                 "on-msg-update",
@@ -176,11 +181,17 @@ internal object ChatLogger {
 
             event.guild.retrieveMemberById(userId).queue { member ->
                 val substitutor = Placeholder.get(member).putAll(
-                    "cl_category_mention" to channel.asStandardGuildChannel().parentCategory!!.asMention,
                     "cl_channel_mention" to channel.asMention,
                     "cl_change_count" to updateCount.toString(),
                     "cl_msg_before" to oldMessage,
                 )
+
+                channel.asStandardGuildChannel().parentCategory?.let { category ->
+                    substitutor.put(
+                        "cl_category_mention" to category.asMention,
+                    )
+                }
+
                 sendListenChannel(
                     "on-msg-delete",
                     event.guild,

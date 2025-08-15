@@ -160,11 +160,17 @@ internal object VoiceLogger {
 
         data.member?.let { member ->
             val substitutor = Placeholder.get(member).putAll(
-                "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_after" to data.newStr!!,
             )
+
+            data.channel.parentCategory?.let { category ->
+                substitutor.put(
+                    "vl_category_mention" to category.asMention,
+                )
+            }
+
             sendListenChannel("on-status-new", event.guild, listenChannelIds, substitutor)
         }
     }
@@ -222,12 +228,18 @@ internal object VoiceLogger {
 
         data.member?.let { member ->
             val substitutor = Placeholder.get(member).putAll(
-                "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_before" to data.oldStr!!,
                 "vl_status_after" to data.newStr!!,
             )
+
+            data.channel.parentCategory?.let { category ->
+                substitutor.put(
+                    "vl_category_mention" to category.asMention,
+                )
+            }
+
             sendListenChannel("on-status-update", event.guild, listenChannelIds, substitutor)
         }
     }
@@ -240,11 +252,17 @@ internal object VoiceLogger {
 
         data.member?.let { member ->
             val substitutor = Placeholder.get(member).putAll(
-                "vl_category_mention" to data.channel.parentCategory!!.asMention,
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_before" to data.oldStr!!,
             )
+
+            data.channel.parentCategory?.let { category ->
+                substitutor.put(
+                    "vl_category_mention" to category.asMention,
+                )
+            }
+
             sendListenChannel("on-status-delete", event.guild, listenChannelIds, substitutor)
         }
     }
@@ -256,11 +274,17 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         val substitutor = Placeholder.get(data.member).putAll(
-            "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
-            "vl_channel_join_mention" to data.channelJoin.asMention,
+            "vl_channel_join_mention" to data.channelJoin!!.asMention,
             "vl_channel_join_name" to data.channelJoin.name,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
         )
+
+        data.channelJoin.parentCategory?.let { category ->
+            substitutor.put(
+                "vl_category_join_mention" to category.asMention,
+            )
+        }
+
         sendListenChannel("on-channel-join", event.guild, listenChannelIds, substitutor)
     }
 
@@ -274,15 +298,25 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         val substitutor = Placeholder.get(data.member).putAll(
-            "vl_category_join_mention" to data.channelJoin!!.parentCategory!!.asMention,
-            "vl_channel_join_mention" to data.channelJoin.asMention,
-            "vl_channel_join_url" to data.channelJoin.jumpUrl,
+            "vl_channel_join_url" to data.channelJoin!!.jumpUrl,
             "vl_channel_join_name" to data.channelJoin.name,
-            "vl_category_left_mention" to data.channelLeft!!.parentCategory!!.asMention,
-            "vl_channel_left_mention" to data.channelLeft.asMention,
+            "vl_channel_left_mention" to data.channelLeft!!.asMention,
             "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
+
+        data.channelJoin.parentCategory?.let { category ->
+            substitutor.put(
+                "vl_category_join_mention" to category.asMention,
+            )
+        }
+
+        data.channelLeft.parentCategory?.let { category ->
+            substitutor.put(
+                "vl_category_left_mention" to category.asMention,
+            )
+        }
+
         sendListenChannel("on-channel-switch", event.guild, listenChannelIds, substitutor)
     }
 
@@ -293,11 +327,17 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         val substitutor = Placeholder.get(data.member).putAll(
-            "vl_category_left_mention" to data.channelLeft!!.parentCategory!!.asMention,
-            "vl_channel_left_mention" to data.channelLeft.asMention,
+            "vl_channel_left_mention" to data.channelLeft!!.asMention,
             "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
+
+        data.channelLeft.parentCategory?.let { category ->
+            substitutor.put(
+                "vl_category_left_mention" to category.asMention,
+            )
+        }
+
         sendListenChannel("on-channel-left", event.guild, listenChannelIds, substitutor)
     }
 
