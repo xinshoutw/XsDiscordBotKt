@@ -67,8 +67,11 @@ object Placeholder {
                     putAll(
                         "channel_id" to it.id,
                         "channel_name" to it.name,
-                        "channel_category_name" to it.asTextChannel().parentCategory!!.name,
                     )
+
+                    it.asTextChannel().parentCategory?.let { category ->
+                        put("channel_category_name" to category.name)
+                    }
                 }
             }
 
