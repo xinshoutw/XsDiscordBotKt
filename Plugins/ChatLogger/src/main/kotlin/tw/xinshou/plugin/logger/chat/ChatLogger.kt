@@ -138,7 +138,7 @@ internal object ChatLogger {
             )
 
             if (listenChannelIds.isEmpty()) return
-            val substitutor = Placeholder.get(event.member!!).putAll(
+            val substitutor = (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(
                 "cl_msg_after_url" to event.message.jumpUrl,
                 "cl_channel_mention" to channel.asMention,
                 "cl_change_count" to updateCount.toString(),

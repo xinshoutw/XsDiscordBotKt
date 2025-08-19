@@ -48,7 +48,8 @@ internal object Feedbacker {
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (!event.isFromGuild || event.guild!!.idLong != config.guildId) return
-        if (Collections.disjoint(config.allowRoleId, event.member!!.roles.map { it.idLong })) {
+        val member = event.member ?: return
+        if (Collections.disjoint(config.allowRoleId, member.roles.map { it.idLong })) {
             event.hook.editOriginal(config.formNoPermission).queue()
             return
         }
@@ -138,7 +139,7 @@ internal object Feedbacker {
 
     fun handleFormSubmit(event: ModalInteractionEvent, idMap: Map<String, Any>) {
         val stars = (idMap["star_count"] as String).toInt()
-        val substitutor = Placeholder.get(event.member!!)
+        val substitutor = (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor)
             .putAll(
                 "fb_stars" to "${"★ ".repeat(stars)}${"☆ ".repeat(5 - stars)}",
                 "fb_content" to event.getValue("form")!!.asString
