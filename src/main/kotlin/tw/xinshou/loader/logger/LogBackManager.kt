@@ -16,7 +16,14 @@ internal object LogBackManager {
     }
 
     fun uninstall() {
-        AnsiConsole.systemUninstall()
+        try {
+            AnsiConsole.systemUninstall()
+        } catch (e: java.io.IOError) {
+            // Suppress IOError that occurs when console streams are already closed
+            // This typically happens during shutdown when JLineManager closes the terminal first
+        } catch (e: java.io.IOException) {
+            // Suppress IOException that occurs when console streams are already closed
+        }
     }
 
     fun setLevel(logLevel: Level) {

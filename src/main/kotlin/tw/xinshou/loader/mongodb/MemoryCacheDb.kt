@@ -5,6 +5,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.bson.Document
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -18,18 +19,30 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @OptIn(DelicateCoroutinesApi::class)
 class MemoryCacheDb(collection: MongoCollection<Document>) : CacheCollectionManager(collection) {
+    private val logger = LoggerFactory.getLogger(MemoryCacheDb::class.java)
     private val cache: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
 
     init {
         // 初始化時從 DB 載入所有資料到內存快取
         val allDocs: List<Document> = findAll()
+        logger.debug("MemoryCacheDb initialization: Found {} documents in MongoDB", allDocs.size)
+        
         for (doc in allDocs) {
             val key = doc.getString("_id")
             val value = doc.get("value")
             if (key != null && value != null) {
-                cache[key] = value
+                // Use deserializeValue to properly handle List unwrapping
+                val deserializedValue = deserializeValue(value)
+                cache[key] = deserializedValue
+                logger.debug(
+                    "MemoryCacheDb: Loaded key '{}' with value type: {}",
+                    key,
+                    deserializedValue::class.simpleName
+                )
             }
         }
+
+        logger.info("MemoryCacheDb initialization completed: {} items loaded into cache", cache.size)
     }
 
     /**
@@ -38,6 +51,7 @@ class MemoryCacheDb(collection: MongoCollection<Document>) : CacheCollectionMana
      * @return Map<String, Any>，包含所有快取資料
      */
     override fun loadAll(): Map<String, Any> {
+        // Data in cache is already deserialized during initialization
         return cache.toMap()
     }
 

@@ -23,7 +23,8 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
      */
     override fun loadAll(): Map<String, Any> {
         return findAll().associate { doc ->
-            doc.getString("_id") to doc.get("value")!!
+            val value = doc.get("value")!!
+            doc.getString("_id") to deserializeValue(value)
         }
     }
 
@@ -45,7 +46,13 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
     @Suppress("UNCHECKED_CAST")
     override fun <T> get(key: Any): T? {
         val strKey = key.toString()
-        return collection.find(Filters.eq("_id", strKey)).firstOrNull()?.get("value") as? T
+        val document = collection.find(Filters.eq("_id", strKey)).firstOrNull()
+        return if (document != null) {
+            val value = document.get("value")!!
+            deserializeValue(value) as? T
+        } else {
+            null
+        }
     }
 
 
@@ -125,6 +132,7 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
      * 將傳入的 value 轉換為 MongoDB 可接受的格式。
      * 若 value 為 Document、String、Number 或 Boolean 則直接使用，
      * 否則使用 Moshi 將物件序列化成 JSON 字串，再解析為 Document。
+     * 特別處理 List 類型，將其包裝在容器物件中以確保正確的 BSON 文件格式。
      *
      * @param value 要轉換的資料
      * @return 轉換後的資料
@@ -132,6 +140,18 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
     private fun serializeValue(value: Any): Any {
         return when (value) {
             is Document, is String, is Number, is Boolean -> value
+            is List<*> -> {
+                // Wrap List in a container object with type information to ensure proper BSON document serialization
+                val itemTypeName = if (value.isNotEmpty()) {
+                    value.first()?.javaClass?.name
+                } else {
+                    null
+                }
+                val wrapper = TypedListWrapper(value, itemTypeName)
+                val adapter = JsonFileManager.moshi.adapter(TypedListWrapper::class.java)
+                val jsonStr = adapter.toJson(wrapper)
+                Document.parse(jsonStr)
+            }
             else -> {
                 val adapter = JsonFileManager.moshi.adapter(Any::class.java)
                 val jsonStr = adapter.toJson(value)
@@ -139,6 +159,97 @@ open class CacheCollectionManager(private val collection: MongoCollection<Docume
             }
         }
     }
+
+    /**
+     * 將從 MongoDB 取得的資料轉換回原始格式。
+     * 檢查是否為 ListWrapper 或 TypedListWrapper 物件，如果是則解包裝回 List。
+     *
+     * @param value 從 MongoDB 取得的資料
+     * @return 解包裝後的資料
+     */
+    protected fun deserializeValue(value: Any): Any {
+        return when (value) {
+            is Document -> {
+                // Check if this is a ListWrapper or TypedListWrapper by looking for the "items" field
+                if (value.containsKey("items")) {
+                    try {
+                        // First try to deserialize as TypedListWrapper (new format with type information)
+                        if (value.containsKey("itemTypeName")) {
+                            val typedAdapter = JsonFileManager.moshi.adapter(TypedListWrapper::class.java)
+                            val typedWrapper = typedAdapter.fromJson(value.toJson())
+                            if (typedWrapper != null) {
+                                return reconstructTypedList(typedWrapper)
+                            }
+                        }
+
+                        // Fallback to old ListWrapper format for backward compatibility
+                        val adapter = JsonFileManager.moshi.adapter(ListWrapper::class.java)
+                        val wrapper = adapter.fromJson(value.toJson())
+                        wrapper?.items ?: value
+                    } catch (e: Exception) {
+                        logger.debug("Failed to deserialize as ListWrapper, returning original value", e)
+                        value
+                    }
+                } else {
+                    value
+                }
+            }
+
+            else -> value
+        }
+    }
+
+    /**
+     * Reconstructs a typed list from TypedListWrapper using the stored type information
+     */
+    private fun reconstructTypedList(wrapper: TypedListWrapper): List<*> {
+        val itemTypeName = wrapper.itemTypeName
+        if (itemTypeName == null || wrapper.items.isEmpty()) {
+            return wrapper.items
+        }
+
+        try {
+            // Get the class for the item type
+            val itemClass = Class.forName(itemTypeName)
+
+            // Create a proper adapter for the specific type
+            val adapter = JsonFileManager.moshi.adapter(itemClass)
+
+            // Reconstruct each item with proper type
+            val reconstructedItems = wrapper.items.mapNotNull { item ->
+                try {
+                    when (item) {
+                        is Map<*, *> -> {
+                            // Convert the map back to JSON and then deserialize with proper type
+                            val itemJson = JsonFileManager.moshi.adapter(Any::class.java).toJson(item)
+                            adapter.fromJson(itemJson)
+                        }
+
+                        else -> item
+                    }
+                } catch (e: Exception) {
+                    logger.debug("Failed to reconstruct item of type {}: {}", itemTypeName, e.message)
+                    item // Return original item if reconstruction fails
+                }
+            }
+
+            logger.debug("Successfully reconstructed {} items of type {}", reconstructedItems.size, itemTypeName)
+            return reconstructedItems
+        } catch (e: Exception) {
+            logger.debug("Failed to reconstruct typed list for type {}: {}", itemTypeName, e.message)
+            return wrapper.items // Return original items if reconstruction fails
+        }
+    }
+
+    /**
+     * Wrapper class for Lists to ensure proper BSON document serialization
+     */
+    private data class ListWrapper(val items: List<*>)
+
+    /**
+     * Enhanced wrapper class for Lists that includes type information for proper deserialization
+     */
+    private data class TypedListWrapper(val items: List<*>, val itemTypeName: String?)
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
