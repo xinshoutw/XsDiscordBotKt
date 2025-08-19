@@ -34,6 +34,7 @@
             <option value="$PROJECT_DIR$/Plugins/Giveaway" />
             <option value="$PROJECT_DIR$/Plugins/IntervalPusher" />
             <option value="$PROJECT_DIR$/Plugins/MusicPlayer" />
+            <option value="$PROJECT_DIR$/Plugins/NtustManager" />
             <option value="$PROJECT_DIR$/Plugins/RentSystem" />
             <option value="$PROJECT_DIR$/Plugins/SimpleCommand" />
             <option value="$PROJECT_DIR$/Plugins/Ticket" />
