@@ -66,3 +66,6 @@ project(":Plugins:SimpleCommand").name = "SimpleCommand"
 
 include("Plugins:Giveaway")
 project(":Plugins:Giveaway").name = "Giveaway"
+
+include("Plugins:NtustManager")
+project(":Plugins:NtustManager").name = "NtustManager"
