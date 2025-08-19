@@ -13,8 +13,8 @@ repositories {
 
 dependencies {
     compileOnly(project(":Plugins:API:AudioAPI"))
-    implementation("dev.lavalink.youtube:common:1.13.3")
-    implementation("com.github.topi314.lavasrc:lavasrc:4.7.3")
-    implementation("com.github.topi314.lavasrc:lavasrc-protocol:4.7.3")
+    implementation("dev.lavalink.youtube:common:1.13.4")
+    implementation("com.github.topi314.lavasrc:lavasrc:4.8.0")
+    implementation("com.github.topi314.lavasrc:lavasrc-protocol:4.8.0")
     implementation("dev.arbjerg:lavaplayer:2.2.4")
 }
