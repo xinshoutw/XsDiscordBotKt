@@ -149,17 +149,18 @@ object NtustManager {
      * @return List of Discord messages ready to send
      */
     private fun createDiscordMessages(announcement: AnnouncementData): List<MessageCreateData> {
+        val header = "＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿"
         if (announcement.content == null) {
             // For null content, just send header + URL
-            val messageContent = announcement.link.url.trim()
+            val messageContent = "$header\n# [${announcement.link.title}](${announcement.link.url.trim()})"
             return listOf(MessageCreateBuilder().setContent(messageContent).build())
         }
 
         // For content announcements, check if we need to split
         val fullContent = announcement.content.trim()
-        if (fullContent.length <= 1980) {
+        if (fullContent.length <= 1990 - header.length) {
             // Content fits in one message
-            return listOf(MessageCreateBuilder().setContent(fullContent).build())
+            return listOf(MessageCreateBuilder().setContent("$header\n${fullContent}").build())
         }
 
         // Content is too long, need to split
@@ -171,11 +172,7 @@ object NtustManager {
 
         // First message with header
         val firstMessageContent = contentSegments[0]
-        messages.add(
-            MessageCreateBuilder().setContent(
-                "＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿\n$firstMessageContent"
-            ).build()
-        )
+        messages.add(MessageCreateBuilder().setContent("$header\n$firstMessageContent").build())
 
         // Subsequent messages with remaining content segments
         for (i in 1 until contentSegments.size) {
