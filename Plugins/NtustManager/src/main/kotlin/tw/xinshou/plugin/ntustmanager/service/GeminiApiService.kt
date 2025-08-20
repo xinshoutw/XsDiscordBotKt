@@ -86,7 +86,7 @@ class GeminiApiService(private val config: ConfigSerializer) {
     suspend fun processHtmlContentWithRetry(
         html: String,
         link: AnnouncementLink,
-        maxRetries: Int = 3
+        maxRetries: Int = 10
     ): String? = withContext(Dispatchers.IO) {
         var attempt = 0
         var last: String? = null
