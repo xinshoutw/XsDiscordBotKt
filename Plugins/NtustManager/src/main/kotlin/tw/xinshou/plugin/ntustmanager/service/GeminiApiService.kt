@@ -15,7 +15,6 @@ import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.min
 
 /**
  * Gemini 2.5 Flash 客戶端（google-genai SDK）
@@ -108,8 +107,12 @@ class GeminiApiService(private val config: ConfigSerializer) {
 
             attempt += 1
             if (attempt < maxRetries) {
-                // 指數退避：0.8s, 1.6s, 3.2s（上限 5s）
-                val backoffMs = min(800L shl (attempt - 1), 5000L)
+                val backoffMs = when (attempt) {
+                    1 -> 60_000L    // 60 seconds = 1min
+                    2 -> 300_000L   // 300 seconds = 5min
+                    3 -> 900_000L   // 900 seconds = 15min
+                    else -> 1800_000L // 1800 seconds = 30min
+                }
                 delay(backoffMs)
             }
         }
