@@ -14,7 +14,10 @@ import tw.xinshou.plugin.ntustmanager.config.ConfigSerializer
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Gemini 2.5 Flash 客戶端（google-genai SDK）
@@ -29,14 +32,80 @@ class GeminiApiService(private val config: ConfigSerializer) {
 
     // === 常數 ===
     private val modelId = "gemini-2.5-flash"
+    private val maxRequestsPerMinute = 10
+    private val rateLimitWindowMs = 60_000L // 1 minute in milliseconds
 
     // === 狀態 ===
     private val apiKeyIndex = AtomicInteger(0)
 
-    /** 依序輪換下一把 API Key（沿用你原本設計） */
-    private fun nextKey(): String {
-        val idx = apiKeyIndex.getAndIncrement() % config.apiKeys.size
-        return config.apiKeys[idx]
+    // === 速率限制 ===
+    // 每個 API Key 的使用時間戳記錄 (key -> list of timestamps)
+    private val apiKeyUsageMap = ConcurrentHashMap<String, MutableList<Long>>()
+    private val rateLimitLock = ReentrantLock()
+
+    /** 清理過期的使用記錄 */
+    private fun cleanupExpiredUsage(apiKey: String, currentTime: Long) {
+        val usageList = apiKeyUsageMap[apiKey] ?: return
+        usageList.removeAll { timestamp -> currentTime - timestamp > rateLimitWindowMs }
+    }
+
+    /** 檢查 API Key 是否可以使用（未超過速率限制） */
+    private fun canUseApiKey(apiKey: String): Boolean {
+        return rateLimitLock.withLock {
+            val currentTime = System.currentTimeMillis()
+            cleanupExpiredUsage(apiKey, currentTime)
+            val usageList = apiKeyUsageMap.getOrPut(apiKey) { mutableListOf() }
+            usageList.size < maxRequestsPerMinute
+        }
+    }
+
+    /** 記錄 API Key 的使用 */
+    private fun recordApiKeyUsage(apiKey: String) {
+        rateLimitLock.withLock {
+            val currentTime = System.currentTimeMillis()
+            val usageList = apiKeyUsageMap.getOrPut(apiKey) { mutableListOf() }
+            usageList.add(currentTime)
+            cleanupExpiredUsage(apiKey, currentTime)
+        }
+    }
+
+    /** 尋找可用的 API Key，如果都被限制則返回 null */
+    private fun findAvailableKey(): String? {
+        // 先嘗試從當前索引開始找可用的 key
+        val startIndex = apiKeyIndex.get() % config.apiKeys.size
+        for (i in config.apiKeys.indices) {
+            val keyIndex = (startIndex + i) % config.apiKeys.size
+            val apiKey = config.apiKeys[keyIndex]
+            if (canUseApiKey(apiKey)) {
+                apiKeyIndex.set(keyIndex + 1) // 更新索引為下一個
+                return apiKey
+            }
+        }
+        return null
+    }
+
+    /** 計算需要等待多久才能使用任一 API Key */
+    private fun calculateWaitTime(): Long {
+        return rateLimitLock.withLock {
+            val currentTime = System.currentTimeMillis()
+            var minWaitTime = Long.MAX_VALUE
+
+            for (apiKey in config.apiKeys) {
+                val usageList = apiKeyUsageMap[apiKey] ?: continue
+                if (usageList.isEmpty()) {
+                    return 0L // 有空閒的 key，不需要等待
+                }
+
+                // 找到最舊的使用記錄
+                val oldestUsage = usageList.minOrNull() ?: continue
+                val waitTime = rateLimitWindowMs - (currentTime - oldestUsage)
+                if (waitTime > 0 && waitTime < minWaitTime) {
+                    minWaitTime = waitTime
+                }
+            }
+
+            if (minWaitTime == Long.MAX_VALUE) 0L else minWaitTime
+        }
     }
 
     /** 用指定 API key 建立一個 Client（每次 call/每次重試都以此 key 建新 client） */
@@ -81,7 +150,7 @@ class GeminiApiService(private val config: ConfigSerializer) {
     }
 
     /**
-     * 對外：處理 HTML（含鍵輪換 + 指數退避重試）
+     * 對外：處理 HTML（含鍵輪換 + 指數退避重試 + 速率限制）
      */
     suspend fun processHtmlContentWithRetry(
         html: String,
@@ -92,17 +161,44 @@ class GeminiApiService(private val config: ConfigSerializer) {
         var last: String? = null
 
         while (attempt < maxRetries) {
-            val key = nextKey()
+            // 尋找可用的 API Key
+            val key = findAvailableKey()
+
+            if (key == null) {
+                // 所有 API Key 都被速率限制，計算等待時間
+                val waitTime = calculateWaitTime()
+                if (waitTime > 0) {
+                    logger.info("All API keys rate limited, waiting {} ms", waitTime)
+                    delay(waitTime)
+                    continue // 等待後重新嘗試，不增加 attempt 計數
+                } else {
+                    // 理論上不應該發生，但作為安全措施
+                    logger.warn("No available API key found but no wait time calculated")
+                    delay(1000L) // 等待 1 秒後重試
+                    continue
+                }
+            }
+
             try {
                 val prompt = materializePrompt(html, link)
                 val client = newClient(key)
+
+                // 記錄 API Key 使用
+                recordApiKeyUsage(key)
+                
                 last = callOnce(client, prompt)
                 if (last != null) {
-                    logger.info("Gemini 2.5 Flash success on attempt {}", attempt + 1)
+                    logger.info(
+                        "Gemini 2.5 Flash success on attempt {} with key ending in {}",
+                        attempt + 1, key.takeLast(4)
+                    )
                     return@withContext last
                 }
             } catch (e: Exception) {
-                logger.warn("Attempt {} failed with key index {}: {}", attempt + 1, apiKeyIndex.get() - 1, e.message)
+                logger.warn(
+                    "Attempt {} failed with key ending in {}: {}",
+                    attempt + 1, key.takeLast(4), e.message
+                )
             }
 
             attempt += 1
@@ -142,12 +238,34 @@ class GeminiApiService(private val config: ConfigSerializer) {
     }
 
     /** 監控資訊 */
-    fun getApiStats(): Map<String, Any> = mapOf(
-        "totalApiKeys" to config.apiKeys.size,
-        "currentApiKeyIndex" to (apiKeyIndex.get() % config.apiKeys.size),
-        "totalRequests" to apiKeyIndex.get(),
-        "promptLength" to config.prompt.length,
-        "modelUsed" to modelId,
-        "sdk" to "com.google.genai:google-genai"
-    )
+    fun getApiStats(): Map<String, Any> {
+        val currentTime = System.currentTimeMillis()
+        val keyUsageStats = mutableMapOf<String, Int>()
+
+        rateLimitLock.withLock {
+            for (apiKey in config.apiKeys) {
+                val usageList = apiKeyUsageMap[apiKey] ?: emptyList()
+                // 計算在當前時間窗口內的使用次數
+                val recentUsage = usageList.count { timestamp ->
+                    currentTime - timestamp <= rateLimitWindowMs
+                }
+                keyUsageStats[apiKey.takeLast(4)] = recentUsage
+            }
+        }
+
+        return mapOf(
+            "totalApiKeys" to config.apiKeys.size,
+            "currentApiKeyIndex" to (apiKeyIndex.get() % config.apiKeys.size),
+            "totalRequests" to apiKeyIndex.get(),
+            "promptLength" to config.prompt.length,
+            "modelUsed" to modelId,
+            "sdk" to "com.google.genai:google-genai",
+            "rateLimitConfig" to mapOf(
+                "maxRequestsPerMinute" to maxRequestsPerMinute,
+                "rateLimitWindowMs" to rateLimitWindowMs
+            ),
+            "keyUsageInCurrentWindow" to keyUsageStats,
+            "availableKeys" to config.apiKeys.count { canUseApiKey(it) }
+        )
+    }
 }
