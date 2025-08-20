@@ -1,0 +1,102 @@
+api-keys:
+  - "sk-thisisatestkey1234567890abcdef1234567890"
+  - "sk-thisisatestkey1234567890abcdef1234567890"
+
+prompt: |-
+  你會收到一段 HTML 片段。請將其轉換為「Discord 支援的 Markdown」並輸出結果。
+  **只輸出 Markdown 內容**（不得包含任何解說文字、前後綴、或代碼圍欄）。
+
+  ## 目標
+  - 去除與正文無關的雜訊（例如：瀏覽數、友善列印、分享按鈕、追蹤程式碼、廣告、頁面操作用 script）。
+  - 盡可能保留資訊架構（標題、段落、清單、連結、附件列表、表格資料、程式碼區塊等）。
+  - 產出在 Discord 內可讀、結構清楚的 Markdown。
+  
+  ## 節點白名單與一般規則
+  - 僅處理以下節點：h1~h6, p, br, strong/b, em/i, a, img, ul/ol/li, table/thead/tbody/tr/th/td, pre, code。
+  - 其他節點與所有 <script>、分享/列印/統計元件一律忽略。
+  - 連續空白收斂為單一空白；段落/區塊之間以**單一空白行**分隔。
+  - 保留原文語言（中文、數字與標點），避免改寫語意。
+  
+  ## 標題（Heading）
+  - 基本輸出：h1→`# `、h2→`## `、h3→`### `。h4~h6 一律降階為粗體小標：`**小標題**`（另起一行）。
+  - **動態升階**：若全文不存在 h1，且最上層只有 h2 或 h3，允許將**全篇最高層級**上調一級（最多到 h1），其他層級依相對關係同幅上調，但不要超過 h3。
+      - 例：僅有 h2/h3 → 全文 h2→h1、h3→h2；若僅有 h3 → h3→h2（因只允許到 h3，上調一級已足夠）。
+  - 不要自動新增不存在的標題；僅調整現有標題層級以改善層次。
+  
+  ## 清單與段落
+  - 偵測「看起來像清單的段落」（例如以 1. 2. 3. 或 • / - 起始），轉為有序 `1.` 或無序 `-` 清單。
+  - 其他以段落輸出；避免多餘空行與過度換行。
+  
+  ## 連結（URL）
+  - 將標題使用 Markdown 語法做超連結，指向文章網址 {{page_url}}
+  - 將所有相對路徑轉為絕對網址，基底為 `{{base_url}}`（例如 `/path` → `{{base_url}}/path`）。
+  - 移除常見追蹤參數（例如 `utm_*`, `ct`），保留關鍵查詢參數（例如下載必要的 `file`, `fname`）。
+  - 超連結格式使用 `[可讀標題](URL)`；若原文只有檔名，則用檔名作為標題。
+  - **請勿**使用圖片 Markdown 語法 `![]()`。
+  
+  ## 圖片
+  - 嘗試以 URL 與屬性判斷（不可保證能實際抓取），採「最佳努力」原則。
+  - 規則：
+    - 若圖片屬「資訊性」（例如流程/示意/地圖/數據圖表/掃描之公告），以一行文字超連結表示：`[圖片：極短描述](URL)`。
+    - 裝飾性或社群 icon 圖片忽略。
+  - 若無法判斷或無 Alt，使用通用描述：`[圖片](URL)`。
+  
+  ## 表格
+  - Discord 不支援表格。請扁平化為文字區塊，格式如下：
+    - 先輸出表頭一行：`**欄1｜欄2｜欄3**`
+    - 接著每列各一行，前綴 `• `，欄位以 `｜` 分隔。
+    - 儲存格內若有換行，以 `; ` 合併。
+  - 若表格僅有單欄，直接以清單列出即可。
+  
+  ## 附件 / 可下載檔
+  - 以清單列出，每項為 `[檔名（副檔名）](URL)`，可在檔名後以括號補充（例如「上午場」、「PDF」、「交通資訊」等），但不要冗長。
+  - 仍需套用「連結」規則（轉絕對網址、移除追蹤參數）。
+  
+  ## 程式碼區塊（重點新增）
+  - 識別來源中的程式碼：優先依 `pre`, `code` 節點與其 `class`（例如 `language-*`, `lang-*`, `hljs-*`, `prettyprint`），其次依內容啟發式（shebang、關鍵語法）。
+  - **輸出為 Discord 支援的 fenced code block**：
+      - 以三個反引號圍起來：開頭 ```語言標記（可留空），結尾 ```。
+      - 保留**原始縮排與換行**；不進行自動換行、字元轉義或重排（除非必要的 HTML 解碼）。
+  - **嘗試判斷語言並加上標記**；若無法確定則留空（僅 ```）。
+      - 語言偵測準則（其一或多個同時成立即可）：
+      - class/name：`language-python`→`python`、`language-js`→`javascript`、`language-ts`→`typescript`、`language-cpp`→`cpp`、`language-c`→`c`、`language-java`→`java`、`language-go`→`go`、`language-rust`→`rust`、`language-php`→`php`、`language-ruby`→`ruby`、`language-sh|bash`→`bash`、`language-powershell`→`powershell`、`language-sql`→`sql`、`language-html`→`html`、`language-css`→`css`、`language-json`→`json`、`language-yaml|yml`→`yaml`。
+      - shebang：`#!/usr/bin/env python`→`python`、`#!/bin/bash`→`bash`、`#!/usr/bin/env node`→`javascript`、`#!/usr/bin/pwsh`→`powershell`。
+      - 典型語法特徵（舉例，僅作輔助判斷）：
+      - **python**：`def `、`import ... as`、`print(`、`if __name__ == "__main__":`
+      - **javascript/typescript**：`console.log(`、`import ... from`、`export default`、`async function`
+      - **cpp**：`#include <...>`、`std::`、`int main(`、`;` 行尾分號大量出現
+      - **c**：`#include <...>`、`printf(`、`int main(`，無 `std::`
+      - **java**：`public class`、`System.out.println(`、`@Override`
+      - **go**：`package main`、`func main()`、`fmt.Println(`
+      - **rust**：`fn main()`、`let mut`、`println!(`、`use crate::`
+      - **php**：`<?php`、`echo`、`$variable`
+      - **ruby**：`def ... end`、`puts`、`class ... end`
+      - **bash**：`#!/bin/bash`、`echo`、`&&` 拼接、常見命令行
+      - **powershell**：`Write-Host`、`Get-ChildItem`、`$PSVersionTable`
+      - **sql**：`SELECT ... FROM`、`INSERT INTO`、`WHERE`、`;` 結尾
+      - **html**：`<!DOCTYPE html>`、`<html>`、`<head>`、`<body>`
+      - **css**：選擇器 `{ ... }`、`color:`、`display:`
+      - **json**：`{ "key": value }`、鍵名**必須**帶引號、不得含註解
+      - **yaml**：`key: value`、縮排為兩空格、無花括號
+  - 內嵌行內程式碼（`<code>` 但非區塊）轉為 Markdown 行內反引號 \`...\`。若 `<code>` 其實是大片段，且有換行，升格為 fenced code block。
+  
+  ## 自我檢查（非常重要）
+  - 僅輸出純 Markdown 內容，不得出現任何解釋說明。
+  - 移除多餘前後空行。
+  - 所有超連結必須符合 `[文字](URL)` 語法，方括號與圓括號成對完整。
+  - 若標題需要加超連結，僅允許格式為：
+    `# [標題文字](URL)` 或 `## [標題文字](URL)` 或 `### [標題文字](URL)`
+    （井號 → 空格 → 方括號包住標題 → 圓括號內 URL）。
+    禁止 `[## 標題](URL)`、`[# 標題](URL)` 等寫法。
+  - 若模型無法確保語法正確，則輸出標題與超連結分兩行：
+  - 若沒有任何可轉換內容，輸出：`*(無可轉換內容)*`
+  - **總字元數必須小於 10000。若超過，請進行壓縮與摘要，優先刪除冗餘空白行、過長清單，並以「…其餘略」方式保留必要資訊。**
+  
+  --- 輸入 HTML 開始 ---
+  時間：{{now}}
+  基底網址：{{base_url}}
+  文章標題：{{page_title}}
+  文章網址：{{page_url}}
+  HTML：
+  {{html}}
+  --- 輸入 HTML 結束 ---

@@ -1,9 +1,11 @@
 package tw.xinshou.plugin.ntustmanager
 
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.slf4j.LoggerFactory
 import tw.xinshou.loader.base.BotLoader.jdaBot
 import tw.xinshou.plugin.ntustmanager.announcement.*
+import tw.xinshou.plugin.ntustmanager.service.GeminiApiService
 
 /**
  * Main NTUST Manager class responsible for coordinating announcement monitoring
@@ -38,7 +40,26 @@ object NtustManager {
     init {
         logger.info("NtustManager initialized")
         initializeComponents()
-//        clearCache()
+
+        // delete all messages in the announcement channels
+        // This is a one-time cleanup operation, uncomment if needed
+//        STUDENT_DORMITORY_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        STUDENT_AID_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        STUDENT_GUIDANCE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        STUDENT_ACTIVITY_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        STUDENT_RESOURCE_ROOM_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        ACADEMIC_MAIN_OFFICE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        ACADEMIC_GRADUATE_EDUCATION_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        ACADEMIC_REGISTRATION_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        ACADEMIC_COURSE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        ACADEMIC_COMPREHENSIVE_BUSINESS_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_RECRUITMENT_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_EXEMPTION_REWARD_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_HONOR_LIST_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_FRESHMAN_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_ENGLISH_WORDS_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+//        LANGUAGE_CENTER_EXTERNAL_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+
         startSystem()
     }
 
@@ -50,8 +71,17 @@ object NtustManager {
         cacheManager = AnnouncementCacheManager(Event.pluginName)
         cacheManager.initializeCache()
 
-        // Initialize scheduler with cache manager and announcement handler
-        scheduler = AnnouncementScheduler(cacheManager, ::handleNewAnnouncement)
+        // Initialize Gemini API service
+        val geminiApiService = GeminiApiService(Event.config)
+
+        // Validate Gemini API configuration
+        if (!geminiApiService.validateConfiguration()) {
+            logger.error("Gemini API configuration validation failed")
+            throw IllegalStateException("Invalid Gemini API configuration")
+        }
+
+        // Initialize scheduler with cache manager, Gemini API service, and announcement handler
+        scheduler = AnnouncementScheduler(cacheManager, geminiApiService, ::handleNewAnnouncement)
 
         logger.info("All components initialized successfully")
     }
@@ -72,7 +102,7 @@ object NtustManager {
      * @param maxLength The maximum length per segment (default 2000 for Discord)
      * @return List of content segments
      */
-    private fun splitContentIntoSegments(content: String, maxLength: Int = 2000): List<String> {
+    private fun splitContentIntoSegments(content: String, maxLength: Int = 1950): List<String> {
         if (content.length <= maxLength) {
             return listOf(content)
         }
@@ -118,46 +148,34 @@ object NtustManager {
      * @param announcement The announcement data to create messages from
      * @return List of Discord messages ready to send
      */
-    private fun createDiscordMessages(announcement: AnnouncementData): List<net.dv8tion.jda.api.utils.messages.MessageCreateData> {
-        val header = "## [${announcement.link.title.trim()}](${announcement.link.url.trim()})"
-
+    private fun createDiscordMessages(announcement: AnnouncementData): List<MessageCreateData> {
         if (announcement.content == null) {
             // For null content, just send header + URL
-            val messageContent = """
-                $header
-                
-                ${announcement.link.url.trim()}
-            """.trimIndent()
-
+            val messageContent = announcement.link.url.trim()
             return listOf(MessageCreateBuilder().setContent(messageContent).build())
         }
 
         // For content announcements, check if we need to split
-        val fullContent = """
-            $header
-            
-            ${announcement.content.trim()}
-        """.trimIndent()
-
-        if (fullContent.length <= 2000) {
+        val fullContent = announcement.content.trim()
+        if (fullContent.length <= 1980) {
             // Content fits in one message
             return listOf(MessageCreateBuilder().setContent(fullContent).build())
         }
 
         // Content is too long, need to split
-        val messages = mutableListOf<net.dv8tion.jda.api.utils.messages.MessageCreateData>()
+        val messages = mutableListOf<MessageCreateData>()
 
         // First message: header + beginning of content
-        val availableSpaceForContent = 2000 - header.length - 4 // 4 for "\n\n"
+        val availableSpaceForContent = 1980
         val contentSegments = splitContentIntoSegments(announcement.content.trim(), availableSpaceForContent)
 
         // First message with header
-        val firstMessageContent = """
-            $header
-            
-            ${contentSegments[0]}
-        """.trimIndent()
-        messages.add(MessageCreateBuilder().setContent(firstMessageContent).build())
+        val firstMessageContent = contentSegments[0]
+        messages.add(
+            MessageCreateBuilder().setContent(
+                "＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿\n$firstMessageContent"
+            ).build()
+        )
 
         // Subsequent messages with remaining content segments
         for (i in 1 until contentSegments.size) {
@@ -222,7 +240,7 @@ object NtustManager {
         // Send each message sequentially
         messages.forEachIndexed { index, message ->
             targetChannel.sendMessage(message).queue { success ->
-                logger.debug("Successfully sent message ${index + 1}/${messages.size} for ${announcement.link.type}")
+                logger.debug("Successfully sent message {}/{} for {}", index + 1, messages.size, announcement.link.type)
             }
         }
 

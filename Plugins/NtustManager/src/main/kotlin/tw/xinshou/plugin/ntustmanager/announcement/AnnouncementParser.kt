@@ -5,6 +5,8 @@ import com.fleeksoft.ksoup.nodes.Document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import tw.xinshou.plugin.ntustmanager.service.GeminiApiService
+import tw.xinshou.plugin.ntustmanager.util.HtmlMinifier
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.net.URI
 import java.net.http.HttpClient
@@ -59,9 +61,10 @@ object AnnouncementParser {
     /**
      * Parses the content of a specific announcement
      * @param link The announcement link with complete URL
+     * @param geminiApiService The Gemini API service for processing HTML content
      * @return AnnouncementData with full content, or null if parsing fails
      */
-    suspend fun contentParser(link: AnnouncementLink): AnnouncementData? {
+    suspend fun contentParser(link: AnnouncementLink, geminiApiService: GeminiApiService): AnnouncementData? {
         val url = link.url
 
         // Validate URL type and determine if content should be processed
@@ -89,7 +92,7 @@ object AnnouncementParser {
                 }
 
                 val document = Ksoup.parse(response.body())
-                parseAnnouncementContent(document, link)
+                parseAnnouncementContent(document, link, geminiApiService)
 
             } catch (e: Exception) {
                 logger.error("Error parsing content for ${UrlUtils.extractParagraphId(link.url) ?: link.url}: $url", e)
@@ -201,10 +204,14 @@ object AnnouncementParser {
     }
 
     /**
-     * Parses the HTML document to extract announcement content
-     * Handles different content structures for different departments
+     * Parses the HTML document to extract announcement content using Gemini API
+     * Extracts entire HTML content from the main container and processes it with AI
      */
-    private fun parseAnnouncementContent(document: Document, link: AnnouncementLink): AnnouncementData? {
+    private suspend fun parseAnnouncementContent(
+        document: Document,
+        link: AnnouncementLink,
+        geminiApiService: GeminiApiService
+    ): AnnouncementData? {
         val urlId = UrlUtils.extractParagraphId(link.url) ?: link.url
         logger.debug("Parsing announcement content for $urlId")
 
@@ -216,21 +223,30 @@ object AnnouncementParser {
                 return null
             }
 
-            // Extract title from h2.hdline within the main container
-            val titleElement = mainContainer.select("h2.hdline").firstOrNull()
-            if (titleElement == null) {
-                logger.warn("No title found for announcement $urlId")
-                return null
-            }
-            val title = titleElement.text().trim()
+            // Extract the entire HTML content from the main container
+            val rawHtml = mainContainer.outerHtml()
+            logger.debug("Extracted raw HTML content for $urlId (length: {} chars)", rawHtml.length)
 
-            // Extract content from div.meditor within the main container
-            val contentElement = mainContainer.select("div.meditor").firstOrNull()
-            if (contentElement == null) {
-                logger.warn("No content found for announcement $urlId")
+            // Minify the HTML content
+            val minifiedHtml = HtmlMinifier.minify(rawHtml)
+            logger.debug(
+                "Minified HTML content for $urlId (length: {} chars, {}% reduction)",
+                minifiedHtml.length,
+                if (rawHtml.isNotEmpty()) ((rawHtml.length - minifiedHtml.length) * 100 / rawHtml.length) else 0
+            )
+
+            // Process the minified HTML with Gemini API
+            val processedContent = geminiApiService.processHtmlContentWithRetry(minifiedHtml, link)
+
+            if (processedContent == null) {
+                logger.error("Failed to process HTML content with Gemini API for $urlId")
                 return null
             }
-            val content = contentElement.text().trim()
+
+            logger.info(
+                "Successfully processed HTML content with Gemini API for $urlId (processed length: {} chars)",
+                processedContent.length
+            )
 
             // Determine release date
             val releaseDate = when {
@@ -241,8 +257,7 @@ object AnnouncementParser {
                 }
 
                 else -> {
-                    // For other departments, try to extract date from various possible locations
-                    // This is a fallback - in practice, dates are usually extracted from the list page
+                    // For other departments, use current date as fallback
                     val currentDate = LocalDate.now()
                     currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                 }
@@ -250,8 +265,8 @@ object AnnouncementParser {
 
             AnnouncementData(
                 link = link,
-                title = title,
-                content = content,
+                title = link.title, // Use the title from the link (extracted during board parsing)
+                content = processedContent, // Use the Gemini-processed content
                 releaseDate = releaseDate
             )
 

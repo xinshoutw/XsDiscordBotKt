@@ -1,9 +1,9 @@
 package tw.xinshou.plugin.ntustmanager
 
-import tw.xinshou.loader.plugin.PluginEvent
+import tw.xinshou.loader.plugin.PluginEventConfigure
+import tw.xinshou.plugin.ntustmanager.config.ConfigSerializer
 
-object Event : PluginEvent(false) {
-
+internal object Event : PluginEventConfigure<ConfigSerializer>(false, ConfigSerializer.serializer()) {
     override fun load() {
         super.load()
 

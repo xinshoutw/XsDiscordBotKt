@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
+import tw.xinshou.plugin.ntustmanager.service.GeminiApiService
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit
 
 class AnnouncementScheduler(
     private val cacheManager: AnnouncementCacheManager,
+    private val geminiApiService: GeminiApiService,
     private val onNewAnnouncement: (AnnouncementData) -> Unit
 ) {
     private val logger = LoggerFactory.getLogger(AnnouncementScheduler::class.java)
@@ -158,7 +160,7 @@ class AnnouncementScheduler(
             logger.info("Removed announcements detected for ${link.type}: ${changes.removed.size} announcements")
             // Remove announcements from cache
             cacheManager.removeAnnouncementsFromCache(link.type, changes.removed)
-            logger.debug("Removed announcements from cache for ${link.type}")
+            logger.debug("Removed announcements from cache for {}", link.type)
         }
 
         // Handle new announcements
@@ -172,7 +174,7 @@ class AnnouncementScheduler(
         cacheManager.updateCurrentAnnouncementList(link.type, boardData)
 
         if (changes.added.isEmpty() && changes.removed.isEmpty()) {
-            logger.debug("No changes detected for ${link.type}")
+            logger.debug("No changes detected for {}", link.type)
         } else {
             logger.info("Processed changes for ${link.type}: ${changes.added.size} added, ${changes.removed.size} removed")
         }
@@ -184,7 +186,7 @@ class AnnouncementScheduler(
     private suspend fun processNewAnnouncements(announcements: List<AnnouncementLink>) {
         announcements.forEach { link ->
             try {
-                val announcementData = AnnouncementParser.contentParser(link)
+                val announcementData = AnnouncementParser.contentParser(link, geminiApiService)
                 if (announcementData != null) {
                     // Save to cache
                     cacheManager.saveAnnouncementData(announcementData)
