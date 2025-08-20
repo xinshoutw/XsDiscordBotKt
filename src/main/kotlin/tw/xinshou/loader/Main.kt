@@ -25,8 +25,8 @@ internal fun main(args: Array<String>) = runBlocking {
     } catch (e: Exception) {
         logger.error("An unexpected error occurred in tw.xinshou.loader.main:", e)
     } finally {
-        BotLoader.stop()
         CacheDbServer.close()
+        BotLoader.stop()
         JLineManager.stop()
         LogBackManager.uninstall()
         logger.info("Application terminated.")
