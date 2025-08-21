@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigSerializer(
+    val enabled: Boolean,
     @SerialName("api-keys")
     val apiKeys: List<String>,
     val prompt: String,
