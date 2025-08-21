@@ -17,22 +17,22 @@ internal data class InfoSerializer(
     val componentPrefix: String = "",
 
     @SerialName("require_intents")
-    val requireIntents: List<String> = emptyList(),
+    val requireIntents: Set<String> = emptySet(),
 
     @SerialName("require_cache_flags")
-    val requireCacheFlags: List<String> = emptyList(),
+    val requireCacheFlags: Set<String> = emptySet(),
 
     @SerialName("require_member_cache_policies")
-    val requireMemberCachePolicies: List<String> = emptyList(),
+    val requireMemberCachePolicies: Set<String> = emptySet(),
 
     @SerialName("depend_plugins")
-    val dependPlugins: List<String> = emptyList(),
+    val dependPlugins: Set<String> = emptySet(),
 
     @SerialName("soft_depend_plugins")
-    val softDependPlugins: List<String> = emptyList(),
+    val softDependPlugins: Set<String> = emptySet(),
 )
 
-fun processMemberCachePolicy(list: List<String>): MemberCachePolicy {
+fun processMemberCachePolicy(list: Set<String>): MemberCachePolicy {
     // OWNER
     // ONLINE
     // VOICE
