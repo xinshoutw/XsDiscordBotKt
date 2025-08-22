@@ -69,3 +69,6 @@ project(":Plugins:Giveaway").name = "Giveaway"
 
 include("Plugins:NtustManager")
 project(":Plugins:NtustManager").name = "NtustManager"
+
+include("Plugins:ChannelConverter")
+project(":Plugins:ChannelConverter").name = "ChannelConverter"

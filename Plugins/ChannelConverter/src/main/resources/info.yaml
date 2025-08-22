@@ -1,0 +1,7 @@
+author: "xinshoutw"
+main: "tw.xinshou.plugin.channelconverter.Event"
+name: "ChannelConverter"
+version: "0.2.0"
+
+require_member_cache_policies:
+  - "ALL"

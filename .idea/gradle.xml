@@ -27,6 +27,7 @@
             <option value="$PROJECT_DIR$/Plugins/AutoRole" />
             <option value="$PROJECT_DIR$/Plugins/BasicCalculator" />
             <option value="$PROJECT_DIR$/Plugins/BotInfo" />
+            <option value="$PROJECT_DIR$/Plugins/ChannelConverter" />
             <option value="$PROJECT_DIR$/Plugins/ChatLogger" />
             <option value="$PROJECT_DIR$/Plugins/DynamicVoiceChannel" />
             <option value="$PROJECT_DIR$/Plugins/Economy" />
