@@ -2,7 +2,7 @@ package tw.xinshou.plugin.autorole
 
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
-import tw.xinshou.loader.base.BotLoader.jdaBot
+import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.plugin.autorole.Event.config
 
 object AutoRole {

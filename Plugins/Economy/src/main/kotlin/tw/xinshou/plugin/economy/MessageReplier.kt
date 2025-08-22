@@ -4,9 +4,9 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.builtin.placeholder.Substitutor
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.economy.Event.pluginDirectory
 import tw.xinshou.plugin.economy.Event.storageManager
 

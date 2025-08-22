@@ -1,4 +1,8 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.intervalpusher.Event"
-name: "IntervalPusher"
-version: "0.1.0"

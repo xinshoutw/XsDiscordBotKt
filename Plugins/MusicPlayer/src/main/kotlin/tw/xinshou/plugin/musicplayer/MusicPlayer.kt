@@ -25,10 +25,10 @@ import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.utils.messages.MessageEditData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.util.ComponentIdManager
-import tw.xinshou.loader.util.FieldType
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.util.ComponentIdManager
+import tw.xinshou.core.util.FieldType
 import tw.xinshou.plugin.musicplayer.Event.componentPrefix
 import tw.xinshou.plugin.musicplayer.Event.config
 import tw.xinshou.plugin.musicplayer.Event.pluginDirectory

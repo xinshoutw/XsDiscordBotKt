@@ -8,9 +8,9 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.loader.localizations.StringLocalizer
-import tw.xinshou.loader.plugin.PluginEvent
-import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.core.localizations.StringLocalizer
+import tw.xinshou.core.plugin.PluginEvent
+import tw.xinshou.core.util.GlobalUtil
 import tw.xinshou.plugin.logger.voice.command.CmdFileSerializer
 import tw.xinshou.plugin.logger.voice.command.PlaceholderSerializer
 import tw.xinshou.plugin.logger.voice.command.guildCommands

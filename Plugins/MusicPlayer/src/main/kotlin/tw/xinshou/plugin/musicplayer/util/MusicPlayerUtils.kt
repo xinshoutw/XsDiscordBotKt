@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.managers.AudioManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.builtin.placeholder.Substitutor
+import tw.xinshou.core.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.musicplayer.Event.config
 import tw.xinshou.plugin.musicplayer.model.EnhancedTrackInfo
 import tw.xinshou.plugin.musicplayer.model.MusicSource

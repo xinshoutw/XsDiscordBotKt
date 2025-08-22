@@ -2,8 +2,8 @@ package tw.xinshou.plugin.economy.storage
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
-import tw.xinshou.loader.builtin.placeholder.Substitutor
-import tw.xinshou.loader.json.JsonFileManager
+import tw.xinshou.core.builtin.placeholder.Substitutor
+import tw.xinshou.core.json.JsonFileManager
 import tw.xinshou.plugin.economy.Economy.Type
 import tw.xinshou.plugin.economy.Event.config
 import tw.xinshou.plugin.economy.UserData

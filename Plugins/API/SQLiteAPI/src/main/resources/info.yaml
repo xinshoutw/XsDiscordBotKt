@@ -1,4 +1,8 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.api.sqlite.Event"
-name: "SQLiteAPI"
-version: "0.2.0"

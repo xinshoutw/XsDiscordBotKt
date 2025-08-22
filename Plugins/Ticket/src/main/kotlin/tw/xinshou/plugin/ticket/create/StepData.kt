@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.internal.interactions.component.ButtonImpl
-import tw.xinshou.loader.util.ComponentField
+import tw.xinshou.core.util.ComponentField
 import tw.xinshou.plugin.ticket.Ticket.componentIdManager
 import tw.xinshou.plugin.ticket.Ticket.messageCreator
 import tw.xinshou.plugin.ticket.json.serializer.DataContainer

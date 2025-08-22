@@ -1,4 +1,8 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.simplecommand.Event"
-name: "SimpleCommand"
-version: "2.0.0"

@@ -3,8 +3,8 @@ package tw.xinshou.plugin.channelconverter
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.Webhook
 import net.dv8tion.jda.api.utils.FileUpload
-import tw.xinshou.loader.base.BotLoader.jdaBot
-import tw.xinshou.loader.plugin.PluginEvent
+import tw.xinshou.core.base.BotLoader.jdaBot
+import tw.xinshou.core.plugin.PluginEvent
 
 
 object Event : PluginEvent(true) {

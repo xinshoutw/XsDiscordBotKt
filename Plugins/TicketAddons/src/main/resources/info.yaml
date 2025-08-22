@@ -1,8 +1,11 @@
-author: "xinshoutw"
-main: "tw.xinshou.plugin.addons.ticket.Event"
-name: "TicketAddons"
-version: "0.1.0"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
 
+### =============================================== ###
+
+main: "tw.xinshou.plugin.addons.ticket.Event"
 require_cache_flags:
   - "ONLINE_STATUS"
 

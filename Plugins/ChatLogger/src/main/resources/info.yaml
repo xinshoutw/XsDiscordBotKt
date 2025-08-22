@@ -1,8 +1,13 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.logger.chat.Event"
-name: "ChatLogger"
-version: "0.2.0"
 component_prefix: "chat-logger@"
+
 depend_plugins:
   - "SQLiteAPI"
 

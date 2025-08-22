@@ -8,10 +8,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.mongodb.CacheDbManager
-import tw.xinshou.loader.mongodb.ICacheDb
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.mongodb.CacheDbManager
+import tw.xinshou.core.mongodb.ICacheDb
 import tw.xinshou.plugin.dynamicvoicechannel.Event.pluginDirectory
 import tw.xinshou.plugin.dynamicvoicechannel.json.DataContainer
 

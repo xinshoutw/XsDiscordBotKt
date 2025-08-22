@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.loader.localizations.StringLocalizer
+import tw.xinshou.core.localizations.StringLocalizer
 
 internal val commandNameSet: Set<String> = setOf(
     "create-ticket",

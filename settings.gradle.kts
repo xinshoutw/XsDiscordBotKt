@@ -11,7 +11,8 @@ dependencyResolutionManagement {
     versionCatalogs { create("libs") {} }
 }
 
-rootProject.name = "XsDiscordBotKt"
+include("Core")
+project(":Core").name = "BotCore"
 
 include(":Plugins:API:GoogleSheetAPI")
 project(":Plugins:API:GoogleSheetAPI").name = "GoogleSheetAPI"

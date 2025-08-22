@@ -2,7 +2,7 @@ package tw.xinshou.plugin.simplecommand
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
 import tw.xinshou.plugin.simplecommand.Event.pluginDirectory
 
 internal object SimpleCommand {

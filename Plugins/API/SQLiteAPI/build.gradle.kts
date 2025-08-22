@@ -1,6 +1,3 @@
-group = "tw.xinshou.api"
-version = "0.2.0"
-
 plugins {
     id("xs-plugin-shadow")
 }

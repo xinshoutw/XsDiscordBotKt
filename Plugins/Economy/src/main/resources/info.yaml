@@ -1,7 +1,12 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.economy.Event"
-name: "Economy"
-version: "0.2.0"
 component_prefix: "economy@"
+
 depend_plugins:
   - "GoogleSheetAPI"

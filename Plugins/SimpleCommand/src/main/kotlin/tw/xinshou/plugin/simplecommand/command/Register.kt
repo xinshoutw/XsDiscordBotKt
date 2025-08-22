@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import tw.xinshou.loader.localizations.StringLocalizer
+import tw.xinshou.core.localizations.StringLocalizer
 
 internal val commandStringSet: Set<String> = setOf(
     "cub-none-card",

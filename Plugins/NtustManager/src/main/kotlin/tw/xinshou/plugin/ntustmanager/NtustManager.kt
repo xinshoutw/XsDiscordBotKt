@@ -3,7 +3,7 @@ package tw.xinshou.plugin.ntustmanager
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.base.BotLoader.jdaBot
+import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.plugin.ntustmanager.announcement.*
 import tw.xinshou.plugin.ntustmanager.service.GeminiApiService
 

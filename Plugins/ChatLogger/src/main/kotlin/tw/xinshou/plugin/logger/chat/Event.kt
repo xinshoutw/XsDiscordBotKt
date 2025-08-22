@@ -9,10 +9,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.loader.base.BotLoader.jdaBot
-import tw.xinshou.loader.localizations.StringLocalizer
-import tw.xinshou.loader.plugin.PluginEventConfigure
-import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.core.base.BotLoader.jdaBot
+import tw.xinshou.core.localizations.StringLocalizer
+import tw.xinshou.core.plugin.PluginEventConfigure
+import tw.xinshou.core.util.GlobalUtil
 import tw.xinshou.plugin.logger.chat.JsonManager.dataMap
 import tw.xinshou.plugin.logger.chat.command.CmdFileSerializer
 import tw.xinshou.plugin.logger.chat.command.PlaceholderSerializer

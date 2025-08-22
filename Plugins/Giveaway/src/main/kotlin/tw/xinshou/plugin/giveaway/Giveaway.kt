@@ -19,9 +19,9 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.util.ComponentIdManager
-import tw.xinshou.loader.util.FieldType
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.util.ComponentIdManager
+import tw.xinshou.core.util.FieldType
 import tw.xinshou.plugin.giveaway.Event.componentPrefix
 import tw.xinshou.plugin.giveaway.Event.pluginDirectory
 import tw.xinshou.plugin.giveaway.data.GiveawayConfig

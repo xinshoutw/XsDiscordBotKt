@@ -9,11 +9,11 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.messagecreator.ModalCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.util.ComponentIdManager
-import tw.xinshou.loader.util.FieldType
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.messagecreator.ModalCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.util.ComponentIdManager
+import tw.xinshou.core.util.FieldType
 import tw.xinshou.plugin.feedbacker.Event.componentPrefix
 import tw.xinshou.plugin.feedbacker.Event.config
 import tw.xinshou.plugin.feedbacker.Event.globalLocale

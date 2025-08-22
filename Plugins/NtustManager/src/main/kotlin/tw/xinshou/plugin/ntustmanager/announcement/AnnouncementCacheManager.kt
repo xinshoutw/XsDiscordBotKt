@@ -1,8 +1,8 @@
 package tw.xinshou.plugin.ntustmanager.announcement
 
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.mongodb.CacheDbManager
-import tw.xinshou.loader.mongodb.ICacheDb
+import tw.xinshou.core.mongodb.CacheDbManager
+import tw.xinshou.core.mongodb.ICacheDb
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.ConcurrentHashMap
 

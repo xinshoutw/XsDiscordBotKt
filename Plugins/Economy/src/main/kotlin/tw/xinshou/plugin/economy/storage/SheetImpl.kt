@@ -3,7 +3,7 @@ package tw.xinshou.plugin.economy.storage
 import com.google.api.services.sheets.v4.model.ValueRange
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
-import tw.xinshou.loader.builtin.placeholder.Substitutor
+import tw.xinshou.core.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.api.google.sheet.SheetsService
 import tw.xinshou.plugin.api.google.sheet.config.ConfigSerializer
 import tw.xinshou.plugin.economy.Economy.Type

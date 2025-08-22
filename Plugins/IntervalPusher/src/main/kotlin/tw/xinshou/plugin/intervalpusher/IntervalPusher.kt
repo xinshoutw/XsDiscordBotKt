@@ -3,7 +3,7 @@ package tw.xinshou.plugin.intervalpusher
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.base.BotLoader.jdaBot
+import tw.xinshou.core.base.BotLoader.jdaBot
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient

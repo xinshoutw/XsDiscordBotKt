@@ -15,11 +15,11 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.builtin.placeholder.Substitutor
-import tw.xinshou.loader.util.ComponentIdManager
-import tw.xinshou.loader.util.FieldType
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.builtin.placeholder.Substitutor
+import tw.xinshou.core.util.ComponentIdManager
+import tw.xinshou.core.util.FieldType
 import tw.xinshou.plugin.logger.chat.Event.componentPrefix
 import tw.xinshou.plugin.logger.chat.Event.config
 import tw.xinshou.plugin.logger.chat.Event.placeholderLocalizer

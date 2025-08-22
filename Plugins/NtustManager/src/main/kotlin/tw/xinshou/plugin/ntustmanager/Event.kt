@@ -1,6 +1,6 @@
 package tw.xinshou.plugin.ntustmanager
 
-import tw.xinshou.loader.plugin.PluginEventConfigure
+import tw.xinshou.core.plugin.PluginEventConfigure
 import tw.xinshou.plugin.ntustmanager.config.ConfigSerializer
 
 internal object Event : PluginEventConfigure<ConfigSerializer>(false, ConfigSerializer.serializer()) {

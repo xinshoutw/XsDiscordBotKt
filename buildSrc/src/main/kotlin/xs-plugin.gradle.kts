@@ -1,4 +1,5 @@
 plugins {
+    id("xs-jvm-conventions")
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
@@ -8,9 +9,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":"))
+    compileOnly(project(":BotCore"))
 }
-
 
 tasks.build {
     dependsOn(tasks.jar)
@@ -18,6 +18,6 @@ tasks.build {
 
 tasks.named<Jar>("jar") {
     val outputPath: File by rootProject.extra
-    setProperty("archiveFileName", "${project.name}-${properties["prefix"]}-$version.jar")
+    setProperty("archiveFileName", "${project.name}-$version.jar")
     setProperty("destinationDirectory", outputPath.resolve("plugins"))
 }

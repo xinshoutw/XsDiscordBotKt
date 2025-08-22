@@ -2,8 +2,8 @@ package tw.xinshou.plugin.rentsystem
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import tw.xinshou.loader.plugin.PluginEventConfigure
-import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.core.plugin.PluginEventConfigure
+import tw.xinshou.core.util.GlobalUtil
 import tw.xinshou.plugin.rentsystem.command.commandStringSet
 import tw.xinshou.plugin.rentsystem.config.ConfigSerializer
 

@@ -1,7 +1,11 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.api.audioapi.Event"
-name: "AudioAPI"
-version: "0.1.0"
 
 require_intents:
   - "GUILD_VOICE_STATES"

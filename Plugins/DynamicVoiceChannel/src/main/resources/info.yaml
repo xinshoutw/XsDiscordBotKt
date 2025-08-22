@@ -1,7 +1,12 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.dynamicvoicechannel.Event"
-name: "DynamicVoiceChannel"
-version: "0.2.0"
+
 depend_plugins:
   - "SQLiteAPI"
 

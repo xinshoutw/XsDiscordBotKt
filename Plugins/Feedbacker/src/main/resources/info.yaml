@@ -1,5 +1,10 @@
-author: "xinshoutw"
+author: ${author}
+name: ${name}
+coreApi: ${coreApi}
+version: ${version}
+
+### =============================================== ###
+
 main: "tw.xinshou.plugin.feedbacker.Event"
-name: "Feedbacker"
-version: "0.1.0"
+
 component_prefix: "feedbacker@"

@@ -3,8 +3,8 @@ package tw.xinshou.plugin.basiccalculator
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
-import tw.xinshou.loader.builtin.placeholder.Placeholder
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.placeholder.Placeholder
 import tw.xinshou.plugin.basiccalculator.Event.pluginDirectory
 import java.math.BigDecimal
 import java.math.RoundingMode

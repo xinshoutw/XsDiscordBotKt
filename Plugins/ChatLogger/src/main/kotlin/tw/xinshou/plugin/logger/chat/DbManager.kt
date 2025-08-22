@@ -3,7 +3,7 @@ package tw.xinshou.plugin.logger.chat
 import net.dv8tion.jda.api.entities.Guild
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.base.BotLoader.jdaBot
+import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.plugin.api.sqlite.SQLiteFileManager
 import tw.xinshou.plugin.logger.chat.Event.config
 import tw.xinshou.plugin.logger.chat.Event.pluginDirectory

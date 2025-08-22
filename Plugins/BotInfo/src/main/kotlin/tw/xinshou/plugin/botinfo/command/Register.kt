@@ -3,7 +3,7 @@ package tw.xinshou.plugin.botinfo.command
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import tw.xinshou.loader.localizations.StringLocalizer
+import tw.xinshou.core.localizations.StringLocalizer
 
 private object Keys {
     const val BASE = "botInfo"

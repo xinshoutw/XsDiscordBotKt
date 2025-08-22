@@ -4,8 +4,8 @@ import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.InteractionHook
-import tw.xinshou.loader.builtin.placeholder.Placeholder
-import tw.xinshou.loader.builtin.placeholder.Substitutor
+import tw.xinshou.core.builtin.placeholder.Placeholder
+import tw.xinshou.core.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.economy.Event.config
 import tw.xinshou.plugin.economy.Event.storageManager
 

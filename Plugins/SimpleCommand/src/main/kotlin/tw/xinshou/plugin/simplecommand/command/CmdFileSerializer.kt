@@ -2,7 +2,7 @@ package tw.xinshou.plugin.simplecommand.command
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import tw.xinshou.loader.localizations.LocalTemplate
+import tw.xinshou.core.localizations.LocalTemplate
 
 @Serializable
 internal data class CmdFileSerializer(

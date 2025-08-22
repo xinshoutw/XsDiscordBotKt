@@ -4,7 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import tw.xinshou.loader.plugin.PluginEventConfigure
+import tw.xinshou.core.plugin.PluginEventConfigure
 import tw.xinshou.plugin.intervalpusher.config.ConfigSerializer
 
 object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {

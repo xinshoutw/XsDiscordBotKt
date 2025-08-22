@@ -3,7 +3,7 @@ package tw.xinshou.plugin.addons.ticket
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
 import tw.xinshou.plugin.addons.ticket.Event.config
 import tw.xinshou.plugin.addons.ticket.Event.pluginDirectory
 import java.util.concurrent.TimeUnit

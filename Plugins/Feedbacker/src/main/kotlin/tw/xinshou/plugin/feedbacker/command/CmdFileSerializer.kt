@@ -1,7 +1,7 @@
 package tw.xinshou.plugin.feedbacker.command
 
 import kotlinx.serialization.Serializable
-import tw.xinshou.loader.localizations.LocalTemplate
+import tw.xinshou.core.localizations.LocalTemplate
 
 @Serializable
 internal data class CmdFileSerializer(

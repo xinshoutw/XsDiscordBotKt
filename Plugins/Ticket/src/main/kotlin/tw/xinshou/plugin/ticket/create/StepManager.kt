@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import tw.xinshou.loader.builtin.placeholder.Placeholder
+import tw.xinshou.core.builtin.placeholder.Placeholder
 import tw.xinshou.plugin.ticket.Ticket.componentIdManager
 import tw.xinshou.plugin.ticket.Ticket.jsonGuildManager
 import tw.xinshou.plugin.ticket.Ticket.messageCreator

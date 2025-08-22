@@ -1,14 +1,9 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
-
 // ███████ ███████ ████████ ████████ ██ ███    ██  ██████
 // ██      ██         ██       ██    ██ ████   ██ ██
 // ███████ █████      ██       ██    ██ ██ ██  ██ ██   ███
 //      ██ ██         ██       ██    ██ ██  ██ ██ ██    ██
 // ███████ ███████    ██       ██    ██ ██   ████  ██████
 
-group = "tw.xinshou.loader"
-version = "v2.0.1"
 
 plugins {
     kotlin("jvm")
@@ -62,22 +57,8 @@ dependencies {
 
 defaultTasks("build")  // Allow to use `./gradlew` to auto build a full project
 
-val outputPath = if (project.hasProperty("outputPath")) {
+extra["outputPath"] = if (project.hasProperty("outputPath")) {
     file(project.property("outputPath") as String)
 } else {
     file("${rootProject.projectDir}/DevServer")
-}
-
-
-extra["outputPath"] = outputPath
-tasks.named<ShadowJar>("shadowJar") {
-    archiveFileName.set("${rootProject.name}-${properties["prefix"]}-$version.jar")
-    destinationDirectory.set(outputPath)
-    manifest {
-        attributes("Main-Class" to "tw.xinshou.loader.MainKt")
-    }
-}
-
-tasks.build {
-    dependsOn(tasks.shadowJar)
 }

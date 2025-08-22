@@ -11,8 +11,8 @@ import org.quartz.TriggerBuilder.newTrigger
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.loader.base.BotLoader
-import tw.xinshou.loader.builtin.messagecreator.MessageCreator
+import tw.xinshou.core.base.BotLoader
+import tw.xinshou.core.builtin.messagecreator.MessageCreator
 import tw.xinshou.plugin.rentsystem.Event.pluginDirectory
 import tw.xinshou.plugin.rentsystem.jobs.RentReminderJob
 import tw.xinshou.plugin.rentsystem.jobs.WaterPowerReminderJob

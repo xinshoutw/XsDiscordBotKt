@@ -5,11 +5,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.loader.json.JsonFileManager
-import tw.xinshou.loader.json.JsonFileManager.Companion.adapterReified
-import tw.xinshou.loader.localizations.StringLocalizer
-import tw.xinshou.loader.plugin.PluginEventConfigure
-import tw.xinshou.loader.util.GlobalUtil
+import tw.xinshou.core.json.JsonFileManager
+import tw.xinshou.core.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.core.localizations.StringLocalizer
+import tw.xinshou.core.plugin.PluginEventConfigure
+import tw.xinshou.core.util.GlobalUtil
 import tw.xinshou.plugin.economy.command.CmdFileSerializer
 import tw.xinshou.plugin.economy.command.commandStringSet
 import tw.xinshou.plugin.economy.command.guildCommands
