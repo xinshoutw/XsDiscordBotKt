@@ -38,6 +38,11 @@ fun processMemberCachePolicy(list: Set<String>): MemberCachePolicy {
     // VOICE
     // BOOSTER
     // PENDING
+    // ALL
+
+    if (list.contains("ALL")) {
+        return MemberCachePolicy.ALL
+    }
 
     var cur = MemberCachePolicy.OWNER
     for (policy in list) {
