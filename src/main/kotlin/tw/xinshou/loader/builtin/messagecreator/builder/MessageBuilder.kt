@@ -128,9 +128,8 @@ internal class MessageBuilder(
     ) = author?.let { author ->
         setAuthor(
             parsePlaceholder(author.name),
-
-            author.url?.let { parsePlaceholder(it) },
-            author.iconUrl?.let { parsePlaceholder(it) }
+            author.url?.let { url -> parsePlaceholder(url).takeIf { it.startsWith("http") } },
+            author.iconUrl?.let { url -> parsePlaceholder(url).takeIf { it.startsWith("http") } }
         )
     }
 
@@ -141,7 +140,7 @@ internal class MessageBuilder(
         setTitle(
             parsePlaceholder(title.text),
 
-            title.url?.let { parsePlaceholder(it) }
+            title.url?.let { url -> parsePlaceholder(url).takeIf { it.startsWith("http") } }
         )
     }
 
@@ -153,12 +152,16 @@ internal class MessageBuilder(
     private fun setupThumbnailUrl(
         thumbnailUrl: String?,
         setThumbnail: (url: String?) -> EmbedBuilder
-    ) = thumbnailUrl?.let { setThumbnail(parsePlaceholder(it)) }
+    ) = thumbnailUrl?.let { url ->
+        parsePlaceholder(url).takeIf { it.startsWith("http") }?.let(setThumbnail)
+    }
 
     private fun setupImage(
         imageUrl: String?,
         setImage: (url: String?) -> EmbedBuilder
-    ) = imageUrl?.let { setImage(parsePlaceholder(it)) }
+    ) = imageUrl?.let { url ->
+        parsePlaceholder(url).takeIf { it.startsWith("http") }?.let(setImage)
+    }
 
     private fun setupColor(
         colorCode: String?,
@@ -178,7 +181,7 @@ internal class MessageBuilder(
     ) = footer?.let { footer ->
         setFooter(
             parsePlaceholder(footer.text),
-            footer.iconUrl?.let { parsePlaceholder(it) }
+            footer.iconUrl?.let { url -> parsePlaceholder(url).takeIf { it.startsWith("http") } }
         )
     }
 
