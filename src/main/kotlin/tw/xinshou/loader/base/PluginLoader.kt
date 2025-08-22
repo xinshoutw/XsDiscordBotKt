@@ -27,7 +27,7 @@ internal object PluginLoader {
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
     val intents: EnumSet<GatewayIntent> = EnumSet.noneOf(GatewayIntent::class.java)
     val cacheFlags: EnumSet<CacheFlag> = EnumSet.noneOf(CacheFlag::class.java)
-    val memberCachePolicies: MutableSet<String> = mutableSetOf()
+    val memberCachePolicies: MutableSet<String> = mutableSetOf("OWNER", "VOICE")
     val guildCommands = mutableListOf<CommandData>()
     val globalCommands = mutableListOf<CommandData>()
     val listenersQueue = ArrayDeque<PluginEvent>()
