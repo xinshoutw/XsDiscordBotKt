@@ -3,15 +3,15 @@
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-3.0.0-blue?style=for-the-badge&logo=github)
+![License](https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge&logo=apache)
+
 ![Java](https://img.shields.io/badge/Java-21+-orange?style=for-the-badge&logo=openjdk)
 ![Kotlin](https://img.shields.io/badge/Kotlin-JVM-purple?style=for-the-badge&logo=kotlin)
-![License](https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge&logo=apache)
 ![Build](https://img.shields.io/badge/Build-Gradle-blue?style=for-the-badge&logo=gradle)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-black?style=for-the-badge&logo=githubactions)
 
-**🤖 次世代模組化 Discord 伺服器管理機器人框架**
+**模組化 Discord 伺服器管理機器人框架**
 
-🚀 雲原生架構 • 🔥 熱重載支援 • 🧩 18+ 插件生態系統 • ⚡ 零停機部署
+🚀 雲原生架構 • 🔥 熱重載支援 • 🧩 18+ 插件生態系統 • ⚡ i10n 支援
 
 </div>
 
@@ -174,26 +174,26 @@ XsDiscordBotKt 是一個採用**雲原生架構**設計的 Discord 伺服器管�
 
 ## 🚀 快速開始
 
-### 1. 下載與安裝
+### 1. 下載與直執行
 
 #### 方法一：下載預構建版本（推薦）
 
 ```bash
 # 從 GitHub Releases 下載最新版本
-wget https://github.com/xinshoutw/XsDiscordBotKt/releases/download/v3.0.0/BotPack-v3.0.0.zip
+wget https://github.com/xinshoutw/XsDiscordBotKt/releases/download/v3.2.0/BotPack-v3.2.0.zip
 ```
 
 #### 方法二：手動構建
 
 ```bash
-# 克隆專案
+# 複製專案
 git clone https://github.com/xinshoutw/XsDiscordBotKt.git
 cd XsDiscordBotKt
 
-# 構建專案
+# 構建專案（需使用 JDK 21+）
 ./gradlew build
 
-# 構建完成後的 JAR 檔案位於 DevServer/ 與 DevServer/plugins/
+# 構建完成後的 JAR 檔案位於 `DevServer/` 與 `DevServer/plugins/`
 ```
 
 ### 2. 配置設定
@@ -202,20 +202,20 @@ cd XsDiscordBotKt
 
 ```yaml
 general_settings:
-   bot_token: "YOUR_DISCORD_BOT_TOKEN_HERE"
+  bot_token: "YOUR_DISCORD_BOT_TOKEN_HERE"
 
 builtin_settings:
-   status_changer_settings:
-      activity_messages:
-         - "🎵 播放音樂中..."
-         - "🛡️ 守護伺服器"
-         - "⚡ Kotlin 驅動"
+  status_changer_settings:
+    activity_messages:
+      - "🎵 播放音樂中..."
+      - "🛡️ 守護伺服器"
+      - "⚡ Kotlin 驅動"
 
-   console_logger_settings:
-      - guild_id: 123456789012345678
-        channel_id: 987654321098765432
-        log_type: [ "INTERACTION", "ERROR" ]
-        format: "[%timestamp%] %level%: %message%"
+  console_logger_settings:
+    - guild_id: 123456789012345678
+      channel_id: 987654321098765432
+      log_type: [ "INTERACTION", "ERROR" ]
+      format: "[%timestamp%] %level%: %message%"
 ```
 
 ### 3. 運行機器人
@@ -225,10 +225,42 @@ builtin_settings:
 java -jar XsDiscordBotKt.jar
 
 # 使用自定義 token（開發模式）
-java -jar XsDiscordBotKt.jar --bot-token "YOUR_TOKEN_HERE"
+java -jar XsDiscordBotKt.jar --token "YOUR_TOKEN_HERE"
 
-# 跳過構建（測試模式）
-java -jar XsDiscordBotKt.jar --no-build
+# 離線模式（不讓機器人上線）
+java -jar XsDiscordBotKt.jar --no-online
+
+# 忽略版本檢查
+java -jar XsDiscordBotKt.jar --ignore-update
+
+# 設定日誌等級
+java -jar XsDiscordBotKt.jar --level INFO
+
+# 強制重新產生語言資源檔案（警告：會覆寫現有檔案）
+java -jar XsDiscordBotKt.jar --force-renew-lang-resources
+```
+
+#### 📝 命令列參數詳細說明
+
+| 參數                             | 簡寫       | 說明                              | 預設值   |
+|--------------------------------|----------|---------------------------------|-------|
+| `--token`                      | `-t`     | 設定機器人 Token                     | 無     |
+| `--level`                      | `-l`     | 設定日誌記錄等級                        | INFO  |
+| `--no-online`                  | `-N`     | 不讓機器人上線（離線模式）                   | false |
+| `--ignore-update`              | `-I`     | 忽略來自 GitHub 的版本檢查               | false |
+| `--force-renew-lang-resources` | `-Flang` | **警告**：強制重新匯出所有插件語言資源檔案，會覆寫現有檔案 | false |
+
+#### 💡 使用範例
+
+```bash
+# 開發環境：使用自定義 token 並設定 DEBUG 日誌等級
+java -jar XsDiscordBotKt.jar -t "YOUR_DEV_TOKEN" -l DEBUG
+
+# 測試環境：離線模式，忽略版本檢查
+java -jar XsDiscordBotKt.jar -N -I
+
+# 維護模式：強制更新語言資源並使用 WARN 等級日誌
+java -jar XsDiscordBotKt.jar --force-renew-lang-resources --level WARN
 ```
 
 ### 4. 插件管理
@@ -256,6 +288,7 @@ java -jar XsDiscordBotKt.jar --no-build
 - `/music play <歌曲>` - 播放音樂
 - `/ticket create` - 建立工單
 - `/economy balance` - 查看經濟狀態
+- ...
 
 ## 🔧 開發指南
 
@@ -268,9 +301,12 @@ XsDiscordBotKt/
 │       └── tw/xinshou/core/
 ├── Plugins/                 # 插件模組
 │   ├── API/                # API 插件
+│   │   ├── AudioAPI/       # 音頻處理 API
+│   │   ├── GoogleSheetAPI/ # Google 試算表 API
+│   │   └── .../            # 其他 API 插件
 │   ├── AutoRole/           # 角色管理
 │   ├── MusicPlayer/        # 音樂播放器
-│   └── ...                 # 其他插件
+│   └── .../                # 其他插件
 ├── Server/                 # 生產環境配置
 ├── DevServer/              # 開發環境配置
 └── build.gradle.kts        # 構建配置
@@ -289,7 +325,7 @@ XsDiscordBotKt/
    ```
 
 2. **IDE 設定**
-   - 推薦使用 IntelliJ IDEA 2023.3+
+   - 推薦使用 IntelliJ IDEA
    - 啟用 Kotlin 插件支援
    - 配置 JDK 21 專案設定
 
@@ -309,13 +345,13 @@ XsDiscordBotKt/
 
 ```kotlin
 class MyPlugin : Plugin {
-   override fun load() {
-      // 插件載入邏輯
-   }
+    override fun load() {
+        // 插件載入邏輯
+    }
 
-   override fun unload() {
-      // 插件卸載邏輯  
-   }
+    override fun unload() {
+        // 插件卸載邏輯  
+    }
 }
 ```
 
