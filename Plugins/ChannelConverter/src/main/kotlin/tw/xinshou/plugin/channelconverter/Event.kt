@@ -34,7 +34,7 @@ object Event : PluginEvent(true) {
 //        targetCategory.channels.forEach {
 //            it.delete().complete()
 //        }
-//        return
+        return // disable func
         sourceForumChannel.threadChannels.forEach { channel ->
             logger.info("Converting channel: ${channel.name}")
             targetCategory.createTextChannel(channel.name).queue { newChannel ->
