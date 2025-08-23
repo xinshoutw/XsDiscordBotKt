@@ -29,67 +29,57 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Build
-        run: |
-          chmod +x ./gradlew
-          ./gradlew clean build -Pversion.snapshot=false
-
-      - name: Place outputs into working directory (core -> /, plugins -> /plugins)
+      - name: Choose output path in workspace
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p plugins
-          shopt -s globstar nullglob
+          echo "OUTPUT_DIR=${GITHUB_WORKSPACE}/out" >> $GITHUB_ENV
+          echo "Using OUTPUT_DIR=$OUTPUT_DIR"
 
-          for f in **/build/libs/*.jar; do
-            case "$f" in
-              *-sources.jar|*-javadoc.jar) continue;;
-            esac
-            if [[ "$f" == plugins/* ]]; then
-              cp "$f" "plugins/"
-            else
-              cp "$f" .
-            fi
-          done
+      - name: Build (snapshot=false) to OUTPUT_DIR
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -PoutputPath="$OUTPUT_DIR" -Pversion.snapshot=false
 
-      - name: Stage artifacts for release (unique names)
+      - name: List outputs
+        run: |
+          echo "== Core outputs =="
+          ls -la "$OUTPUT_DIR" || true
+          echo "== Plugin outputs =="
+          ls -la "$OUTPUT_DIR/plugins" || true
+
+      - name: Stage artifacts with prefixes
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist/plugins
-          repo_root_name="$(basename "$GITHUB_WORKSPACE")"
 
-          shopt -s globstar nullglob
-          for f in **/build/libs/*.jar; do
-            case "$f" in *-sources.jar|*-javadoc.jar) continue;; esac
+          shopt -s nullglob
+          # Core: OUTPUT_DIR/*.jar -> dist/Core-<basename>
+          for f in "$OUTPUT_DIR"/*.jar; do
             base="$(basename "$f")"
-            modpath="${f%/build/libs/*}"         # 取出 /build/libs 之前的模組路徑
-            mod="${modpath#./}"                  # 去掉 ./ 前綴
-            if [[ "$mod" == "$f" || -z "$mod" ]]; then
-              mod="$repo_root_name"              # root 模組
-            else
-              mod="$(basename "$mod")"           # 取最後一層當模組名
-            fi
-
-            if [[ "$f" == plugins/* ]]; then
-              cp "$f" "dist/plugins/Plugin-${mod}-${base}"
-            else
-              cp "$f" "dist/Core-${mod}-${base}"
-            fi
+            cp "$f" "dist/Core-${base}"
           done
 
-          mkdir -p tmp_ws/plugins
-          for f in dist/Core-*-*.jar; do
-            [[ -e "$f" ]] || continue
-            cp "$f" "tmp_ws/$(echo "$f" | sed -E 's#^dist/Core-[^-]+-##')"
-          done
-          for f in dist/plugins/Plugin-*-*.jar; do
-            [[ -e "$f" ]] || continue
-            cp "$f" "tmp_ws/plugins/$(echo "$f" | sed -E 's#^dist/plugins/Plugin-[^-]+-##')"
-          done
+          # Plugins: OUTPUT_DIR/plugins/*.jar -> dist/plugins/Plugin-<basename>
+          if [[ -d "$OUTPUT_DIR/plugins" ]]; then
+            for f in "$OUTPUT_DIR"/plugins/*.jar; do
+              base="$(basename "$f")"
+              cp "$f" "dist/plugins/Plugin-${base}"
+            done
+          fi
+
+          echo "== Staged for release =="
+          ls -la dist || true
+          ls -la dist/plugins || true
+
+      - name: Create BotPack zip (original names)
+        shell: bash
+        run: |
+          set -e
+          mkdir -p dist
           tag="${GITHUB_REF##*/}"; [[ -n "$tag" ]] || tag="${{ github.event.inputs.tag_name || 'manual' }}"
-          (cd tmp_ws && zip -r "../dist/WorkingSpace-${tag}.zip" .)
-          ls -R dist
+          (cd "$OUTPUT_DIR" && zip -r "../dist/BotPack-${tag}.zip" .)
+          ls -la dist
 
       - name: Upload CI artifacts (optional)
         uses: actions/upload-artifact@v4
@@ -127,8 +117,8 @@ jobs:
           tag: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           artifacts: |
-            dist/*.jar
-            dist/plugins/*.jar
-            dist/*.zip
+            dist/Core-*.jar
+            dist/plugins/Plugin-*.jar
+            dist/BotPack-*.zip
           generateReleaseNotes: true
           token: ${{ secrets.GITHUB_TOKEN }}
