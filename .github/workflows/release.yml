@@ -1,0 +1,134 @@
+name: Build (JBR) & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g., v2.1.12)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java (JetBrains Runtime 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -Pversion.snapshot=false
+
+      - name: Place outputs into working directory (core -> /, plugins -> /plugins)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p plugins
+          shopt -s globstar nullglob
+
+          for f in **/build/libs/*.jar; do
+            case "$f" in
+              *-sources.jar|*-javadoc.jar) continue;;
+            esac
+            if [[ "$f" == plugins/* ]]; then
+              cp "$f" "plugins/"
+            else
+              cp "$f" .
+            fi
+          done
+
+      - name: Stage artifacts for release (unique names)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/plugins
+          repo_root_name="$(basename "$GITHUB_WORKSPACE")"
+
+          shopt -s globstar nullglob
+          for f in **/build/libs/*.jar; do
+            case "$f" in *-sources.jar|*-javadoc.jar) continue;; esac
+            base="$(basename "$f")"
+            modpath="${f%/build/libs/*}"         # 取出 /build/libs 之前的模組路徑
+            mod="${modpath#./}"                  # 去掉 ./ 前綴
+            if [[ "$mod" == "$f" || -z "$mod" ]]; then
+              mod="$repo_root_name"              # root 模組
+            else
+              mod="$(basename "$mod")"           # 取最後一層當模組名
+            fi
+
+            if [[ "$f" == plugins/* ]]; then
+              cp "$f" "dist/plugins/Plugin-${mod}-${base}"
+            else
+              cp "$f" "dist/Core-${mod}-${base}"
+            fi
+          done
+
+          mkdir -p tmp_ws/plugins
+          for f in dist/Core-*-*.jar; do
+            [[ -e "$f" ]] || continue
+            cp "$f" "tmp_ws/$(echo "$f" | sed -E 's#^dist/Core-[^-]+-##')"
+          done
+          for f in dist/plugins/Plugin-*-*.jar; do
+            [[ -e "$f" ]] || continue
+            cp "$f" "tmp_ws/plugins/$(echo "$f" | sed -E 's#^dist/plugins/Plugin-[^-]+-##')"
+          done
+          tag="${GITHUB_REF##*/}"; [[ -n "$tag" ]] || tag="${{ github.event.inputs.tag_name || 'manual' }}"
+          (cd tmp_ws && zip -r "../dist/WorkingSpace-${tag}.zip" .)
+          ls -R dist
+
+      - name: Upload CI artifacts (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            dist/*.jar
+            dist/plugins/*.jar
+            dist/*.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download staged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+          path: dist
+
+      - name: Determine tag
+        id: tag
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Using tag: ${{ steps.tag.outputs.tag }}"
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          artifacts: |
+            dist/*.jar
+            dist/plugins/*.jar
+            dist/*.zip
+          generateReleaseNotes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
