@@ -2,6 +2,7 @@ package tw.xinshou.core.base
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xinshou.common.Version
 import tw.xinshou.core.logger.Color
 import tw.xinshou.core.util.Arguments.ignoreVersionCheck
 import java.io.FileOutputStream
@@ -14,10 +15,9 @@ import java.nio.channels.Channels
 
 internal object UpdateChecker {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private const val VERSION = "v2.0.1"
 
     fun versionCheck(): Boolean {
-        if (ignoreVersionCheck) {
+        if (ignoreVersionCheck || true) { // Temporary disable version check
             logger.info("Version check ignored.")
             return false
         }
@@ -27,7 +27,7 @@ internal object UpdateChecker {
 
         try {
             val request = HttpRequest.newBuilder()
-                .uri(URI.create("https://github.com/IceXinShou/XsDiscordBot/releases/latest"))
+                .uri(URI.create("https://github.com/xinshoutw/XsDiscordBotKt/releases/latest"))
                 .GET()
                 .build()
 
@@ -37,15 +37,15 @@ internal object UpdateChecker {
 
             val latestVersion = response.uri().toString().substringAfterLast('/')
             val fileName = "XsDiscordBotLoader_$latestVersion.jar"
-            val downloadURL = "https://github.com/IceXinShou/XsDiscordBot/releases/download/$latestVersion/$fileName"
+            val downloadURL = "https://github.com/xinshoutw/XsDiscordBotKt/releases/download/$latestVersion/$fileName"
 
             // Log version info
-            if (VERSION == latestVersion) {
-                logger.info("You are running on the latest version: {}{}{}", Color.GREEN, VERSION, Color.RESET)
+            if (Version.VERSION == latestVersion) {
+                logger.info("You are running on the latest version: {}{}{}", Color.GREEN, Version.VERSION, Color.RESET)
                 return false
             } else {
                 logger.warn(
-                    "Your current version: ${Color.RED}$VERSION${Color.RESET}, " +
+                    "Your current version: ${Color.RED}${Version.VERSION}${Color.RESET}, " +
                             "latest version: ${Color.GREEN}$latestVersion${Color.RESET}"
                 )
                 logger.info("Downloading latest version file...")
