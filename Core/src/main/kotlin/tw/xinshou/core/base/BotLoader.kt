@@ -13,7 +13,6 @@ import tw.xinshou.core.logger.InteractionLogger
 import tw.xinshou.core.plugin.yaml.processMemberCachePolicy
 import tw.xinshou.core.util.Arguments
 import java.nio.file.Paths
-import kotlin.system.exitProcess
 
 /**
  * Main loader for the bot application, handles bot initialization, and management of events and plugins.
@@ -32,7 +31,7 @@ object BotLoader {
     internal fun start() {
         if (UpdateChecker.versionCheck()) {
             logger.error("Version check failed, exiting.")
-            exitProcess(2)
+            return
         }
 
         SettingsLoader.run()

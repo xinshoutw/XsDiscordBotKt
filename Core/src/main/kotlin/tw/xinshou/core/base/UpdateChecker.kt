@@ -11,7 +11,6 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.channels.Channels
-import kotlin.system.exitProcess
 
 internal object UpdateChecker {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -72,7 +71,8 @@ internal object UpdateChecker {
             return true
         } catch (e: Exception) {
             logger.error("Error checking version.", e)
-            exitProcess(1)
+            logger.error("Please check your network connection or try again later.")
+            throw e
         }
     }
 }
