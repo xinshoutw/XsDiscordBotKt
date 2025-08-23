@@ -10,6 +10,7 @@ internal data class InfoSerializer(
     val main: String,
     val name: String,
     val description: String? = null,
+    val coreApi: String,
     val version: String,
     val prefix: String = name,
 
