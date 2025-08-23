@@ -62,3 +62,33 @@ extra["outputPath"] = if (project.hasProperty("outputPath")) {
 } else {
     file("${rootProject.projectDir}/DevServer")
 }
+
+val versionMajor = findProperty("version.major")?.toString() ?: error("version.major missing")
+val versionMinor = findProperty("version.minor")?.toString() ?: error("version.minor missing")
+val coreApiVersion = "$versionMajor.$versionMinor"
+val updateReadmeVersion by tasks.registering {
+    description = "Updates the version badge in README.md with current version from gradle.properties"
+    group = "documentation"
+
+    val readmeFile = file("README.md")
+    inputs.property("coreApiVersion", coreApiVersion)
+    outputs.file(readmeFile)
+
+    doLast {
+        if (readmeFile.exists()) {
+            val content = readmeFile.readText()
+            val updatedContent = content.replace(
+                Regex("""!\[Version\]\(https://img\.shields\.io/badge/version-[\d\.\*]+-blue\?style=for-the-badge&logo=github\)"""),
+                "![Version](https://img.shields.io/badge/version-$coreApiVersion.*-blue?style=for-the-badge&logo=github)"
+            )
+            readmeFile.writeText(updatedContent)
+            println("Updated README.md version badge to: $coreApiVersion.*")
+        }
+    }
+}
+
+// Hook updateReadmeVersion into common development tasks
+// This ensures README version is updated during normal development workflow
+tasks.matching { it.name in listOf("processResources", "compileKotlin", "assemble") }.configureEach {
+    dependsOn(updateReadmeVersion)
+}
