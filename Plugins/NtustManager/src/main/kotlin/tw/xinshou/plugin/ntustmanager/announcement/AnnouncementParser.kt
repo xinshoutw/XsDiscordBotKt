@@ -244,6 +244,7 @@ object AnnouncementParser {
                 if (rawHtml.isNotEmpty()) ((rawHtml.length - minifiedHtml.length) * 100 / rawHtml.length) else 0
             )
 
+            logger.info("Sending HTML content to Gemini API for processing for $urlId")
             // Process the minified HTML with Gemini API
             val processedContent = geminiApiService.processHtmlContentWithRetry(minifiedHtml, link)
 
