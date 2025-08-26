@@ -20,6 +20,7 @@ object NtustManager {
     private lateinit var scheduler: AnnouncementScheduler
     private val guild = jdaBot.getGuildById(1407404369753931826L)!!
     private val STUDENT_DORMITORY_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_DORMITORY.id)!! }
+    private val STUDENT_MAIN_OFFICE_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_MAIN_OFFICE.id)!! }
     private val STUDENT_AID_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_AID.id)!! }
     private val STUDENT_GUIDANCE_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_GUIDANCE.id)!! }
     private val STUDENT_ACTIVITY_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_ACTIVITY.id)!! }
@@ -216,6 +217,7 @@ object NtustManager {
 
         // Send all messages to the appropriate channel
         val targetChannel = when (announcement.link.type) {
+            AnnouncementType.STUDENT_MAIN_OFFICE -> STUDENT_MAIN_OFFICE_CHANNEL
             AnnouncementType.STUDENT_DORMITORY -> STUDENT_DORMITORY_CHANNEL
             AnnouncementType.STUDENT_AID -> STUDENT_AID_CHANNEL
             AnnouncementType.STUDENT_GUIDANCE -> STUDENT_GUIDANCE_CHANNEL

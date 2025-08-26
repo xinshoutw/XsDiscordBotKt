@@ -178,6 +178,12 @@ object AnnouncementParser {
                         val title = titleLink.text().trim()
                         val href = titleLink.attr("href")
 
+                        // Filter for STUDENT_MAIN_OFFICE: only include announcements with "【處本部】" prefix
+                        if (baseLink.type == AnnouncementType.STUDENT_MAIN_OFFICE && !title.startsWith("【處本部】")) {
+                            logger.debug("Skipping announcement for STUDENT_MAIN_OFFICE without '【處本部】' prefix: $title")
+                            continue
+                        }
+
                         // Construct complete URL based on href type
                         val completeUrl = UrlUtils.constructCompleteUrl(href, baseLink.url)
 
@@ -285,7 +291,8 @@ object AnnouncementParser {
             AnnouncementType.STUDENT_AID,
             AnnouncementType.STUDENT_GUIDANCE,
             AnnouncementType.STUDENT_ACTIVITY,
-            AnnouncementType.STUDENT_RESOURCE_ROOM -> true
+            AnnouncementType.STUDENT_RESOURCE_ROOM,
+            AnnouncementType.STUDENT_MAIN_OFFICE -> true
 
             else -> false
         }

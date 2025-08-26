@@ -45,6 +45,9 @@ class AnnouncementScheduler(
         AnnouncementType.STUDENT_RESOURCE_ROOM to AnnouncementLink(
             AnnouncementType.STUDENT_RESOURCE_ROOM, "https://student.ntust.edu.tw/p/412-1053-8272.php", "資源教室"
         ),
+        AnnouncementType.STUDENT_MAIN_OFFICE to AnnouncementLink(
+            AnnouncementType.STUDENT_MAIN_OFFICE, "https://student.ntust.edu.tw/p/403-1053-1435-1.php", "學務處本部公告"
+        ),
 
         // 教務處
         AnnouncementType.ACADEMIC_MAIN_OFFICE to AnnouncementLink(
