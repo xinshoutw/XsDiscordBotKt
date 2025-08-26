@@ -201,16 +201,6 @@ object NtustManager {
         logger.debug("  Content Length: ${announcement.content?.length ?: 0} characters")
         logger.debug("  Fetched Timestamp: ${announcement.fetchedTimestamp}")
 
-        // TODO: Implement user-defined announcement processing logic
-        // This is where you would trigger specific functions to handle the content
-        // Examples:
-        // - Send notifications to Discord channels
-        // - Store in additional databases
-        // - Trigger webhooks
-        // - Process content for specific keywords
-        // - Generate summaries
-        // - Forward to other systems
-
         // Create messages with content splitting if necessary
         val messages = createDiscordMessages(announcement)
         logger.debug("Created ${messages.size} message(s) for announcement")
