@@ -190,13 +190,13 @@ object NtustManager {
      * @param announcement The new announcement data to process
      */
     private fun handleNewAnnouncement(announcement: AnnouncementData) {
-        logger.info("New announcement: ${announcement.title ?: "Unknown Title"} (${announcement.link.type})")
+        logger.info("New announcement: ${announcement.title} (${announcement.link.type})")
 
         // Log announcement details
         logger.debug("Announcement details:")
-        logger.debug("  Type: ${announcement.link.type}")
+        logger.debug("  Type: {}", announcement.link.type)
         logger.debug("  URL: ${announcement.link.url}")
-        logger.debug("  Title: ${announcement.title ?: "Unknown Title"}")
+        logger.debug("  Title: ${announcement.title}")
         logger.debug("  Release Date: ${announcement.releaseDate}")
         logger.debug("  Content Length: ${announcement.content?.length ?: 0} characters")
         logger.debug("  Fetched Timestamp: ${announcement.fetchedTimestamp}")
@@ -233,7 +233,7 @@ object NtustManager {
             }
         }
 
-        logger.info("Announcement processing completed for: ${announcement.title ?: "Unknown Title"}")
+        logger.info("Announcement processing completed for: ${announcement.title}")
     }
 
     /**

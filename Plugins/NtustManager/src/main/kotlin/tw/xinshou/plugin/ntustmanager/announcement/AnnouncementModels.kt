@@ -8,8 +8,8 @@ data class AnnouncementLink(
 
 data class AnnouncementData(
     val link: AnnouncementLink,
-    val title: String?, // the title of the announcement, can be null if not available
-    val content: String?, // the content of the announcement, can be null if not available
+    val title: String,
+    val content: String?, // the content of the announcement can be null if it's a third-party link
     val releaseDate: String, // the date in format "yyyy-mm-dd"
     val fetchedTimestamp: Long = System.currentTimeMillis(), // timestamp in milliseconds since epoch
 )

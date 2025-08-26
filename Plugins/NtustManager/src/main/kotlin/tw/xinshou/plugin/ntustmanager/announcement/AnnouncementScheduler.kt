@@ -229,21 +229,20 @@ class AnnouncementScheduler(
         announcements.forEach { link ->
             try {
                 val announcementData = AnnouncementParser.contentParser(link, geminiApiService)
-                if (announcementData != null && !announcementData.content.isNullOrBlank()) {
-                    // Save to cache
-                    cacheManager.saveAnnouncementData(announcementData)
 
-                    // Trigger the callback for new announcement handling
-                    onNewAnnouncement(announcementData)
-
-                    logger.debug("Successfully processed new announcement: ${link.title}")
-                } else {
-                    logger.info(
-                        "Skipping announcement with empty content: ${link.title} (${
-                            UrlUtils.extractParagraphId(link.url) ?: link.url
-                        })"
-                    )
+                if (announcementData == null) {
+                    logger.warn("Failed to parse announcement content for ${link.title} (${link.url})")
+                    return@forEach
                 }
+
+                // Save to cache
+                cacheManager.saveAnnouncementData(announcementData)
+
+                // Trigger the callback for new announcement handling
+                onNewAnnouncement(announcementData)
+
+                logger.debug("Successfully processed new announcement: ${link.title}")
+
             } catch (e: Exception) {
                 logger.error("Error processing announcement ${UrlUtils.extractParagraphId(link.url) ?: link.url}", e)
             }

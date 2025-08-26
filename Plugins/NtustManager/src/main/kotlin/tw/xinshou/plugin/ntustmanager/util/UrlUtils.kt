@@ -81,7 +81,7 @@ object UrlUtils {
     fun createExternalLinkData(link: AnnouncementLink): AnnouncementData {
         return AnnouncementData(
             link = link,
-            title = null,
+            title = link.title,
             content = null,
             releaseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         )
