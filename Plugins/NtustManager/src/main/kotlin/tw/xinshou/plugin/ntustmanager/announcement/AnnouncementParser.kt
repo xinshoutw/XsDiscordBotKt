@@ -200,7 +200,7 @@ object AnnouncementParser {
                 }
             }
 
-            logger.info("Parsed ${announcements.size} announcements for ${baseLink.type}")
+            logger.debug("Parsed {} announcements for {}", announcements.size, baseLink.type)
             announcements
 
         } catch (e: Exception) {

@@ -128,7 +128,7 @@ class AnnouncementScheduler(
      * Checks all announcement sources for updates
      */
     private suspend fun checkAllAnnouncements() {
-        logger.info("Starting announcement check cycle")
+        logger.debug("Starting announcement check cycle")
 
         val semaphore = Semaphore(maxConcurrentRequests)
 
