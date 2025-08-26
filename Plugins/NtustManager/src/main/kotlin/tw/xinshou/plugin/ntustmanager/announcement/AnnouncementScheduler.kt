@@ -66,7 +66,8 @@ class AnnouncementScheduler(
             "註冊組公告"
         ),
         AnnouncementType.ACADEMIC_COURSE to AnnouncementLink(
-            AnnouncementType.ACADEMIC_COURSE, "https://www.academic.ntust.edu.tw/p/403-1048-1416-1.php", "課務組公告"
+            AnnouncementType.ACADEMIC_COURSE, "https://www.academic.ntust.edu.tw/p/403-1048-1416-1.php",
+            "課務組公告"
         ),
         AnnouncementType.ACADEMIC_COMPREHENSIVE_BUSINESS to AnnouncementLink(
             AnnouncementType.ACADEMIC_COMPREHENSIVE_BUSINESS,
@@ -161,7 +162,7 @@ class AnnouncementScheduler(
         if (validBoardData.size < boardData.size) {
             val emptyCount = boardData.size - validBoardData.size
             logger.warn(
-                "Found ${emptyCount} announcements with empty/missing content for ${link.type}. " +
+                "Found $emptyCount announcements with empty/missing content for ${link.type}. " +
                         "These announcements exist but have no actual published content. " +
                         "This may require plugin updates to fix HTML extraction methods or Regex patterns."
             )
@@ -212,7 +213,7 @@ class AnnouncementScheduler(
                 val hasValidContent = announcementData?.content?.isNotBlank() == true
 
                 if (!hasValidContent) {
-                    logger.debug(
+                    logger.info(
                         "Announcement has empty/missing content: ${announcement.title} (${
                             UrlUtils.extractParagraphId(
                                 announcement.url
