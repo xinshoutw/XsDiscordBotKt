@@ -202,48 +202,47 @@ class AnnouncementScheduler(
     }
 
     /**
-     * Filters announcements to include only those with valid content
-     * Performs a quick content validation to detect empty announcements
+     * Filters announcements to include only those with valid basic structure
+     * This method performs lightweight validation without making API calls
      */
-    private suspend fun filterValidAnnouncements(announcements: List<AnnouncementLink>): List<AnnouncementLink> {
+    private fun filterValidAnnouncements(announcements: List<AnnouncementLink>): List<AnnouncementLink> {
         return announcements.filter { announcement ->
-            try {
-                // Perform a basic validation by checking if the announcement URL returns valid content
-                val announcementData = AnnouncementParser.contentParser(announcement, geminiApiService)
-                val hasValidContent = announcementData?.content?.isNotBlank() == true
+            // Perform basic validation without API calls
+            val hasValidTitle = announcement.title.isNotBlank()
+            val hasValidUrl = announcement.url.isNotBlank()
 
-                if (!hasValidContent) {
-                    logger.info(
-                        "Announcement has empty/missing content: ${announcement.title} (${
-                            UrlUtils.extractParagraphId(
-                                announcement.url
-                            ) ?: announcement.url
-                        })"
-                    )
-                }
-
-                hasValidContent
-            } catch (e: Exception) {
-                logger.debug("Error validating announcement content for ${announcement.title}: ${e.message}")
-                // If there's an error during validation, include the announcement to avoid losing data
-                true
+            if (!hasValidTitle || !hasValidUrl) {
+                logger.debug(
+                    "Announcement has invalid structure: title='${announcement.title}', url='${announcement.url}'"
+                )
             }
+
+            hasValidTitle && hasValidUrl
         }
     }
 
     /**
      * Processes new announcements by parsing their content
+     * Only makes API calls for truly new announcements
      */
     private suspend fun processNewAnnouncements(announcements: List<AnnouncementLink>) {
         announcements.forEach { link ->
             try {
                 val announcementData = AnnouncementParser.contentParser(link, geminiApiService)
-                if (announcementData != null) {
+                if (announcementData != null && !announcementData.content.isNullOrBlank()) {
                     // Save to cache
                     cacheManager.saveAnnouncementData(announcementData)
 
                     // Trigger the callback for new announcement handling
                     onNewAnnouncement(announcementData)
+
+                    logger.debug("Successfully processed new announcement: ${link.title}")
+                } else {
+                    logger.info(
+                        "Skipping announcement with empty content: ${link.title} (${
+                            UrlUtils.extractParagraphId(link.url) ?: link.url
+                        })"
+                    )
                 }
             } catch (e: Exception) {
                 logger.error("Error processing announcement ${UrlUtils.extractParagraphId(link.url) ?: link.url}", e)
