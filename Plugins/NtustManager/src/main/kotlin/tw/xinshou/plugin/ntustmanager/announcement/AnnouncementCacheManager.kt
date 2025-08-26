@@ -277,6 +277,28 @@ class AnnouncementCacheManager(pluginName: String) {
     }
 
     /**
+     * Removes specific URL from current announcement list and cache
+     * @param type The announcement type
+     * @param urlToRemove The URL to remove
+     */
+    fun removeUrlFromAnnouncementList(type: AnnouncementType, urlToRemove: String) {
+        val currentList = getCurrentAnnouncementList(type)
+        val filteredList = currentList.filter { it.url != urlToRemove }
+
+        if (filteredList.size < currentList.size) {
+            updateCurrentAnnouncementList(type, filteredList)
+
+            // Also remove from data cache if exists
+            val cacheKey = "${type.name}_${UrlUtils.extractParagraphId(urlToRemove) ?: urlToRemove}"
+            announcementDataCache.remove(cacheKey)
+
+            logger.info("Removed URL from announcement list and cache: {} for type: {}", urlToRemove, type)
+        } else {
+            logger.debug("URL not found in current announcement list: {} for type: {}", urlToRemove, type)
+        }
+    }
+
+    /**
      * Clears all cache data
      */
     fun clearCache() {
