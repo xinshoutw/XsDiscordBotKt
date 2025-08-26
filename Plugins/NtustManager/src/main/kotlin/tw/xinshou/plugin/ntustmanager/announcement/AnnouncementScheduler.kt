@@ -155,8 +155,25 @@ class AnnouncementScheduler(
             return
         }
 
-        // Compare current announcement list with new fetched data
-        val changes = cacheManager.compareAnnouncementLists(link.type, boardData)
+        // Filter out announcements with empty or missing content
+        val validBoardData = filterValidAnnouncements(boardData)
+
+        if (validBoardData.size < boardData.size) {
+            val emptyCount = boardData.size - validBoardData.size
+            logger.warn(
+                "Found ${emptyCount} announcements with empty/missing content for ${link.type}. " +
+                        "These announcements exist but have no actual published content. " +
+                        "This may require plugin updates to fix HTML extraction methods or Regex patterns."
+            )
+        }
+
+        if (validBoardData.isEmpty()) {
+            logger.warn("No valid announcements with content found for ${link.type}")
+            return
+        }
+
+        // Compare current announcement list with new filtered data
+        val changes = cacheManager.compareAnnouncementLists(link.type, validBoardData)
 
         // Handle removed announcements
         if (changes.removed.isNotEmpty()) {
@@ -173,13 +190,43 @@ class AnnouncementScheduler(
             processNewAnnouncements(changes.added)
         }
 
-        // Update the current announcement list in cache (regardless of changes)
-        cacheManager.updateCurrentAnnouncementList(link.type, boardData)
+        // Update the current announcement list in cache with only valid announcements
+        cacheManager.updateCurrentAnnouncementList(link.type, validBoardData)
 
         if (changes.added.isEmpty() && changes.removed.isEmpty()) {
             logger.debug("No changes detected for {}", link.type)
         } else {
             logger.info("Processed changes for ${link.type}: ${changes.added.size} added, ${changes.removed.size} removed")
+        }
+    }
+
+    /**
+     * Filters announcements to include only those with valid content
+     * Performs a quick content validation to detect empty announcements
+     */
+    private suspend fun filterValidAnnouncements(announcements: List<AnnouncementLink>): List<AnnouncementLink> {
+        return announcements.filter { announcement ->
+            try {
+                // Perform a basic validation by checking if the announcement URL returns valid content
+                val announcementData = AnnouncementParser.contentParser(announcement, geminiApiService)
+                val hasValidContent = announcementData?.content?.isNotBlank() == true
+
+                if (!hasValidContent) {
+                    logger.debug(
+                        "Announcement has empty/missing content: ${announcement.title} (${
+                            UrlUtils.extractParagraphId(
+                                announcement.url
+                            ) ?: announcement.url
+                        })"
+                    )
+                }
+
+                hasValidContent
+            } catch (e: Exception) {
+                logger.debug("Error validating announcement content for ${announcement.title}: ${e.message}")
+                // If there's an error during validation, include the announcement to avoid losing data
+                true
+            }
         }
     }
 
