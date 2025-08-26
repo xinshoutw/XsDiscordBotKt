@@ -223,7 +223,10 @@ object AnnouncementParser {
 
         return try {
             // First, find the main content container with id="Dyn_2_3" and class="M23"
-            val mainContainer = document.select("div#Dyn_2_3.M23").firstOrNull()
+            // Second, find the main content container with class="M23"
+            val mainContainer =
+                document.select("div#Dyn_2_3.M23").firstOrNull()
+                    ?: document.select("div.M23").firstOrNull()
             if (mainContainer == null) {
                 logger.warn("No main content container found for announcement $urlId")
                 return null
