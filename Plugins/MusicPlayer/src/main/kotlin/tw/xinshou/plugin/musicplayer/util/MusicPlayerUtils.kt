@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.managers.AudioManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.core.builtin.placeholder.Substitutor
 import tw.xinshou.plugin.musicplayer.Event.config
 import tw.xinshou.plugin.musicplayer.model.EnhancedTrackInfo
@@ -20,22 +21,49 @@ import tw.xinshou.plugin.musicplayer.music.GuildMusicManager
 internal object MusicPlayerUtils {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
+    private lateinit var mediaPauseMention: String
+    private lateinit var mediaPlayMention: String
+    private lateinit var progressWhiteStartMention: String
+    private lateinit var progressWhiteEndMention: String
+    private lateinit var progressWhiteFullMention: String
+    private lateinit var progressBlackMention: String
+    private lateinit var progressBlackEndMention: String
+    private lateinit var mediaOrderedMention: String
+    private lateinit var mediaRepeatOnceMention: String
+
     // 音樂播放器進度條相關常數
     private const val PROGRESS_BAR_LENGTH = 15
 
     // 音樂播放器進度條陣列（從配置讀取 Emoji）
     private val BAR_ARRAY by lazy {
-        val emojis = config.emojis
         arrayOf(
-            emojis.progressWhiteStart + emojis.progressBlack.repeat(PROGRESS_BAR_LENGTH - 2) + emojis.progressBlackEnd,
+            progressWhiteStartMention + progressBlackMention.repeat(PROGRESS_BAR_LENGTH - 2) + progressBlackEndMention,
             *((1..PROGRESS_BAR_LENGTH - 2).map {
-                emojis.progressWhiteStart +
-                        emojis.progressWhiteFull.repeat(it) +
-                        emojis.progressBlack.repeat(PROGRESS_BAR_LENGTH - 2 - it) +
-                        emojis.progressBlackEnd
+                progressWhiteStartMention +
+                        progressWhiteFullMention.repeat(it) +
+                        progressBlackMention.repeat(PROGRESS_BAR_LENGTH - 2 - it) +
+                        progressBlackEndMention
             }.toTypedArray()),
-            emojis.progressWhiteStart + emojis.progressWhiteFull.repeat(PROGRESS_BAR_LENGTH - 2) + emojis.progressWhiteEnd,
+            progressWhiteStartMention + progressWhiteFullMention.repeat(PROGRESS_BAR_LENGTH - 2) + progressWhiteEndMention,
         )
+    }
+
+    init {
+        jdaBot.retrieveApplicationEmojis().onSuccess { emojis ->
+            emojis.forEach { it ->
+                when (it.name) {
+                    config.emojis.mediaPauseName -> mediaPauseMention = it.asMention
+                    config.emojis.mediaPlayName -> mediaPlayMention = it.asMention
+                    config.emojis.progressWhiteStartName -> progressWhiteStartMention = it.asMention
+                    config.emojis.progressWhiteEndName -> progressWhiteEndMention = it.asMention
+                    config.emojis.progressWhiteFullName -> progressWhiteFullMention = it.asMention
+                    config.emojis.progressBlackName -> progressBlackMention = it.asMention
+                    config.emojis.progressBlackEndName -> progressBlackEndMention = it.asMention
+                    config.emojis.mediaOrderedName -> mediaOrderedMention = it.asMention
+                    config.emojis.mediaRepeatOnceName -> mediaRepeatOnceMention = it.asMention
+                }
+            }
+        }
     }
 
     /**
@@ -108,11 +136,11 @@ internal object MusicPlayerUtils {
     ): String {
         // 如果是直播，返回簡單的播放/暫停狀態
         if (totalDuration == Long.MAX_VALUE || totalDuration <= 0) {
-            val playPauseEmoji = if (isPlaying) config.emojis.mediaPlay else config.emojis.mediaPause
+            val playPauseEmoji = if (isPlaying) mediaPlayMention else mediaPauseMention
             return "$playPauseEmoji 直播中"
         }
         val progress = ((currentPosition.toDouble() / totalDuration.toDouble()) * (PROGRESS_BAR_LENGTH - 1)).toInt()
-        val playPauseEmoji = if (isPlaying) config.emojis.mediaPlay else config.emojis.mediaPause
+        val playPauseEmoji = if (isPlaying) mediaPlayMention else mediaPauseMention
 
         return "$playPauseEmoji " +
                 formatTime(currentPosition) +
@@ -266,12 +294,12 @@ internal object MusicPlayerUtils {
             if (musicManager.scheduler.isSequentialPlayback()) {
                 put(
                     "music_player@player_currnet_loop_mode_emoji",
-                    config.emojis.mediaOrdered
+                    mediaOrderedMention
                 )
             } else if (musicManager.scheduler.isSingleTrackLoop()) {
                 put(
                     "music_player@player_currnet_loop_mode_emoji",
-                    config.emojis.mediaRepeatOnce
+                    mediaRepeatOnceMention
                 )
             }
         }
