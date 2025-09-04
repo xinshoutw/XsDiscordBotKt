@@ -49,19 +49,17 @@ internal object MusicPlayerUtils {
     }
 
     init {
-        jdaBot.retrieveApplicationEmojis().onSuccess { emojis ->
-            emojis.forEach { it ->
-                when (it.name) {
-                    config.emojis.mediaPauseName -> mediaPauseMention = it.asMention
-                    config.emojis.mediaPlayName -> mediaPlayMention = it.asMention
-                    config.emojis.progressWhiteStartName -> progressWhiteStartMention = it.asMention
-                    config.emojis.progressWhiteEndName -> progressWhiteEndMention = it.asMention
-                    config.emojis.progressWhiteFullName -> progressWhiteFullMention = it.asMention
-                    config.emojis.progressBlackName -> progressBlackMention = it.asMention
-                    config.emojis.progressBlackEndName -> progressBlackEndMention = it.asMention
-                    config.emojis.mediaOrderedName -> mediaOrderedMention = it.asMention
-                    config.emojis.mediaRepeatOnceName -> mediaRepeatOnceMention = it.asMention
-                }
+        jdaBot.retrieveApplicationEmojis().complete().forEach { it ->
+            when (it.name) {
+                config.emojis.mediaPauseName -> mediaPauseMention = it.asMention
+                config.emojis.mediaPlayName -> mediaPlayMention = it.asMention
+                config.emojis.progressWhiteStartName -> progressWhiteStartMention = it.asMention
+                config.emojis.progressWhiteEndName -> progressWhiteEndMention = it.asMention
+                config.emojis.progressWhiteFullName -> progressWhiteFullMention = it.asMention
+                config.emojis.progressBlackName -> progressBlackMention = it.asMention
+                config.emojis.progressBlackEndName -> progressBlackEndMention = it.asMention
+                config.emojis.mediaOrderedName -> mediaOrderedMention = it.asMention
+                config.emojis.mediaRepeatOnceName -> mediaRepeatOnceMention = it.asMention
             }
         }
     }
