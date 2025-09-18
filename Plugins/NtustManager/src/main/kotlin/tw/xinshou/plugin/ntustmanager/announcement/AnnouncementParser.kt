@@ -327,7 +327,8 @@ object AnnouncementParser {
             AnnouncementType.LANGUAGE_CENTER_HONOR_LIST,
             AnnouncementType.LANGUAGE_CENTER_FRESHMAN,
             AnnouncementType.LANGUAGE_CENTER_ENGLISH_WORDS,
-            AnnouncementType.LANGUAGE_CENTER_EXTERNAL -> true
+            AnnouncementType.LANGUAGE_CENTER_EXTERNAL,
+            AnnouncementType.LANGUAGE_CENTER_ACTIVITY -> true
 
             else -> false
         }

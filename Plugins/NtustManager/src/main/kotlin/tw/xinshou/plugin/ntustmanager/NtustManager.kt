@@ -36,6 +36,7 @@ object NtustManager {
     private val LANGUAGE_CENTER_FRESHMAN_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.LANGUAGE_CENTER_FRESHMAN.id)!! }
     private val LANGUAGE_CENTER_ENGLISH_WORDS_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.LANGUAGE_CENTER_ENGLISH_WORDS.id)!! }
     private val LANGUAGE_CENTER_EXTERNAL_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.LANGUAGE_CENTER_EXTERNAL.id)!! }
+    private val LANGUAGE_CENTER_ACTIVITY_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.LANGUAGE_CENTER_ACTIVITY.id)!! }
 
 
     init {
@@ -224,6 +225,7 @@ object NtustManager {
             AnnouncementType.LANGUAGE_CENTER_FRESHMAN -> LANGUAGE_CENTER_FRESHMAN_CHANNEL
             AnnouncementType.LANGUAGE_CENTER_ENGLISH_WORDS -> LANGUAGE_CENTER_ENGLISH_WORDS_CHANNEL
             AnnouncementType.LANGUAGE_CENTER_EXTERNAL -> LANGUAGE_CENTER_EXTERNAL_CHANNEL
+            AnnouncementType.LANGUAGE_CENTER_ACTIVITY -> LANGUAGE_CENTER_ACTIVITY_CHANNEL
         }
 
         // Send each message sequentially

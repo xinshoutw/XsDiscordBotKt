@@ -105,6 +105,11 @@ class AnnouncementScheduler(
             AnnouncementType.LANGUAGE_CENTER_EXTERNAL,
             "https://lc.ntust.edu.tw/p/403-1070-1829-1.php",
             "語言中心校外公告"
+        ),
+        AnnouncementType.LANGUAGE_CENTER_ACTIVITY to AnnouncementLink(
+            AnnouncementType.LANGUAGE_CENTER_ACTIVITY,
+            "https://lc.ntust.edu.tw/p/403-1070-1050-1.php",
+            "語言中心活動公告"
         )
     )
 
