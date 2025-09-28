@@ -111,7 +111,10 @@ internal class Step(
                     "tt@embed" to previewEmbed,
                     "tt@btn" to ButtonImpl(
                         componentIdManager.build(
-                            ComponentField("btn_index", "0"),
+                            mapOf(
+                                "action" to "press",
+                                "btn_index" to "0"
+                            )
                         ),
                         data.btnText,
                         data.btnStyle,
@@ -136,7 +139,10 @@ internal class Step(
                     add(
                         ButtonImpl(
                             componentIdManager.build(
-                                ComponentField("btn_index", size.toString()),
+                                mapOf(
+                                    "action" to "press",
+                                    "btn_index" to size.toString()
+                                )
                             ),
                             data.btnText,
                             data.btnStyle,

@@ -21,7 +21,6 @@ import tw.xinshou.core.builtin.placeholder.Placeholder
 import tw.xinshou.core.json.JsonFileManager
 import tw.xinshou.core.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.core.json.JsonGuildFileManager
-import tw.xinshou.core.util.ComponentField
 import tw.xinshou.core.util.ComponentIdManager
 import tw.xinshou.core.util.FieldType
 import tw.xinshou.core.util.GlobalUtil
@@ -111,13 +110,23 @@ internal object Ticket {
                                 Button.of(
                                     ButtonStyle.SUCCESS,
                                     componentIdManager.build(
-                                        ComponentField("btn_index", idMap["btn_index"] as String),
+                                        mapOf(
+                                            "action" to "unlock",
+                                            "user_id" to idMap["user_id"] as Long,
+                                            "msg_id" to idMap["msg_id"] as String,
+                                            "btn_index" to idMap["btn_index"] as String,
+                                        )
                                     ), "開啟", Emoji.fromUnicode("🔓")
                                 ),
                                 Button.of(
                                     ButtonStyle.DANGER,
                                     componentIdManager.build(
-                                        ComponentField("btn_index", idMap["btn_index"] as String),
+                                        mapOf(
+                                            "action" to "delete",
+                                            "user_id" to idMap["user_id"] as Long,
+                                            "msg_id" to idMap["msg_id"] as String,
+                                            "btn_index" to idMap["btn_index"] as String,
+                                        )
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
                             )
@@ -136,13 +145,23 @@ internal object Ticket {
                                 Button.of(
                                     ButtonStyle.SECONDARY,
                                     componentIdManager.build(
-                                        ComponentField("btn_index", idMap["btn_index"] as String),
+                                        mapOf(
+                                            "action" to "lock",
+                                            "user_id" to idMap["user_id"] as Long,
+                                            "msg_id" to idMap["msg_id"] as String,
+                                            "btn_index" to idMap["btn_index"] as String,
+                                        )
                                     ), "關閉", Emoji.fromUnicode("🔒")
                                 ),
                                 Button.of(
                                     ButtonStyle.DANGER,
                                     componentIdManager.build(
-                                        ComponentField("btn_index", idMap["btn_index"] as String),
+                                        mapOf(
+                                            "action" to "delete",
+                                            "user_id" to idMap["user_id"] as Long,
+                                            "msg_id" to idMap["msg_id"] as String,
+                                            "btn_index" to idMap["btn_index"] as String,
+                                        )
                                     ), "刪除", Emoji.fromUnicode("🗑")
                                 )
                             )
@@ -236,13 +255,23 @@ internal object Ticket {
                 Button.of(
                     ButtonStyle.SECONDARY,
                     componentIdManager.build(
-                        ComponentField("btn_index", idMap["btn_index"] as String),
+                        mapOf(
+                            "action" to "lock",
+                            "user_id" to event.user.idLong,
+                            "msg_id" to idMap["msg_id"] as String,
+                            "btn_index" to idMap["btn_index"] as String,
+                        )
                     ), "關閉", Emoji.fromUnicode("🔒")
                 ),
                 Button.of(
                     ButtonStyle.DANGER,
                     componentIdManager.build(
-                        ComponentField("btn_index", idMap["btn_index"] as String),
+                        mapOf(
+                            "action" to "delete",
+                            "user_id" to event.user.idLong,
+                            "msg_id" to idMap["msg_id"] as String,
+                            "btn_index" to idMap["btn_index"] as String,
+                        )
                     ), "刪除", Emoji.fromUnicode("🗑")
                 )
             )
