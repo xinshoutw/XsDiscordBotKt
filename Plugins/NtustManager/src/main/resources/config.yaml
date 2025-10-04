@@ -1,5 +1,6 @@
 enable: false
 
+fetch-interval: 3600
 api-keys:
   - "sk-thisisatestkey1234567890abcdef1234567890"
   - "sk-thisisatestkey1234567890abcdef1234567890"

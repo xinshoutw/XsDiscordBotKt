@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
+import tw.xinshou.plugin.ntustmanager.Event
 import tw.xinshou.plugin.ntustmanager.service.GeminiApiService
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.Executors
@@ -18,7 +19,7 @@ class AnnouncementScheduler(
     private val logger = LoggerFactory.getLogger(AnnouncementScheduler::class.java)
 
     // Configuration constants
-    private val cycleTimeSeconds = 3600L // 1 hour = 3600 seconds
+    private val cycleTimeSeconds = Event.config.fetchInterval // 1 hour = 3600 seconds
     private val maxConcurrentRequests = 5
 
     // Scheduler for periodic execution

@@ -9,6 +9,8 @@ data class ConfigSerializer(
     @SerialName("api-keys")
     val apiKeys: List<String>,
     val prompt: String,
+    @SerialName("fetch-interval")
+    val fetchInterval: Long = 3600,
 ) {
     init {
         require(apiKeys.isNotEmpty()) { "apiKeys must not be empty" }
@@ -17,5 +19,6 @@ data class ConfigSerializer(
         }
 
         require(prompt.isNotBlank()) { "prompt must not be blank" }
+        require(fetchInterval >= 60) { "fetchInterval must be at least 60 seconds" }
     }
 }
