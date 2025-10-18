@@ -25,7 +25,6 @@ class JsonFileManager<T>(
 ) : AutoCloseable {
     var isDeleted: Boolean = false
     var data: T
-        private set
 
     init {
         data = if (!file.exists()) {

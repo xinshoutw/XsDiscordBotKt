@@ -12,6 +12,7 @@ import tw.xinshou.plugin.dynamicvoicechannel.Event.pluginDirectory
 import tw.xinshou.plugin.dynamicvoicechannel.json.DataContainer
 import tw.xinshou.plugin.dynamicvoicechannel.json.JsonDataClass
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 
 /*
@@ -28,89 +29,116 @@ import java.io.File
 
 internal object JsonManager {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
-    val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
+
+    private val jsonAdapter: JsonAdapter<JsonDataClass> =
+        JsonFileManager.moshi.adapterReified<JsonDataClass>()
+
+    private val jsonGuildManager = JsonGuildFileManager(
         dataDirectory = File(pluginDirectory, "data"),
         adapter = jsonAdapter,
         defaultInstance = mutableListOf()
     )
 
-    private val dataSet: HashSet<DataContainer> = HashSet()
+    private val dataSet: MutableSet<DataContainer> = ConcurrentHashMap.newKeySet()
 
     init {
-        jsonGuildManager.mapper.forEach { guildId, jsonManager ->
-            // check guild available
-            val guild: Guild? = jdaBot.getGuildById(guildId)
-            if (guild == null) {
-                jsonGuildManager.removeAndSave(guildId)
-                return@forEach
-            }
+        try {
+            logger.info("[JsonManager] Initializing DynamicVoiceChannel data...")
 
-            // check json data
-            var index = 0
-            jsonManager.data.forEach { data ->
-                // check category available
-                if (guild.getCategoryById(data.categoryId) == null) {
-                    jsonManager.data.removeAt(index)
+            jsonGuildManager.mapper.forEach { (guildId, jsonManager) ->
+                val guild: Guild? = jdaBot.getGuildById(guildId)
+
+                if (guild == null) {
+                    logger.warn("Guild $guildId not found, removing associated data file.")
+                    jsonGuildManager.removeAndSave(guildId)
                     return@forEach
                 }
 
-                // check channel available
-                var checkFlag = false
-                guild.getVoiceChannelsByName(data.defaultName, false).forEach { channel ->
-                    if (channel.parentCategory?.idLong == data.categoryId) {
-                        checkFlag = true
-                        return@forEach
+                val validData = jsonManager.data.filter { data ->
+                    val categoryExists = guild.getCategoryById(data.categoryId) != null
+                    if (!categoryExists) {
+                        logger.warn("Category ${data.categoryId} not found in guild ${guild.name}, skipping.")
+                        return@filter false
                     }
-                }
-                if (!checkFlag) {
-                    jsonManager.data.removeAt(index)
-                    return@forEach
+
+                    val channelExists = guild
+                        .getVoiceChannelsByName(data.defaultName, false)
+                        .any { it.parentCategory?.idLong == data.categoryId }
+
+                    if (!channelExists) {
+                        logger.warn("Channel ${data.defaultName} not found under category ${data.categoryId}, skipping.")
+                        return@filter false
+                    }
+
+                    // 如果通過檢查，加入 dataSet
+                    dataSet.add(data)
+                    true
                 }
 
-                // valid data, add to map
-                dataSet.add(data)
-
-                index++
+                // 將過濾後的資料覆蓋回 JSON
+                jsonManager.data = validData.toMutableList()
+                jsonManager.save()
             }
 
-            jsonManager.save()
+            logger.info("[JsonManager] Initialization complete. Loaded ${dataSet.size} valid data entries.")
+        } catch (e: Exception) {
+            logger.error("[JsonManager] Initialization failed: ${e.message}", e)
         }
     }
 
     fun addData(guildId: Long, data: DataContainer) {
         val json = jsonGuildManager.get(guildId)
-        json.data.add(data)
-        json.save()
+        synchronized(json) {
+            json.data.add(data)
+            json.save()
+        }
 
-        dataSet.removeIf { it.categoryId == data.categoryId && it.defaultName == data.defaultName }
-        dataSet.add(data)
+        synchronized(dataSet) {
+            dataSet.removeIf { it.categoryId == data.categoryId && it.defaultName == data.defaultName }
+            dataSet.add(data)
+        }
+
+        logger.info("Added DynamicVoiceChannel binding for guild $guildId → ${data.defaultName}")
     }
 
     fun removeData(guildId: Long, categoryId: Long, defaultName: String): Boolean {
-        dataSet.removeIf { it.categoryId == categoryId && it.defaultName == defaultName }
-
-        val jsonManager = jsonGuildManager.get(guildId)
-        var index = 0
-        jsonManager.data.forEach { data ->
-            // check category available
-            if (categoryId == data.categoryId && defaultName == data.defaultName) {
-                jsonManager.data.removeAt(index)
-                jsonManager.save()
-                return false
-            }
-            index++
+        synchronized(dataSet) {
+            dataSet.removeIf { it.categoryId == categoryId && it.defaultName == defaultName }
         }
 
-        return true
+        val jsonManager = jsonGuildManager.get(guildId)
+        var removed = false
+
+        synchronized(jsonManager) {
+            val newData = jsonManager.data.filterNot {
+                it.categoryId == categoryId && it.defaultName == defaultName
+            }
+            removed = newData.size != jsonManager.data.size
+            if (removed) {
+                jsonManager.data = newData.toMutableList()
+                jsonManager.save()
+            }
+        }
+
+        if (removed) {
+            logger.info("Removed DynamicVoiceChannel binding for guild $guildId → $defaultName")
+        }
+
+        return !removed
     }
 
     fun removeGuild(guildId: Long) {
         jsonGuildManager.removeAndSave(guildId)
+        synchronized(dataSet) {
+            dataSet.removeIf { it.categoryId.toString().startsWith(guildId.toString()) }
+        }
+        logger.info("Removed all DynamicVoiceChannel data for guild $guildId")
     }
 
     fun getData(categoryId: Long, defaultName: String): DataContainer? {
-        return dataSet.firstOrNull { it.categoryId == categoryId && it.defaultName == defaultName }
+        synchronized(dataSet) {
+            return dataSet.firstOrNull { it.categoryId == categoryId && it.defaultName == defaultName }
+        }
     }
 }
 
