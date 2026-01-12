@@ -3,6 +3,7 @@ package tw.xinshou.plugin.ntustmanager.announcement
 import org.slf4j.LoggerFactory
 import tw.xinshou.core.mongodb.CacheDbManager
 import tw.xinshou.core.mongodb.ICacheDb
+import tw.xinshou.core.mongodb.getTyped
 import tw.xinshou.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.ConcurrentHashMap
 
@@ -241,7 +242,7 @@ class AnnouncementCacheManager(pluginName: String) {
      */
     fun getAnnouncementData(type: AnnouncementType, paragraphId: String): AnnouncementData? {
         val cacheKey = "${type.name}_$paragraphId"
-        return announcementDataCache.get(cacheKey)
+        return announcementDataCache.getTyped<AnnouncementData>(cacheKey)
     }
 
     /**
