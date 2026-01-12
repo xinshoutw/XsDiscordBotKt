@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="Run_At_DevServer" type="JetRunConfigurationType">
+        <option name="MAIN_CLASS_NAME" value="tw.xinshou.core.MainKt"/>
+        <module name="XsDiscordBotKt.BotCore.main"/>
+        <option name="PROGRAM_PARAMETERS" value="--ignore-update --level DEBUG --force-renew-lang-resources"/>
+        <shortenClasspath name="MANIFEST"/>
+        <option name="WORKING_DIRECTORY" value="./DevServer"/>
+        <method v="2">
+            <option name="Gradle.BeforeRunTask" enabled="false" tasks="build" externalProjectPath="$PROJECT_DIR$"
+                    vmOptions="" scriptParameters="-PoutputPath=&quot;./DevServer&quot;"/>
+        </method>
+    </configuration>
+</component>

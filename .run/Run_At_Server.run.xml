@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="Run_At_Server" type="JetRunConfigurationType">
+        <option name="MAIN_CLASS_NAME" value="tw.xinshou.core.MainKt"/>
+        <module name="XsDiscordBotKt.BotCore.main"/>
+        <option name="PROGRAM_PARAMETERS" value="--ignore-update --level INFO --force-renew-lang-resources"/>
+        <shortenClasspath name="NONE"/>
+        <option name="WORKING_DIRECTORY" value="./Server"/>
+        <method v="2">
+            <option name="Gradle.BeforeRunTask" enabled="false" tasks="build" externalProjectPath="$PROJECT_DIR$"
+                    vmOptions="" scriptParameters="-PoutputPath=&quot;./Server&quot;"/>
+        </method>
+    </configuration>
+</component>
