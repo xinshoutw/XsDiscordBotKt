@@ -73,3 +73,6 @@ project(":Plugins:NtustManager").name = "NtustManager"
 
 include("Plugins:ChannelConverter")
 project(":Plugins:ChannelConverter").name = "ChannelConverter"
+
+include("Plugins:NtustCourse")
+project(":Plugins:NtustCourse").name = "NtustCourse"
