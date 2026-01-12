@@ -7,9 +7,9 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/buildSrc" name="buildSrc">
+              <build path="$PROJECT_DIR$/build-logic/convention" name="convention">
                 <projects>
-                  <project path="$PROJECT_DIR$/buildSrc" />
+                  <project path="$PROJECT_DIR$/build-logic/convention" />
                 </projects>
               </build>
             </builds>
@@ -43,7 +43,7 @@
             <option value="$PROJECT_DIR$/Plugins/Ticket" />
             <option value="$PROJECT_DIR$/Plugins/TicketAddons" />
             <option value="$PROJECT_DIR$/Plugins/VoiceLogger" />
-            <option value="$PROJECT_DIR$/buildSrc" />
+            <option value="$PROJECT_DIR$/build-logic/convention" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -2,6 +2,8 @@ plugins {
     `kotlin-dsl`
 }
 
+group = "tw.xinshou.buildlogic"
+
 repositories {
     gradlePluginPortal()
     mavenCentral()
@@ -16,4 +18,3 @@ dependencies {
 kotlin {
     jvmToolchain(21)
 }
-
