@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
     <configuration default="false" name="Run_At_DevServer_Offline" type="JetRunConfigurationType">
         <option name="MAIN_CLASS_NAME" value="tw.xinshou.core.MainKt"/>
-        <module name="XsDiscordBotKt.BotCore.main"/>
+        <module name="XsDiscordBotKt.Core.main"/>
         <option name="PROGRAM_PARAMETERS"
                 value="--ignore-update --level DEBUG --force-renew-lang-resources --no-online"/>
         <shortenClasspath name="NONE"/>

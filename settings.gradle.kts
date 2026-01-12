@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 }
 
 include("Core")
-project(":Core").name = "BotCore"
+project(":Core").name = "Core"
 
 include(":Plugins:API:GoogleSheetAPI")
 project(":Plugins:API:GoogleSheetAPI").name = "GoogleSheetAPI"

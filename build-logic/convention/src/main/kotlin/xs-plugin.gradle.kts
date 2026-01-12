@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":BotCore"))
+    compileOnly(project(":Core"))
 }
 
 tasks.build {
