@@ -7,8 +7,8 @@
 
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("com.gradleup.shadow")
+    kotlin("plugin.serialization") apply false
+    id("com.gradleup.shadow") apply false
 }
 
 java {
@@ -58,8 +58,10 @@ dependencies {
 defaultTasks("build")  // Allow to use `./gradlew` to auto build a full project
 
 extra["outputPath"] = if (project.hasProperty("outputPath")) {
+    println("outputPath set to: ${project.property("outputPath")}")
     file(project.property("outputPath") as String)
 } else {
+    println("outputPath not set, using default: ${rootProject.projectDir}/DevServer")
     file("${rootProject.projectDir}/DevServer")
 }
 
@@ -89,6 +91,6 @@ val updateReadmeVersion by tasks.registering {
 
 // Hook updateReadmeVersion into common development tasks
 // This ensures README version is updated during normal development workflow
-tasks.matching { it.name in listOf("processResources", "compileKotlin", "assemble") }.configureEach {
+tasks.named("build") {
     dependsOn(updateReadmeVersion)
 }
