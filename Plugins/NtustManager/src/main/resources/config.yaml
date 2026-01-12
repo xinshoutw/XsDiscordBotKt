@@ -1,4 +1,4 @@
-enable: false
+enabled: false
 
 fetch-interval: 3600
 api-keys:
