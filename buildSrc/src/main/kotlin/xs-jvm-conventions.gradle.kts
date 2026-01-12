@@ -6,6 +6,12 @@ plugins {
     kotlin("jvm")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 val author = rootProject.findProperty("author")?.toString() ?: error("author missing")
 val major = rootProject.findProperty("version.major")?.toString() ?: error("version.major missing").toInt()
 val minor = rootProject.findProperty("version.minor")?.toString() ?: error("version.minor missing").toInt()
