@@ -13,6 +13,7 @@ import tw.xinshou.core.logger.InteractionLogger
 import tw.xinshou.core.plugin.yaml.processMemberCachePolicy
 import tw.xinshou.core.util.Arguments
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 /**
  * Main loader for the bot application, handles bot initialization, and management of events and plugins.
@@ -40,25 +41,36 @@ object BotLoader {
             return
         }
 
+        val token = Arguments.botToken ?: token
+        if (token == "ODgAAAAAAAAAAADkx.GBBBBI.V6CCCCCCCCCCCCCCCCCCCCCCCC9mfsU") {
+            logger.error("Bot token is not set, exiting.")
+            exitProcess(1)
+        }
+
         PluginLoader.preLoad()
-        jdaBot = JDABuilder.createDefault(Arguments.botToken ?: token)
-            .setBulkDeleteSplittingEnabled(false)
-            .disableCache(
-                CacheFlag.ACTIVITY,
-                CacheFlag.VOICE_STATE,
-                CacheFlag.CLIENT_STATUS,
-                CacheFlag.ONLINE_STATUS,
-            )
-            .setEnabledIntents(
-                GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.SCHEDULED_EVENTS,
-                GatewayIntent.GUILD_EXPRESSIONS,
-            )
-            .setMemberCachePolicy(processMemberCachePolicy(PluginLoader.memberCachePolicies))
-            .enableCache(PluginLoader.cacheFlags)
-            .enableIntents(PluginLoader.intents)
-            .build()
-            .awaitReady()
+        try {
+            jdaBot = JDABuilder.createDefault(Arguments.botToken ?: token)
+                .setBulkDeleteSplittingEnabled(false)
+                .disableCache(
+                    CacheFlag.ACTIVITY,
+                    CacheFlag.VOICE_STATE,
+                    CacheFlag.CLIENT_STATUS,
+                    CacheFlag.ONLINE_STATUS,
+                )
+                .setEnabledIntents(
+                    GatewayIntent.GUILD_MEMBERS,
+                    GatewayIntent.SCHEDULED_EVENTS,
+                    GatewayIntent.GUILD_EXPRESSIONS,
+                )
+                .setMemberCachePolicy(processMemberCachePolicy(PluginLoader.memberCachePolicies))
+                .enableCache(PluginLoader.cacheFlags)
+                .enableIntents(PluginLoader.intents)
+                .build()
+                .awaitReady()
+        } catch (e: Exception) {
+            logger.error("Failed to start bot:", e)
+            exitProcess(2)
+        }
 
         bot = jdaBot.selfUser
 
