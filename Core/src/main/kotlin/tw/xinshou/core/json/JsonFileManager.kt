@@ -77,6 +77,10 @@ class JsonFileManager<T>(
     fun save() {
         ensureNotDeleted()
         try {
+            if (file.parentFile?.exists() == false) {
+                file.parentFile?.mkdirs()
+            }
+
             logger.debug("Saving file: {}", file.absolutePath)
             file.writeText(adapter.toJson(data))
         } catch (e: IOException) {
