@@ -9,7 +9,10 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    versionCatalogs { create("libs") {} }
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+    }
 }
 
 include("Core")
