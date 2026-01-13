@@ -23,7 +23,9 @@ internal object Event : PluginEventConfigure<ConfigSerializer>(false, ConfigSeri
 
         logger.info("Shutting down NTUST announcement monitoring system...")
 
-        NtustManager.shutdown()
+        if (config.enabled) {
+            NtustManager.shutdown()
+        }
 
         logger.info("NtustManager unloaded")
     }
