@@ -57,9 +57,6 @@ project(":Plugins:Ticket").name = "Ticket"
 include("Plugins:AutoRole")
 project(":Plugins:AutoRole").name = "AutoRole"
 
-include("Plugins:RentSystem")
-project(":Plugins:RentSystem").name = "RentSystem"
-
 include("Plugins:MusicPlayer")
 project(":Plugins:MusicPlayer").name = "MusicPlayer"
 

@@ -1,8 +1,0 @@
-author: ${author}
-name: ${name}
-coreApi: ${coreApi}
-version: ${version}
-
-### =============================================== ###
-
-main: "tw.xinshou.plugin.rentsystem.Event"
