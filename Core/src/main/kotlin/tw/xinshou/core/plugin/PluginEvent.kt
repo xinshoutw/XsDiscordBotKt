@@ -53,12 +53,16 @@ abstract class PluginEventConfigure<C : Any>(
     lateinit var config: C
 
     override fun load() {
+        super.load()
+
         config = fileGetter.readOrExportInputStream("config.yaml").use { inputStream ->
             Yaml().decodeFromStream(configSerializer, inputStream)
         }
     }
 
     override fun reload() {
+        super.reload()
+
         config = fileGetter.readOrExportInputStream("config.yaml").use { inputStream ->
             Yaml().decodeFromStream(configSerializer, inputStream)
         }
