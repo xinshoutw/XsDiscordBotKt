@@ -13,7 +13,6 @@ import tw.xinshou.core.logger.InteractionLogger
 import tw.xinshou.core.plugin.yaml.processMemberCachePolicy
 import tw.xinshou.core.util.Arguments
 import java.nio.file.Paths
-import kotlin.system.exitProcess
 
 /**
  * Main loader for the bot application, handles bot initialization, and management of events and plugins.
@@ -44,7 +43,7 @@ object BotLoader {
         val token = Arguments.botToken ?: token
         if (token == "ODgAAAAAAAAAAADkx.GBBBBI.V6CCCCCCCCCCCCCCCCCCCCCCCC9mfsU") {
             logger.error("Bot token is not set, exiting.")
-            exitProcess(1)
+            throw IllegalStateException("Bot token is not set.")
         }
 
         PluginLoader.preLoad()
@@ -69,7 +68,7 @@ object BotLoader {
                 .awaitReady()
         } catch (e: Exception) {
             logger.error("Failed to start bot:", e)
-            exitProcess(2)
+            throw e
         }
 
         bot = jdaBot.selfUser
@@ -82,7 +81,7 @@ object BotLoader {
 
             // printout PluginLoader.guildCommands for debug
             if (PluginLoader.guildCommands.isNotEmpty()) {
-                logger.info("Guild Commands: {}", PluginLoader.guildCommands.joinToString(", ") { it.name })
+                logger.debug("Guild Commands: {}", PluginLoader.guildCommands.joinToString(", ") { it.name })
             }
 
             // Register Plugins' Event Listener
