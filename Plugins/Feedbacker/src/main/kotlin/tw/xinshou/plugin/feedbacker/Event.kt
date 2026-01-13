@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.core.localizations.StringLocalizer
 import tw.xinshou.core.plugin.PluginEventConfigure
 import tw.xinshou.core.util.GlobalUtil
@@ -20,12 +19,12 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun load() {
         super.load()
 
-        globalLocale = DiscordLocale.from(config.language)
-
-        jdaBot.getGuildById(config.guildId)?.let { guild ->
-            Feedbacker.guild = guild
-            Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
+        if (!config.enabled) {
+            logger.warn("Feedbacker is disabled.")
+            return
         }
+
+        globalLocale = DiscordLocale.from(config.language)
 
         localizer = StringLocalizer(
             pluginDirectory,
@@ -37,33 +36,44 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun reload() {
         super.reload()
 
-        globalLocale = DiscordLocale.from(config.language)
-
-        jdaBot.getGuildById(config.guildId)?.let { guild ->
-            Feedbacker.guild = guild
-            Feedbacker.submitChannel = guild.getTextChannelById(config.submitChannelId)!!
+        if (!config.enabled) {
+            logger.warn("Feedbacker is disabled.")
+            return
         }
+
+        globalLocale = DiscordLocale.from(config.language)
 
         localizer = StringLocalizer(
             pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
         )
+
+        Feedbacker.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands(localizer)
+    override fun guildCommands(): Array<CommandData> {
+        return if (!config.enabled) {
+            emptyArray()
+        } else {
+            guildCommands(localizer)
+        }
+    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkCommandString(event, "feedbacker")) return
         Feedbacker.onSlashCommandInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         Feedbacker.onButtonInteraction(event)
     }
 
     override fun onModalInteraction(event: ModalInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
         Feedbacker.onModalInteraction(event)
     }

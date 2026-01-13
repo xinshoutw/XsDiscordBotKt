@@ -14,6 +14,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun load() {
         super.load()
 
+        if (!config.enabled) {
+            logger.warn("IntervalPusher is disabled.")
+            return
+        }
+
         for (listener in config.listeners) {
             val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
             pusher.start()
@@ -21,6 +26,23 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         }
 
         logger.info("IntervalPusher loaded.")
+    }
+
+    override fun reload() {
+        super.reload()
+
+        if (!config.enabled) {
+            logger.warn("IntervalPusher is disabled.")
+            return
+        }
+
+        pushers.forEach { it.stop() }
+
+        for (listener in config.listeners) {
+            val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
+            pusher.start()
+            pushers.add(pusher)
+        }
     }
 
     override fun unload() {

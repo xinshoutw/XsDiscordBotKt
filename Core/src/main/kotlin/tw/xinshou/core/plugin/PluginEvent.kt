@@ -50,8 +50,16 @@ abstract class PluginEventConfigure<C : Any>(
     listener: Boolean,
     private val configSerializer: KSerializer<C>
 ) : PluginEvent(listener) {
-    val config: C by lazy {
-        fileGetter.readOrExportInputStream("config.yaml").use { inputStream ->
+    lateinit var config: C
+
+    override fun load() {
+        config = fileGetter.readOrExportInputStream("config.yaml").use { inputStream ->
+            Yaml().decodeFromStream(configSerializer, inputStream)
+        }
+    }
+
+    override fun reload() {
+        config = fileGetter.readOrExportInputStream("config.yaml").use { inputStream ->
             Yaml().decodeFromStream(configSerializer, inputStream)
         }
     }

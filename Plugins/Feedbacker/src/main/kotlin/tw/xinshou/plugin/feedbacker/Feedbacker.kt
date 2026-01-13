@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.components.ActionRow
 import net.dv8tion.jda.api.interactions.components.buttons.Button
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
+import tw.xinshou.core.base.BotLoader.jdaBot
 import tw.xinshou.core.builtin.messagecreator.MessageCreator
 import tw.xinshou.core.builtin.messagecreator.ModalCreator
 import tw.xinshou.core.builtin.placeholder.Placeholder
@@ -31,13 +32,13 @@ internal object Feedbacker {
         )
     )
 
-    private val messageCreator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
 
-    private val modalCreator = ModalCreator(
+    private var modalCreator = ModalCreator(
         langDirFile = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
@@ -45,6 +46,30 @@ internal object Feedbacker {
 
     lateinit var guild: Guild
     lateinit var submitChannel: TextChannel
+
+    init {
+        jdaBot.getGuildById(config.guildId)?.let {
+            guild = it
+            submitChannel = it.getTextChannelById(config.submitChannelId)!!
+        }
+    }
+
+    fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager,
+        )
+        modalCreator = ModalCreator(
+            langDirFile = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager,
+        )
+        jdaBot.getGuildById(config.guildId)?.let {
+            guild = it
+            submitChannel = it.getTextChannelById(config.submitChannelId)!!
+        }
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (!event.isFromGuild || event.guild!!.idLong != config.guildId) return

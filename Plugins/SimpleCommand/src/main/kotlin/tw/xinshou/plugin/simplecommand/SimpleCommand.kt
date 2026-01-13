@@ -6,10 +6,17 @@ import tw.xinshou.core.builtin.messagecreator.MessageCreator
 import tw.xinshou.plugin.simplecommand.Event.pluginDirectory
 
 internal object SimpleCommand {
-    private val creator = MessageCreator(
+    private var creator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        creator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         when (event.name) {

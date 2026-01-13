@@ -34,11 +34,19 @@ internal object VoiceLogger {
         )
     )
 
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager,
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
         getSettingMenu(
@@ -178,7 +186,7 @@ internal object VoiceLogger {
     private fun createSelButton(event: ButtonInteractionEvent, key: String) {
         event.editMessage(
             MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     key,
                     event.userLocale,
                     Placeholder.get(event)
@@ -211,7 +219,7 @@ internal object VoiceLogger {
         // reply
         event.editMessage(
             MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     "delete",
                     event.userLocale,
                     Placeholder.get(event)
@@ -342,7 +350,7 @@ internal object VoiceLogger {
     }
 
     private fun sendListenChannel(key: String, guild: Guild, listenChannelId: List<Long>, substitutor: Substitutor) {
-        val message = creator.getCreateBuilder(key, guild.locale, substitutor).build()
+        val message = messageCreator.getCreateBuilder(key, guild.locale, substitutor).build()
 
         listenChannelId.forEach {
             val listenChannel = guild.getGuildChannelById(it) ?: return
@@ -422,7 +430,7 @@ internal object VoiceLogger {
 
 
         return MessageEditData.fromCreateData(
-            creator.getCreateBuilder(
+            messageCreator.getCreateBuilder(
                 "voice-logger@setting",
                 locale,
                 substitutor

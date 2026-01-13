@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigSerializer(
-    val enabled: Boolean,
+    val enabled: Boolean = false,
 
     @SerialName("command_message_acknowledges")
     val commandMessageAcknowledges: CommandMessageAcknowledges,

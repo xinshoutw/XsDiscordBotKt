@@ -11,10 +11,17 @@ import tw.xinshou.plugin.economy.Event.pluginDirectory
 import tw.xinshou.plugin.economy.Event.storageManager
 
 internal object MessageReplier {
-    private val creator = MessageCreator(
+    private var creator = MessageCreator(
         pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        creator = MessageCreator(
+            pluginDirectory,
+            DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun getNoPermissionMessageData(
         locale: DiscordLocale,

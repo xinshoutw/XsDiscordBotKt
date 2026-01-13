@@ -49,7 +49,7 @@ internal object Giveaway {
     )
 
     // Message creator for internationalized messages
-    private val messageCreator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
@@ -58,6 +58,14 @@ internal object Giveaway {
     // Storage for active giveaways and temporary configurations
     private val activeGiveaways = ConcurrentHashMap<String, GiveawayInstance>()
     private val tempConfigs = ConcurrentHashMap<String, GiveawayConfig>()
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager,
+        )
+    }
 
     /**
      * Handle the /create-giveaway slash command
@@ -77,9 +85,7 @@ internal object Giveaway {
         // Create the initial configuration interface
         val message = createConfigurationMessage(tempConfigId, GiveawayConfig())
 
-        event.reply(message.build())
-            .setEphemeral(true)
-            .queue()
+        event.hook.editOriginal(MessageEditBuilder.fromCreateData(message.build()).build()).queue()
     }
 
     /**
@@ -658,21 +664,21 @@ internal object Giveaway {
             ActionRow.of(
                 TextInput.create("end_time", "結束時間 (優先級最高)", TextInputStyle.SHORT)
                     .setPlaceholder("格式: 2024-12-31 23:59 或留空")
-                    .setValue(config.endTime?.toString() ?: "")
+                    .setValue(config.endTime?.toString())
                     .setRequired(false)
                     .build()
             ),
             ActionRow.of(
                 TextInput.create("start_time", "開始時間", TextInputStyle.SHORT)
                     .setPlaceholder("格式: 2024-12-31 12:00 或留空")
-                    .setValue(config.startTime?.toString() ?: "")
+                    .setValue(config.startTime?.toString())
                     .setRequired(false)
                     .build()
             ),
             ActionRow.of(
                 TextInput.create("duration", "持續時間 (秒)", TextInputStyle.SHORT)
                     .setPlaceholder("例如: 3600 (1小時) 或留空")
-                    .setValue(config.duration?.toString() ?: "")
+                    .setValue(config.duration?.toString())
                     .setRequired(false)
                     .build()
             )

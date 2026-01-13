@@ -49,16 +49,30 @@ internal object Ticket {
             "btn_index" to FieldType.STRING,
         )
     )
-    val messageCreator = MessageCreator(
+    var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager
     )
-    val modalCreator = ModalCreator(
+    var modalCreator = ModalCreator(
         langDirFile = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager
+        )
+
+        modalCreator = ModalCreator(
+            langDirFile = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         StepManager.onSlashCommandInteraction(event)

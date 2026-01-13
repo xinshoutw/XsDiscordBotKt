@@ -29,6 +29,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun load() {
         super.load()
 
+        if (!config.enabled) {
+            logger.warn("Economy is disabled.")
+            return
+        }
+
         when (MODE) {
             Mode.Json -> {
                 val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
@@ -66,6 +71,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun reload() {
         super.reload()
 
+        if (!config.enabled) {
+            logger.warn("Economy is disabled.")
+            return
+        }
+
         when (MODE) {
             Mode.Json -> {
                 val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
@@ -88,16 +98,30 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
         )
+
+        storageManager.init()
+        storageManager.sortMoneyBoard()
+        storageManager.sortCostBoard()
+
+        MessageReplier.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands(localizer)
+    override fun guildCommands(): Array<CommandData> {
+        return if (!config.enabled) {
+            emptyArray()
+        } else {
+            guildCommands(localizer)
+        }
+    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
         Economy.onSlashCommandInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         Economy.onButtonInteraction(event)
     }

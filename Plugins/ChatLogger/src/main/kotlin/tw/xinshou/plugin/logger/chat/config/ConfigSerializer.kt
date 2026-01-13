@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigSerializer(
+    val enabled: Boolean = false,
     @SerialName("log_all")
     val logAll: Boolean = true,
 )

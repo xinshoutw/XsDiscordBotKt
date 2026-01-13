@@ -61,8 +61,14 @@ object NtustManager {
 //        LANGUAGE_CENTER_FRESHMAN_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
 //        LANGUAGE_CENTER_ENGLISH_WORDS_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
 //        LANGUAGE_CENTER_EXTERNAL_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
+    }
 
-        startSystem()
+    /**
+     * Starts the announcement monitoring system
+     */
+    internal fun startSystem() {
+        scheduler.startScheduler()
+        logger.info("NTUST announcement monitoring system started")
     }
 
     /**
@@ -86,14 +92,6 @@ object NtustManager {
         scheduler = AnnouncementScheduler(cacheManager, geminiApiService, ::handleNewAnnouncement)
 
         logger.info("All components initialized successfully")
-    }
-
-    /**
-     * Starts the announcement monitoring system
-     */
-    private fun startSystem() {
-        scheduler.startScheduler()
-        logger.info("NTUST announcement monitoring system started")
     }
 
     /**

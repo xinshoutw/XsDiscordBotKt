@@ -18,17 +18,17 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
 
     override fun load() {
         super.load()
+        1
+        if (!config.enabled) {
+            logger.warn("MusicPlayer is disabled.")
+            return
+        }
 
         localizer = StringLocalizer(
             pluginDirFile = pluginDirectory,
             defaultLocale = DiscordLocale.ENGLISH_US,
             clazzSerializer = CmdFileSerializer::class,
         )
-
-        if (!config.enabled) {
-            logger.warn("Plugin is disabled in configuration. Enable it by setting 'enabled: true' in config.yaml")
-            return
-        }
 
         config.validate()
         logger.info("MusicPlayer plugin loaded successfully")
@@ -46,16 +46,31 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun reload() {
         super.reload()
 
+        if (!config.enabled) {
+            logger.warn("MusicPlayer is disabled.")
+            return
+        }
+        config.validate()
+
         localizer = StringLocalizer(
             pluginDirFile = pluginDirectory,
             defaultLocale = DiscordLocale.ENGLISH_US,
             clazzSerializer = CmdFileSerializer::class,
         )
+
+        MusicPlayer.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands(localizer)
+    override fun guildCommands(): Array<CommandData> {
+        return if (!config.enabled) {
+            emptyArray()
+        } else {
+            guildCommands(localizer)
+        }
+    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
 
         try {
@@ -79,6 +94,7 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
 
         try {
@@ -102,6 +118,7 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     }
 
     override fun onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent) {
+        if (!config.enabled) return
         try {
             logger.debug("Processing auto-complete for command: ${event.name}, option: ${event.focusedOption.name}")
 

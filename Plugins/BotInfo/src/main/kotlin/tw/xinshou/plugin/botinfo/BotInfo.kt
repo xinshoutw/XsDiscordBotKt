@@ -8,10 +8,17 @@ import tw.xinshou.core.builtin.placeholder.Placeholder
 import tw.xinshou.plugin.botinfo.Event.pluginDirectory
 
 internal object BotInfo {
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirectory,
+            DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val memberCounts = event.jda.guilds.sumOf { it.memberCount }
@@ -21,7 +28,7 @@ internal object BotInfo {
 
         event.hook.editOriginal(
             MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     "bot-info",
                     event.userLocale
                 ).build()

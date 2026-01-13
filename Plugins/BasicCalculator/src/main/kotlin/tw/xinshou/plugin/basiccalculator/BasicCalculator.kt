@@ -12,10 +12,17 @@ import java.util.*
 
 
 internal object BasicCalculator {
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirectory,
+            DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val formula: String = event.getOption("formula")!!.asString.trim().trimEnd('?', '=', ' ')
@@ -25,7 +32,7 @@ internal object BasicCalculator {
         } catch (e: IllegalArgumentException) {
             event.hook.editOriginal(
                 MessageEditData.fromCreateData(
-                    creator.getCreateBuilder(
+                    messageCreator.getCreateBuilder(
                         "error",
                         event.userLocale,
                         (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(
@@ -39,7 +46,7 @@ internal object BasicCalculator {
         }
 
         event.channel.sendMessage(
-            creator.getCreateBuilder(
+            messageCreator.getCreateBuilder(
                 "basic-calculate",
                 event.userLocale,
                 (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(

@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigSerializer(
+    val enabled: Boolean = false,
+
     @SerialName("guild_id")
     val guildId: String,
 

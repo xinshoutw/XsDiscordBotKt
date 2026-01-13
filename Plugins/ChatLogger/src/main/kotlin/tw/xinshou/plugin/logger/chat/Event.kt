@@ -27,6 +27,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun load() {
         super.load()
 
+        if (!config.enabled) {
+            logger.warn("ChatLogger is disabled.")
+            return
+        }
+
         registerLocalizer = StringLocalizer(
             pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
@@ -52,6 +57,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     override fun reload() {
         super.reload()
 
+        if (!config.enabled) {
+            logger.warn("ChatLogger is disabled.")
+            return
+        }
+
         registerLocalizer = StringLocalizer(
             pluginDirectory,
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
@@ -65,42 +75,57 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             clazzSerializer = PlaceholderSerializer::class,
             fileName = "placeholder.yaml"
         )
+
+        ChatLogger.reload()
     }
 
 
-    override fun guildCommands(): Array<CommandData> = guildCommands(registerLocalizer)
+    override fun guildCommands(): Array<CommandData> {
+        return if (!config.enabled) {
+            emptyArray()
+        } else {
+            guildCommands(registerLocalizer)
+        }
+    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkCommandString(event, "chat-logger setting")) return
         ChatLogger.onSlashCommandInteraction(event)
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         ChatLogger.onEntitySelectInteraction(event)
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
+        if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         ChatLogger.onButtonInteraction(event)
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
+        if (!config.enabled) return
         if (!event.isFromGuild || event.author == jdaBot.selfUser) return
         ChatLogger.onMessageReceived(event)
     }
 
     override fun onMessageUpdate(event: MessageUpdateEvent) {
+        if (!config.enabled) return
         if (!event.isFromGuild || event.author == jdaBot.selfUser) return
         ChatLogger.onMessageUpdate(event)
     }
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
+        if (!config.enabled) return
         if (!event.isFromGuild) return
         ChatLogger.onMessageDelete(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
+        if (!config.enabled) return
         ChatLogger.onGuildLeave(event)
     }
 }

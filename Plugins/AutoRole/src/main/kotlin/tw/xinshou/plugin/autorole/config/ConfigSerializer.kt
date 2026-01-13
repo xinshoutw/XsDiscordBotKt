@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigSerializer(
+    val enabled: Boolean = false,
     val guilds: List<GuildConfigSerializer>,
 ) {
     @Serializable

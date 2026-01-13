@@ -23,6 +23,7 @@
 # 步驟 5. 複製 「您的用戶端 ID」與「您的用戶端密碼」至下方兩欄
 # 步驟 6. 點擊 PUBLISH_APP https://reurl.cc/KX7g9n
 
+enabled: false
 client_id: "xxx.xxx.com"
 client_secret: "xxx-xxx-xxx"
 port: 8888  # default

@@ -1,4 +1,4 @@
-enabled: true  # 啟用插件
+enabled: false  # 啟用插件
 
 command_message_acknowledges:
   join: false

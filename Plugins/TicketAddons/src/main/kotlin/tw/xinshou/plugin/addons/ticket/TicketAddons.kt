@@ -9,10 +9,17 @@ import tw.xinshou.plugin.addons.ticket.Event.pluginDirectory
 import java.util.concurrent.TimeUnit
 
 internal object TicketAddons {
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirectory,
+            DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun onChannelCreate(event: ChannelCreateEvent) {
         if (!event.isFromGuild && event.guild.id != config.guildId) return
@@ -23,7 +30,7 @@ internal object TicketAddons {
 
             val delay: Long = config.delayMillis
             event.channel.asTextChannel().sendMessage(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     key = "not-online",
                     locale = DiscordLocale.CHINESE_TAIWAN
                 ).build()

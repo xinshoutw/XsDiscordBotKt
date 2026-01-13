@@ -6,8 +6,8 @@ import java.time.Instant
  * Represents the configuration for a giveaway
  */
 data class GiveawayConfig(
-    val giveawayName: String = "",
-    val prizeName: String = "",
+    val giveawayName: String = "未設定",
+    val prizeName: String = "未設定",
     val winnerCount: Int = 1,
     val startTime: Instant? = null,
     val endTime: Instant? = null,

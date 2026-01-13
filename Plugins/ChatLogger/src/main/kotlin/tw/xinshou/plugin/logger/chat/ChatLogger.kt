@@ -36,11 +36,19 @@ internal object ChatLogger {
         )
     )
 
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            componentIdManager = componentIdManager,
+        )
+    }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
         getSettingMenu(
@@ -221,7 +229,7 @@ internal object ChatLogger {
     fun createSelButton(event: ButtonInteractionEvent, key: String) {
         event.editMessage(
             MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     key,
                     event.userLocale,
                     Placeholder.get(event)
@@ -259,7 +267,7 @@ internal object ChatLogger {
         // reply
         event.editMessage(
             MessageEditData.fromCreateData(
-                creator.getCreateBuilder(
+                messageCreator.getCreateBuilder(
                     "delete",
                     event.userLocale,
                     Placeholder.get(event)
@@ -269,7 +277,7 @@ internal object ChatLogger {
     }
 
     private fun sendListenChannel(key: String, guild: Guild, listenChannelId: List<Long>, substitutor: Substitutor) {
-        val message = creator.getCreateBuilder(key, guild.locale, substitutor).build()
+        val message = messageCreator.getCreateBuilder(key, guild.locale, substitutor).build()
 
         listenChannelId.forEach {
             val listenChannel = guild.getGuildChannelById(it)
@@ -358,7 +366,7 @@ internal object ChatLogger {
         }
 
         return MessageEditData.fromCreateData(
-            creator.getCreateBuilder(
+            messageCreator.getCreateBuilder(
                 "chat-logger@setting",
                 locale,
                 substitutor

@@ -20,10 +20,17 @@ internal object DynamicVoiceChannel {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val cacheDbManager: CacheDbManager = CacheDbManager(Event.pluginName)
     private val generatedCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
-    private val creator = MessageCreator(
+    private var messageCreator = MessageCreator(
         pluginDirectory,
         DiscordLocale.CHINESE_TAIWAN
     )
+
+    internal fun reload() {
+        messageCreator = MessageCreator(
+            pluginDirectory,
+            DiscordLocale.CHINESE_TAIWAN
+        )
+    }
 
     fun bind(event: SlashCommandInteractionEvent) {
         val locale = event.userLocale
@@ -35,14 +42,14 @@ internal object DynamicVoiceChannel {
 
         if (category == null) {
             event.hook.editOriginal(
-                creator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
+                messageCreator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
             ).queue()
             return
         }
 
         JsonManager.addData(guild.idLong, DataContainer(category.idLong, channel.name, formatName1, formatName2))
         event.hook.editOriginal(
-            creator.getEditBuilder("bind-success", locale, Placeholder.get(event)).build()
+            messageCreator.getEditBuilder("bind-success", locale, Placeholder.get(event)).build()
         ).queue()
     }
 
@@ -54,7 +61,7 @@ internal object DynamicVoiceChannel {
 
         if (category == null) {
             event.hook.editOriginal(
-                creator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
+                messageCreator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
             ).queue()
             return
         }
@@ -62,7 +69,7 @@ internal object DynamicVoiceChannel {
         val status = JsonManager.removeData(guild.idLong, category.idLong, channel.name)
 
         event.hook.editOriginal(
-            creator.getEditBuilder(
+            messageCreator.getEditBuilder(
                 if (status) "unbind-fail" else "unbind-success",
                 locale,
                 Placeholder.get(event)
@@ -89,8 +96,7 @@ internal object DynamicVoiceChannel {
         val channelLeft = event.channelLeft
 
         if (channelJoin != null && channelJoin.members.size == 1) {
-            val data = JsonManager.getData(channelJoin.parentCategoryIdLong, channelJoin.name)
-            if (data == null) return
+            val data = JsonManager.getData(channelJoin.parentCategoryIdLong, channelJoin.name) ?: return
 
             firstJoin(event, channelJoin.asVoiceChannel(), data)
         }
