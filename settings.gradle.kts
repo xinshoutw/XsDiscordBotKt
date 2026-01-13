@@ -18,6 +18,9 @@ dependencyResolutionManagement {
 include("Core")
 project(":Core").name = "Core"
 
+include("Plugins:_Example")
+project(":Plugins:_Example").name = "_Example"
+
 include(":Plugins:API:GoogleSheetAPI")
 project(":Plugins:API:GoogleSheetAPI").name = "GoogleSheetAPI"
 

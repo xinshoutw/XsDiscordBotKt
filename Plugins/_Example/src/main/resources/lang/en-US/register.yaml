@@ -1,0 +1,10 @@
+example:
+  name: "example-command"
+  description: "This is an example command"
+  options:
+    option1:
+      name: "option1"
+      description: "This is a required option"
+    option2:
+      name: "option2"
+      description: "This is an optional option"

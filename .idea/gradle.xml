@@ -41,6 +41,7 @@
             <option value="$PROJECT_DIR$/Plugins/Ticket" />
             <option value="$PROJECT_DIR$/Plugins/TicketAddons" />
             <option value="$PROJECT_DIR$/Plugins/VoiceLogger" />
+            <option value="$PROJECT_DIR$/Plugins/_Example" />
             <option value="$PROJECT_DIR$/build-logic/convention" />
           </set>
         </option>

@@ -1,0 +1,10 @@
+example:
+  name: "範例指令"
+  description: "這是一個範例指令"
+  options:
+    option1:
+      name: "選項1"
+      description: "這是一個必填選項"
+    option2:
+      name: "選項2"
+      description: "這是一個可選選項"
