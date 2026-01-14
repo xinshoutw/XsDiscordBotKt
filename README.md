@@ -180,7 +180,7 @@ XsDiscordBotKt 是一個採用**雲原生架構**設計的 Discord 伺服器管�
 
 ```bash
 # 從 GitHub Releases 下載最新版本
-wget https://github.com/xinshoutw/XsDiscordBotKt/releases/download/v3.2.0/BotPack-v3.2.0.zip
+wget https://github.com/xinshoutw/XsDiscordBotKt/releases/download/v3.3.0/BotPack-v3.3.0.zip
 ```
 
 #### 方法二：手動構建
