@@ -11,9 +11,10 @@ import java.util.concurrent.TimeUnit
 internal object StatusChanger {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private var threadPool = Executors.newSingleThreadScheduledExecutor()
-    private val botStatusList = SettingsLoader.config.builtinSettings?.statusChangerSetting?.activityMessages
+    private var botStatusList = SettingsLoader.config.builtinSettings?.statusChangerSetting?.activityMessages
 
     fun run() {
+        botStatusList = SettingsLoader.config.builtinSettings?.statusChangerSetting?.activityMessages
         if (botStatusList.isNullOrEmpty()) {
             logger.info("No bot status messages to display.")
             return
