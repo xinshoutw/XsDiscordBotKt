@@ -1,11 +1,11 @@
-package tw.xinshou.plugin._example
+package tw.xinshou.discord.plugin._example
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.core.builtin.messagecreator.MessageCreator
-import tw.xinshou.core.builtin.placeholder.Placeholder
-import tw.xinshou.plugin._example.Event.pluginDirectory
+import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.discord.core.builtin.placeholder.Placeholder
+import tw.xinshou.discord.plugin._example.Event.pluginDirectory
 
 
 internal object _Example {

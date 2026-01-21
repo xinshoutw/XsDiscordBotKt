@@ -2,10 +2,10 @@
 <configuration>
     <conversionRule
             conversionWord="highlight2"
-            converterClass="tw.xinshou.core.logger.HighlightingCompositeConverter"
+            converterClass="tw.xinshou.discord.core.logger.HighlightingCompositeConverter"
     />
 
-    <appender name="CONSOLE" class="tw.xinshou.core.logger.JLineAppender"/>
+    <appender name="CONSOLE" class="tw.xinshou.discord.core.logger.JLineAppender"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <encoder>
             <pattern>[%d{MM-dd HH:mm:ss.SSS}] %5level | %-65(%logger{50}.%M{10}:%line{4}) -> %msg%n</pattern>

@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.api.google.sheet.Event"
+main: "tw.xinshou.discord.plugin.api.google.sheet.Event"

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
     <configuration default="false" name="Run_At_Server" type="JetRunConfigurationType">
-        <option name="MAIN_CLASS_NAME" value="tw.xinshou.core.MainKt"/>
+        <option name="MAIN_CLASS_NAME" value="tw.xinshou.discord.core.MainKt"/>
         <module name="XsDiscordBotKt.Core.main"/>
         <option name="PROGRAM_PARAMETERS" value="--ignore-update --level INFO --force-renew-lang-resources"/>
         <shortenClasspath name="NONE"/>

@@ -1,14 +1,14 @@
-package tw.xinshou.plugin._example
+package tw.xinshou.discord.plugin._example
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.core.localizations.StringLocalizer
-import tw.xinshou.core.plugin.PluginEventConfigure
-import tw.xinshou.core.util.GlobalUtil
-import tw.xinshou.plugin._example.command.CmdFileSerializer
-import tw.xinshou.plugin._example.command.guildCommands
-import tw.xinshou.plugin._example.config.ConfigSerializer
+import tw.xinshou.discord.core.localizations.StringLocalizer
+import tw.xinshou.discord.core.plugin.PluginEventConfigure
+import tw.xinshou.discord.core.util.GlobalUtil
+import tw.xinshou.discord.plugin._example.command.CmdFileSerializer
+import tw.xinshou.discord.plugin._example.command.guildCommands
+import tw.xinshou.discord.plugin._example.config.ConfigSerializer
 
 
 object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {

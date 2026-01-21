@@ -1,0 +1,27 @@
+package tw.xinshou.discord.plugin.ticket.command
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import tw.xinshou.discord.core.localizations.LocalTemplate
+
+@Serializable
+internal data class CmdFileSerializer(
+    @SerialName("create_ticket")
+    val createTicket: LocalTemplate.NameDescriptionString,
+
+    @SerialName("add_ticket")
+    val addTicket: CommandMessageId,
+) {
+    @Serializable
+    internal data class CommandMessageId(
+        val name: String,
+        val description: String,
+        val options: Options
+    ) {
+        @Serializable
+        internal data class Options(
+            @SerialName("message_id")
+            val messageId: LocalTemplate.NameDescriptionString,
+        )
+    }
+}

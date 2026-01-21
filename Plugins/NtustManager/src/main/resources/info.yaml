@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.ntustmanager.Event"
+main: "tw.xinshou.discord.plugin.ntustmanager.Event"

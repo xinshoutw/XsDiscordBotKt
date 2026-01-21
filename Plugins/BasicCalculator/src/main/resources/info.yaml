@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.basiccalculator.Event"
+main: "tw.xinshou.discord.plugin.basiccalculator.Event"

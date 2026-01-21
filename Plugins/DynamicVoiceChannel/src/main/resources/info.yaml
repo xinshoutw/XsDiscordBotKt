@@ -5,7 +5,7 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.dynamicvoicechannel.Event"
+main: "tw.xinshou.discord.plugin.dynamicvoicechannel.Event"
 
 depend_plugins:
   - "SQLiteAPI"

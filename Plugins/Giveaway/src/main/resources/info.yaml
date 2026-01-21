@@ -5,5 +5,5 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.giveaway.Event"
+main: "tw.xinshou.discord.plugin.giveaway.Event"
 component_prefix: "giveaway@"

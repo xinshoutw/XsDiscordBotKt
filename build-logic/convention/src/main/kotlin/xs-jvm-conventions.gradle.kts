@@ -1,9 +1,22 @@
 import org.gradle.internal.jvm.Jvm
+import org.jetbrains.gradle.ext.packagePrefix
+import org.jetbrains.gradle.ext.settings
 import java.time.Instant
 
 plugins {
     `java-library`
     kotlin("jvm")
+    id("org.jetbrains.gradle.plugin.idea-ext")
+
+}
+
+idea {
+    module {
+        settings {
+            packagePrefix["src/main/kotlin"] = "tw.xinshou.discord"
+            packagePrefix["src/test/kotlin"] = "tw.xinshou.discord"
+        }
+    }
 }
 
 java {
@@ -31,11 +44,11 @@ val genDir = layout.buildDirectory.dir("generated/sources/version/kotlin")
 val generateVersion by tasks.registering {
     outputs.dir(genDir)
     doLast {
-        val file = genDir.get().file("tw/xinshou/common/Version.kt").asFile
+        val file = genDir.get().file("tw/xinshou/discord/common/Version.kt").asFile
         file.parentFile.mkdirs()
         file.writeText(
             """
-            package tw.xinshou.common
+            package tw.xinshou.discord.common
             object Version {
                 const val VERSION = "$verString"
                 const val CORE_API = "$coreApi"

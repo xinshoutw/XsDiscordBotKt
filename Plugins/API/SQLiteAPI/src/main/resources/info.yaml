@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.api.sqlite.Event"
+main: "tw.xinshou.discord.plugin.api.sqlite.Event"

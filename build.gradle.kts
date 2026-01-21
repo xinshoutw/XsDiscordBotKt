@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.idea.ext) apply false
 }
 
 java {

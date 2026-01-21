@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.autorole.Event"
+main: "tw.xinshou.discord.plugin.autorole.Event"

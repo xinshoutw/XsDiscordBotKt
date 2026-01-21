@@ -5,7 +5,7 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.economy.Event"
+main: "tw.xinshou.discord.plugin.economy.Event"
 component_prefix: "economy@"
 
 depend_plugins:

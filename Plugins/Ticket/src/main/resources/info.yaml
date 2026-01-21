@@ -5,5 +5,5 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.ticket.Event"
+main: "tw.xinshou.discord.plugin.ticket.Event"
 component_prefix: "ticket@"

@@ -5,6 +5,6 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.feedbacker.Event"
+main: "tw.xinshou.discord.plugin.feedbacker.Event"
 
 component_prefix: "feedbacker@"

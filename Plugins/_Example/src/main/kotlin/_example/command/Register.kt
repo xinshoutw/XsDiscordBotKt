@@ -1,10 +1,10 @@
-package tw.xinshou.plugin._example.command
+package tw.xinshou.discord.plugin._example.command
 
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.core.localizations.StringLocalizer
+import tw.xinshou.discord.core.localizations.StringLocalizer
 
 private object Keys {
     const val BASE = "example"

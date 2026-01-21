@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin._example.Event"
+main: "tw.xinshou.discord.plugin._example.Event"

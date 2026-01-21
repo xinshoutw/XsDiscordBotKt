@@ -34,7 +34,7 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveFileName.set("${project.name}-$version.jar")
     destinationDirectory.set(outputPath)
     manifest {
-        attributes("Main-Class" to "tw.xinshou.core.MainKt")
+        attributes("Main-Class" to "tw.xinshou.discord.core.MainKt")
     }
 }
 

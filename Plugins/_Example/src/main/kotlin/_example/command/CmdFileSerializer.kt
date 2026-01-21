@@ -1,7 +1,7 @@
-package tw.xinshou.plugin._example.command
+package tw.xinshou.discord.plugin._example.command
 
 import kotlinx.serialization.Serializable
-import tw.xinshou.core.localizations.LocalTemplate
+import tw.xinshou.discord.core.localizations.LocalTemplate
 
 @Serializable
 internal data class CmdFileSerializer(

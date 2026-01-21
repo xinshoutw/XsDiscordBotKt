@@ -5,4 +5,4 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.intervalpusher.Event"
+main: "tw.xinshou.discord.plugin.intervalpusher.Event"

@@ -5,7 +5,7 @@ version: ${version}
 
 ### =============================================== ###
 
-main: "tw.xinshou.plugin.musicplayer.Event"
+main: "tw.xinshou.discord.plugin.musicplayer.Event"
 
 depend_plugins:
   - "AudioAPI"

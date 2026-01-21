@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.kotlin.serialization)
     implementation(libs.shadow.gradle.plugin)
+    implementation(libs.idea.ext.gradle.plugin)
 }
 
 kotlin {
