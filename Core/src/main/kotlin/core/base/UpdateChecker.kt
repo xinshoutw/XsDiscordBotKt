@@ -2,7 +2,7 @@ package tw.xinshou.discord.core.base
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.common.Version
+import tw.xinshou.discord.common.Version
 import tw.xinshou.discord.core.logger.Color
 import tw.xinshou.discord.core.util.Arguments.ignoreVersionCheck
 import java.io.FileOutputStream
