@@ -4,5 +4,5 @@ plugins {
 
 dependencies {
     api("club.minnced:opus-java:1.1.1")
-    api("com.google.crypto.tink:tink:1.18.0")
+    api("com.google.crypto.tink:tink:1.20.0")
 }

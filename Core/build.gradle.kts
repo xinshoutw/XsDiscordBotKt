@@ -5,7 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("com.gradleup.shadow")
     id("xs-jvm-conventions")
-    id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.vanniktech.maven.publish") version "0.36.0"
     id("signing")
 }
 
@@ -21,7 +21,7 @@ signing {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+//    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
     coordinates(group.toString(), "discord-bot-core", version.toString())
 

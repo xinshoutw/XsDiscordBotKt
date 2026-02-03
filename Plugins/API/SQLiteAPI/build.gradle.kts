@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    api("org.xerial:sqlite-jdbc:3.50.3.0")
-    api("org.jetbrains.exposed:exposed-core:0.61.0")
-    api("org.jetbrains.exposed:exposed-dao:0.61.0")
-    api("org.jetbrains.exposed:exposed-jdbc:0.61.0")
+    api("org.xerial:sqlite-jdbc:3.51.1.0")
+    api("org.jetbrains.exposed:exposed-core:1.0.0")
+    api("org.jetbrains.exposed:exposed-dao:1.0.0")
+    api("org.jetbrains.exposed:exposed-jdbc:1.0.0")
 }
