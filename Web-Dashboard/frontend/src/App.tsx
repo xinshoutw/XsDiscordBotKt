@@ -5,7 +5,6 @@ import {
   FileCode2,
   LoaderCircle,
   Puzzle,
-  RefreshCcw,
   Save
 } from "lucide-react";
 
@@ -517,18 +516,22 @@ function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge variant={health?.status === "ok" ? "success" : "warning"}>
-                <CheckCircle2 className="mr-1.5 size-3.5" />
-                {health?.status === "ok" ? "Connected" : "Offline"}
-              </Badge>
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 onClick={() => void refreshAll()}
                 disabled={loading || refreshing || savingCore || savingYaml}
+                title="點擊 Connected 重新整理"
+                className="disabled:cursor-not-allowed"
               >
-                <RefreshCcw className={cn("size-4", (loading || refreshing) && "animate-spin")} />
-                重新整理
-              </Button>
+                <Badge variant={health?.status === "ok" ? "success" : "warning"}>
+                  {refreshing ? (
+                    <LoaderCircle className="mr-1.5 size-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-1.5 size-3.5" />
+                  )}
+                  {health?.status === "ok" ? "Connected" : "Offline"}
+                </Badge>
+              </button>
             </div>
           </div>
 
@@ -550,46 +553,57 @@ function App() {
               <Card className="bg-card/95 backdrop-blur">
                 <CardHeader>
                   <CardTitle>Status Changer</CardTitle>
-                  <CardDescription>使用 Type / Message / Delay 編輯，不再手動打整串分號格式。</CardDescription>
+                  <CardDescription>每列依序設定狀態類型、顯示文字與停留時間（毫秒）。</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(coreDraft?.builtins.statusMessages ?? []).map((line, index) => {
                     const entry = parseStatusLine(line);
                     return (
-                      <div key={index} className="grid gap-2 md:grid-cols-[170px_1fr_140px_auto]">
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          value={entry.type}
-                          onChange={(event) => updateStatusEntry(index, { type: event.target.value as ActivityType })}
-                        >
-                          {STATUS_TYPES.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
-                            </option>
-                          ))}
-                        </select>
+                      <div key={index} className="grid gap-2 md:grid-cols-[170px_1fr_160px_auto]">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Type</label>
+                          <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            value={entry.type}
+                            onChange={(event) => updateStatusEntry(index, { type: event.target.value as ActivityType })}
+                          >
+                            {STATUS_TYPES.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                        <Input
-                          value={entry.content}
-                          onChange={(event) => updateStatusEntry(index, { content: event.target.value })}
-                          placeholder="Status text"
-                        />
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Message</label>
+                          <Input
+                            value={entry.content}
+                            onChange={(event) => updateStatusEntry(index, { content: event.target.value })}
+                            placeholder="Status text"
+                          />
+                        </div>
 
-                        <Input
-                          type="number"
-                          min={1000}
-                          step={1000}
-                          value={entry.delayMs}
-                          onChange={(event) => updateStatusEntry(index, { delayMs: Number(event.target.value) || 1000 })}
-                        />
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Delay (ms)</label>
+                          <Input
+                            type="number"
+                            min={1000}
+                            step={1000}
+                            value={entry.delayMs}
+                            onChange={(event) => updateStatusEntry(index, { delayMs: Number(event.target.value) || 1000 })}
+                          />
+                        </div>
 
-                        <Button
-                          variant="outline"
-                          onClick={() => removeStatusMessage(index)}
-                          disabled={(coreDraft?.builtins.statusMessages.length ?? 0) <= 1}
-                        >
-                          Remove
-                        </Button>
+                        <div className="md:self-end">
+                          <Button
+                            variant="outline"
+                            onClick={() => removeStatusMessage(index)}
+                            disabled={(coreDraft?.builtins.statusMessages.length ?? 0) <= 1}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
@@ -695,102 +709,103 @@ function App() {
             </TabsContent>
 
             <TabsContent value="plugins">
-              <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.2fr)_minmax(420px,520px)]">
-                <div className="min-w-0 space-y-4">
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle>Installed Plugins</CardTitle>
-                      <CardDescription>有 `enabled` 旗標的插件會顯示即時開關。</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-3 lg:grid-cols-2">
-                      {togglePlugins.map((plugin) => {
-                        const busy = Boolean(toggleBusy[plugin.name]);
-                        return (
-                          <div
-                            key={plugin.name}
-                            className={cn(
-                              "min-w-0 rounded-lg border p-3 transition-colors",
-                              selectedPlugin?.name === plugin.name
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:bg-muted/60"
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
+              <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+                <Card className="min-w-0 bg-card/95 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle>Plugin List</CardTitle>
+                    <CardDescription>左側選擇插件；有 `enabled` 欄位的插件可即時切換。</CardDescription>
+                  </CardHeader>
+                  <CardContent className="max-h-[72vh] space-y-4 overflow-y-auto pr-1">
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Instant Toggle</p>
+                      <p className="text-xs text-muted-foreground">切換後會立即送出請求並套用。</p>
+                      <div className="space-y-2">
+                        {togglePlugins.length === 0 && (
+                          <p className="text-xs text-muted-foreground">沒有可即時切換的插件。</p>
+                        )}
+                        {togglePlugins.map((plugin) => {
+                          const busy = Boolean(toggleBusy[plugin.name]);
+                          return (
+                            <div
+                              key={plugin.name}
+                              className={cn(
+                                "rounded-lg border p-2.5 transition-colors",
+                                selectedPlugin?.name === plugin.name
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:bg-muted/60"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
                                 <button
-                                  className="w-full truncate text-left font-semibold hover:text-primary"
+                                  className="min-w-0 flex-1 truncate text-left text-sm font-semibold hover:text-primary"
                                   onClick={() => setSelectedPluginName(plugin.name)}
                                   title={plugin.name}
                                 >
                                   {plugin.name}
                                 </button>
-                                <p className="text-xs text-muted-foreground">{plugin.category}</p>
+                                <Switch
+                                  checked={plugin.enabled}
+                                  disabled={busy}
+                                  onCheckedChange={(checked) => {
+                                    void togglePluginImmediate(plugin, checked);
+                                  }}
+                                />
                               </div>
-
-                              <Switch
-                                checked={plugin.enabled}
-                                disabled={busy}
-                                onCheckedChange={(checked) => {
-                                  void togglePluginImmediate(plugin, checked);
-                                }}
-                              />
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                <Badge variant={plugin.enabled ? "success" : "secondary"}>
+                                  {plugin.enabled ? "Enabled" : "Disabled"}
+                                </Badge>
+                                <Badge variant={plugin.loaded ? "outline" : "secondary"}>
+                                  {plugin.loaded ? "Loaded" : "Not Loaded"}
+                                </Badge>
+                                {busy && <Badge variant="outline">Applying...</Badge>}
+                              </div>
                             </div>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                            <p className="mt-3 text-xs text-muted-foreground">{plugin.description}</p>
+                    <Separator />
 
-                            <div className="mt-3 flex flex-wrap gap-1.5">
-                              <Badge variant={plugin.enabled ? "success" : "secondary"}>
-                                {plugin.enabled ? "Enabled" : "Disabled"}
-                              </Badge>
-                              <Badge variant={plugin.loaded ? "outline" : "secondary"}>
-                                {plugin.loaded ? "Loaded" : "Not Loaded"}
-                              </Badge>
-                              {busy && <Badge variant="outline">Applying...</Badge>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-
-                  {fixedPlugins.length > 0 && (
-                    <Card className="bg-card/95 backdrop-blur">
-                      <CardHeader>
-                        <CardTitle>No Enabled Flag</CardTitle>
-                        <CardDescription>這些插件沒有 `enabled` 欄位，僅可查看資訊與 YAML（若存在）。</CardDescription>
-                      </CardHeader>
-                      <CardContent className="grid gap-3 lg:grid-cols-2">
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Manual-Only Plugins</p>
+                      <p className="text-xs text-muted-foreground">
+                        這些插件的設定檔沒有 `enabled` 欄位，請在右側 YAML 手動管理。
+                      </p>
+                      <div className="space-y-2">
+                        {fixedPlugins.length === 0 && (
+                          <p className="text-xs text-muted-foreground">全部插件都支援即時切換。</p>
+                        )}
                         {fixedPlugins.map((plugin) => (
                           <div
                             key={plugin.name}
                             className={cn(
-                              "min-w-0 rounded-lg border p-3 transition-colors",
+                              "rounded-lg border p-2.5 transition-colors",
                               selectedPlugin?.name === plugin.name
                                 ? "border-primary bg-primary/10"
                                 : "border-border hover:bg-muted/60"
                             )}
                           >
                             <button
-                              className="w-full truncate text-left font-semibold hover:text-primary"
+                              className="w-full truncate text-left text-sm font-semibold hover:text-primary"
                               onClick={() => setSelectedPluginName(plugin.name)}
                               title={plugin.name}
                             >
                               {plugin.name}
                             </button>
-                            <p className="mt-1 text-xs text-muted-foreground">{plugin.category}</p>
-                            <p className="mt-2 text-xs text-muted-foreground">{plugin.description}</p>
-                            <div className="mt-3 flex flex-wrap gap-1.5">
+                            <div className="mt-2 flex flex-wrap gap-1.5">
                               <Badge variant={plugin.loaded ? "outline" : "secondary"}>
                                 {plugin.loaded ? "Loaded" : "Not Loaded"}
                               </Badge>
-                              <Badge variant="warning">No enabled flag</Badge>
+                              <Badge variant="warning">Manual Config</Badge>
                             </div>
                           </div>
                         ))}
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 <Card className="min-w-0 bg-card/95 backdrop-blur">
                   <CardHeader>
@@ -798,12 +813,12 @@ function App() {
                       {selectedPlugin ? <Puzzle className="size-4" /> : <CloudOff className="size-4" />}
                       {selectedPlugin?.name ?? "Select Plugin"}
                     </CardTitle>
-                    <CardDescription>顯示 info.yaml 內容與插件設定檔編輯。</CardDescription>
+                    <CardDescription>右側顯示 `info.yaml` 欄位與 `config.yaml` 編輯。</CardDescription>
                   </CardHeader>
 
                   <CardContent className="min-w-0 space-y-4">
                     {!selectedPlugin ? (
-                      <p className="text-sm text-muted-foreground">從左側選擇一個插件以查看細節。</p>
+                      <p className="text-sm text-muted-foreground">從左側插件列表選擇一個插件以查看細節。</p>
                     ) : (
                       <>
                         <div className="grid gap-2 sm:grid-cols-2">
