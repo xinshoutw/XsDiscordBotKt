@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   CloudOff,
@@ -220,6 +220,16 @@ function buildPluginInfoYaml(plugin: PluginConfig): string {
     "soft_depend_plugins:",
     formatYamlList(plugin.softDependPlugins)
   ].join("\n");
+}
+
+function onCardKeyboardSelect(
+  event: KeyboardEvent<HTMLDivElement>,
+  onSelect: () => void
+) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    onSelect();
+  }
 }
 
 function App() {
@@ -727,14 +737,14 @@ function App() {
             <TabsContent value="plugins">
               <div className="grid gap-4 xl:items-start xl:grid-cols-[320px_minmax(0,1fr)]">
                 <Card className="mx-auto w-full min-w-0 max-w-[320px] bg-card/95 backdrop-blur">
-                  <CardHeader className="text-center">
+                  <CardHeader>
                     <CardTitle>Plugin List</CardTitle>
                     <CardDescription>左側選擇插件；有 `enabled` 欄位的插件可即時切換。</CardDescription>
                   </CardHeader>
                   <CardContent className="max-h-[72vh] space-y-4 overflow-y-auto pr-1">
                     <div className="space-y-2">
-                      <p className="text-center text-xs uppercase tracking-[0.14em] text-muted-foreground">Instant Toggle</p>
-                      <p className="text-center text-xs text-muted-foreground">切換後會立即送出請求並套用。</p>
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Instant Toggle</p>
+                      <p className="text-xs text-muted-foreground">切換後會立即送出請求並套用。</p>
                       <div className="space-y-2">
                         {togglePlugins.length === 0 && (
                           <p className="text-xs text-muted-foreground">沒有可即時切換的插件。</p>
@@ -744,21 +754,23 @@ function App() {
                           return (
                             <div
                               key={plugin.name}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setSelectedPluginName(plugin.name)}
+                              onKeyDown={(event) =>
+                                onCardKeyboardSelect(event, () => setSelectedPluginName(plugin.name))
+                              }
                               className={cn(
-                                "rounded-lg border p-2.5 transition-colors",
+                                "mx-auto w-full max-w-[282px] cursor-pointer rounded-lg border p-2.5 transition-colors",
                                 selectedPlugin?.name === plugin.name
                                   ? "border-primary bg-primary/10"
                                   : "border-border hover:bg-muted/60"
                               )}
                             >
                               <div className="flex items-center gap-2">
-                                <button
-                                  className="min-w-0 flex-1 truncate text-left text-sm font-semibold hover:text-primary"
-                                  onClick={() => setSelectedPluginName(plugin.name)}
-                                  title={plugin.name}
-                                >
+                                <p className="min-w-0 flex-1 truncate text-left text-sm font-semibold" title={plugin.name}>
                                   {plugin.name}
-                                </button>
+                                </p>
                                 <Switch
                                   checked={plugin.enabled}
                                   disabled={busy}
@@ -785,8 +797,8 @@ function App() {
                     <Separator />
 
                     <div className="space-y-2">
-                      <p className="text-center text-xs uppercase tracking-[0.14em] text-muted-foreground">Manual-Only Plugins</p>
-                      <p className="text-center text-xs text-muted-foreground">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Manual-Only Plugins</p>
+                      <p className="text-xs text-muted-foreground">
                         這些插件的設定檔沒有 `enabled` 欄位，請在右側 YAML 手動管理。
                       </p>
                       <div className="space-y-2">
@@ -796,20 +808,22 @@ function App() {
                         {fixedPlugins.map((plugin) => (
                           <div
                             key={plugin.name}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedPluginName(plugin.name)}
+                            onKeyDown={(event) =>
+                              onCardKeyboardSelect(event, () => setSelectedPluginName(plugin.name))
+                            }
                             className={cn(
-                              "rounded-lg border p-2.5 transition-colors",
+                              "mx-auto w-full max-w-[282px] cursor-pointer rounded-lg border p-2.5 transition-colors",
                               selectedPlugin?.name === plugin.name
                                 ? "border-primary bg-primary/10"
                                 : "border-border hover:bg-muted/60"
                             )}
                           >
-                            <button
-                              className="w-full truncate text-left text-sm font-semibold hover:text-primary"
-                              onClick={() => setSelectedPluginName(plugin.name)}
-                              title={plugin.name}
-                            >
+                            <p className="w-full truncate text-left text-sm font-semibold" title={plugin.name}>
                               {plugin.name}
-                            </button>
+                            </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               <Badge variant={plugin.loaded ? "outline" : "secondary"}>
                                 {plugin.loaded ? "Loaded" : "Not Loaded"}
