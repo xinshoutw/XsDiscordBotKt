@@ -196,19 +196,30 @@ async function putJson<TRequest, TResponse>(url: string, payload: TRequest): Pro
   return (await response.json()) as TResponse;
 }
 
-function renderTagList(title: string, items: string[]) {
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{title}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {(items.length > 0 ? items : ["None"]).map((item) => (
-          <Badge key={`${title}-${item}`} variant="outline">
-            {item}
-          </Badge>
-        ))}
-      </div>
-    </div>
-  );
+function formatYamlList(items: string[]): string {
+  if (items.length === 0) {
+    return "  []";
+  }
+  return items.map((item) => `  - ${item}`).join("\n");
+}
+
+function buildPluginInfoYaml(plugin: PluginConfig): string {
+  return [
+    `name: ${plugin.name}`,
+    `author: ${plugin.author ?? "unknown"}`,
+    `version: ${plugin.version ?? "unknown"}`,
+    `description: ${plugin.description}`,
+    "require_intents:",
+    formatYamlList(plugin.requireIntents),
+    "require_cache_flags:",
+    formatYamlList(plugin.requireCacheFlags),
+    "require_member_cache_policies:",
+    formatYamlList(plugin.requireMemberCachePolicies),
+    "depend_plugins:",
+    formatYamlList(plugin.dependPlugins),
+    "soft_depend_plugins:",
+    formatYamlList(plugin.softDependPlugins)
+  ].join("\n");
 }
 
 function App() {
@@ -228,6 +239,7 @@ function App() {
   const [loadingYaml, setLoadingYaml] = useState(false);
   const [toggleBusy, setToggleBusy] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState<string>("");
+  const [showPluginInfo, setShowPluginInfo] = useState(false);
 
   useEffect(() => {
     void refreshAll();
@@ -256,6 +268,10 @@ function App() {
       setPluginYamlDraft("");
     }
   }, [selectedPlugin?.name, selectedPlugin?.hasWebEditor]);
+
+  useEffect(() => {
+    setShowPluginInfo(false);
+  }, [selectedPluginName]);
 
   const dirtyCore = useMemo(
     () => JSON.stringify(coreDraft) !== JSON.stringify(core),
@@ -709,16 +725,16 @@ function App() {
             </TabsContent>
 
             <TabsContent value="plugins">
-              <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-                <Card className="min-w-0 bg-card/95 backdrop-blur">
-                  <CardHeader>
+              <div className="grid gap-4 xl:items-start xl:grid-cols-[320px_minmax(0,1fr)]">
+                <Card className="mx-auto w-full min-w-0 max-w-[320px] bg-card/95 backdrop-blur">
+                  <CardHeader className="text-center">
                     <CardTitle>Plugin List</CardTitle>
                     <CardDescription>左側選擇插件；有 `enabled` 欄位的插件可即時切換。</CardDescription>
                   </CardHeader>
                   <CardContent className="max-h-[72vh] space-y-4 overflow-y-auto pr-1">
                     <div className="space-y-2">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Instant Toggle</p>
-                      <p className="text-xs text-muted-foreground">切換後會立即送出請求並套用。</p>
+                      <p className="text-center text-xs uppercase tracking-[0.14em] text-muted-foreground">Instant Toggle</p>
+                      <p className="text-center text-xs text-muted-foreground">切換後會立即送出請求並套用。</p>
                       <div className="space-y-2">
                         {togglePlugins.length === 0 && (
                           <p className="text-xs text-muted-foreground">沒有可即時切換的插件。</p>
@@ -769,8 +785,8 @@ function App() {
                     <Separator />
 
                     <div className="space-y-2">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Manual-Only Plugins</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-center text-xs uppercase tracking-[0.14em] text-muted-foreground">Manual-Only Plugins</p>
+                      <p className="text-center text-xs text-muted-foreground">
                         這些插件的設定檔沒有 `enabled` 欄位，請在右側 YAML 手動管理。
                       </p>
                       <div className="space-y-2">
@@ -809,11 +825,20 @@ function App() {
 
                 <Card className="min-w-0 bg-card/95 backdrop-blur">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      {selectedPlugin ? <Puzzle className="size-4" /> : <CloudOff className="size-4" />}
-                      {selectedPlugin?.name ?? "Select Plugin"}
-                    </CardTitle>
-                    <CardDescription>右側顯示 `info.yaml` 欄位與 `config.yaml` 編輯。</CardDescription>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2">
+                        {selectedPlugin ? <Puzzle className="size-4" /> : <CloudOff className="size-4" />}
+                        {selectedPlugin?.name ?? "Select Plugin"}
+                      </CardTitle>
+                      <Button
+                        variant="outline"
+                        disabled={!selectedPlugin}
+                        onClick={() => setShowPluginInfo((current) => !current)}
+                      >
+                        {showPluginInfo ? "隱藏詳情" : "詳細資訊"}
+                      </Button>
+                    </div>
+                    <CardDescription>右側顯示插件設定編輯；完整 info.yaml 可由右上角按鈕展開。</CardDescription>
                   </CardHeader>
 
                   <CardContent className="min-w-0 space-y-4">
@@ -837,24 +862,18 @@ function App() {
                           <p>{selectedPlugin.description}</p>
                         </div>
 
-                        <Separator />
-
-                        {renderTagList("requireIntents", selectedPlugin.requireIntents)}
-                        {renderTagList("requireCacheFlags", selectedPlugin.requireCacheFlags)}
-                        {renderTagList("requireMemberCachePolicies", selectedPlugin.requireMemberCachePolicies)}
-                        {renderTagList("dependPlugins", selectedPlugin.dependPlugins)}
-                        {renderTagList("softDependPlugins", selectedPlugin.softDependPlugins)}
-
-                        {selectedPlugin.configPath && (
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">config.yaml path</p>
-                            <p
-                              className="mt-2 w-full truncate rounded-md bg-muted/70 px-2 py-1 font-mono text-[11px] text-muted-foreground"
-                              title={selectedPlugin.configPath}
-                            >
-                              {selectedPlugin.configPath}
-                            </p>
-                          </div>
+                        {showPluginInfo && (
+                          <>
+                            <Separator />
+                            <div className="space-y-2">
+                              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Info YAML</p>
+                              <Textarea
+                                readOnly
+                                value={buildPluginInfoYaml(selectedPlugin)}
+                                className="h-48 min-h-[180px] max-h-[42vh] font-mono text-xs"
+                              />
+                            </div>
+                          </>
                         )}
 
                         {!selectedPlugin.hasWebEditor ? (
@@ -878,7 +897,7 @@ function App() {
                             )}
 
                             <Textarea
-                              className="min-h-[280px] font-mono text-xs"
+                              className="h-56 min-h-[220px] max-h-[48vh] font-mono text-xs"
                               value={pluginYamlDraft}
                               onChange={(event) => setPluginYamlDraft(event.target.value)}
                               disabled={loadingYaml || !pluginYaml}
