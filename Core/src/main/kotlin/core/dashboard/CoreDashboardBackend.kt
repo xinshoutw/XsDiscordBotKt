@@ -112,8 +112,15 @@ object CoreDashboardBackend : DashboardBackend {
                 category = "Plugin",
                 description = meta?.description?.takeIf { it.isNotBlank() }
                     ?: "No description found in info.yaml.",
-                dependencies = meta?.dependencies ?: emptyList(),
-                intents = meta?.intents ?: emptyList(),
+                dependencies = meta?.dependPlugins ?: emptyList(),
+                intents = meta?.requireIntents ?: emptyList(),
+                author = meta?.author,
+                version = meta?.version,
+                requireIntents = meta?.requireIntents ?: emptyList(),
+                requireCacheFlags = meta?.requireCacheFlags ?: emptyList(),
+                requireMemberCachePolicies = meta?.requireMemberCachePolicies ?: emptyList(),
+                dependPlugins = meta?.dependPlugins ?: emptyList(),
+                softDependPlugins = meta?.softDependPlugins ?: emptyList(),
                 loaded = PluginLoader.pluginQueue.containsKey(pluginName),
                 canToggle = hasEnabled,
                 configPath = pluginConfig.takeIf { it.exists() }?.absolutePath,
@@ -286,9 +293,14 @@ object CoreDashboardBackend : DashboardBackend {
                         val info = yaml.decodeFromStream<InfoSerializer>(inputStream)
                         result[info.name] = PluginMeta(
                             name = info.name,
+                            author = info.author,
+                            version = info.version,
                             description = info.description ?: "",
-                            dependencies = info.dependPlugins.toList(),
-                            intents = info.requireIntents.toList(),
+                            requireIntents = info.requireIntents.sorted(),
+                            requireCacheFlags = info.requireCacheFlags.sorted(),
+                            requireMemberCachePolicies = info.requireMemberCachePolicies.sorted(),
+                            dependPlugins = info.dependPlugins.sorted(),
+                            softDependPlugins = info.softDependPlugins.sorted(),
                         )
                     }
                 }
@@ -332,7 +344,12 @@ object CoreDashboardBackend : DashboardBackend {
 
 private data class PluginMeta(
     val name: String,
+    val author: String?,
+    val version: String,
     val description: String,
-    val dependencies: List<String>,
-    val intents: List<String>,
+    val requireIntents: List<String>,
+    val requireCacheFlags: List<String>,
+    val requireMemberCachePolicies: List<String>,
+    val dependPlugins: List<String>,
+    val softDependPlugins: List<String>,
 )

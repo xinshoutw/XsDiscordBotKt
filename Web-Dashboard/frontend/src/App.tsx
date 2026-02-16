@@ -1,22 +1,12 @@
-import { type ReactElement, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Activity,
-  Cable,
   CheckCircle2,
   CloudOff,
-  Database,
   FileCode2,
-  Globe,
-  LayoutDashboard,
   LoaderCircle,
   Puzzle,
   RefreshCcw,
-  Save,
-  Settings2,
-  Shield,
-  Sparkles,
-  Terminal,
-  Workflow
+  Save
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +52,13 @@ type PluginConfig = {
   description: string;
   dependencies: string[];
   intents: string[];
+  author?: string | null;
+  version?: string | null;
+  requireIntents: string[];
+  requireCacheFlags: string[];
+  requireMemberCachePolicies: string[];
+  dependPlugins: string[];
+  softDependPlugins: string[];
   loaded: boolean;
   canToggle: boolean;
   configPath?: string | null;
@@ -89,22 +86,65 @@ type Health = {
   recommendedBaseUrl: string;
 };
 
-const pluginCategoryIcon: Record<string, ReactElement> = {
-  Moderation: <Shield className="size-4" />,
-  Utility: <Settings2 className="size-4" />,
-  Logging: <Database className="size-4" />,
-  Voice: <Workflow className="size-4" />,
-  Economy: <Sparkles className="size-4" />,
-  Community: <Puzzle className="size-4" />,
-  Ops: <Activity className="size-4" />,
-  Music: <Cable className="size-4" />,
-  Automation: <RefreshCcw className="size-4" />,
-  Support: <Terminal className="size-4" />,
-  Plugin: <Puzzle className="size-4" />
+type ActivityType =
+  | "PLAYING"
+  | "STREAMING"
+  | "LISTENING"
+  | "WATCHING"
+  | "COMPETING"
+  | "CUSTOM_STATUS";
+
+type StatusEntry = {
+  type: ActivityType;
+  content: string;
+  delayMs: number;
+};
+
+const STATUS_TYPES: ActivityType[] = [
+  "PLAYING",
+  "STREAMING",
+  "LISTENING",
+  "WATCHING",
+  "COMPETING",
+  "CUSTOM_STATUS"
+];
+
+const DEFAULT_STATUS_ENTRY: StatusEntry = {
+  type: "COMPETING",
+  content: "Developing...",
+  delayMs: 5000
 };
 
 function normalizeYaml(input: string): string {
   return input.replace(/\r\n/g, "\n").trim();
+}
+
+function parseStatusLine(line: string): StatusEntry {
+  const first = line.indexOf(";");
+  const last = line.lastIndexOf(";");
+
+  if (first <= 0 || last <= first) {
+    return DEFAULT_STATUS_ENTRY;
+  }
+
+  const rawType = line.slice(0, first).trim();
+  const rawContent = line.slice(first + 1, last);
+  const rawDelay = Number(line.slice(last + 1).trim());
+
+  const type = STATUS_TYPES.includes(rawType as ActivityType)
+    ? (rawType as ActivityType)
+    : DEFAULT_STATUS_ENTRY.type;
+
+  return {
+    type,
+    content: rawContent,
+    delayMs: Number.isFinite(rawDelay) && rawDelay > 0 ? Math.floor(rawDelay) : DEFAULT_STATUS_ENTRY.delayMs
+  };
+}
+
+function formatStatusLine(entry: StatusEntry): string {
+  const delay = Number.isFinite(entry.delayMs) && entry.delayMs > 0 ? Math.floor(entry.delayMs) : DEFAULT_STATUS_ENTRY.delayMs;
+  return `${entry.type};${entry.content};${delay}`;
 }
 
 async function readErrorMessage(response: Response): Promise<string> {
@@ -157,6 +197,21 @@ async function putJson<TRequest, TResponse>(url: string, payload: TRequest): Pro
   return (await response.json()) as TResponse;
 }
 
+function renderTagList(title: string, items: string[]) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{title}</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {(items.length > 0 ? items : ["None"]).map((item) => (
+          <Badge key={`${title}-${item}`} variant="outline">
+            {item}
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [health, setHealth] = useState<Health | null>(null);
   const [core, setCore] = useState<CoreConfig | null>(null);
@@ -184,6 +239,16 @@ function App() {
     [plugins, selectedPluginName]
   );
 
+  const togglePlugins = useMemo(
+    () => plugins.filter((plugin) => plugin.canToggle),
+    [plugins]
+  );
+
+  const fixedPlugins = useMemo(
+    () => plugins.filter((plugin) => !plugin.canToggle),
+    [plugins]
+  );
+
   useEffect(() => {
     if (selectedPlugin?.hasWebEditor) {
       void loadPluginYaml(selectedPlugin.name);
@@ -202,9 +267,6 @@ function App() {
     if (!pluginYaml) return false;
     return normalizeYaml(pluginYamlDraft) !== normalizeYaml(pluginYaml.yaml);
   }, [pluginYaml, pluginYamlDraft]);
-
-  const unsavedCount = Number(dirtyCore) + Number(dirtyPluginYaml);
-  const enabledPluginCount = plugins.filter((it) => it.enabled).length;
 
   async function refreshAll() {
     setLoading(true);
@@ -263,11 +325,13 @@ function App() {
     }
   }
 
-  function updateStatusMessage(index: number, value: string) {
+  function updateStatusEntry(index: number, patch: Partial<StatusEntry>) {
     setCoreDraft((current) => {
       if (!current) return current;
       const next = [...current.builtins.statusMessages];
-      next[index] = value;
+      const previous = parseStatusLine(next[index] ?? formatStatusLine(DEFAULT_STATUS_ENTRY));
+      next[index] = formatStatusLine({ ...previous, ...patch });
+
       return {
         ...current,
         builtins: {
@@ -285,7 +349,7 @@ function App() {
         ...current,
         builtins: {
           ...current.builtins,
-          statusMessages: [...current.builtins.statusMessages, "COMPETING;New Status;5000"]
+          statusMessages: [...current.builtins.statusMessages, formatStatusLine(DEFAULT_STATUS_ENTRY)]
         }
       };
     });
@@ -368,9 +432,7 @@ function App() {
         ...coreDraft,
         builtins: {
           ...coreDraft.builtins,
-          statusMessages: coreDraft.builtins.statusMessages
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0)
+          statusMessages: coreDraft.builtins.statusMessages.map((line) => formatStatusLine(parseStatusLine(line)))
         }
       };
 
@@ -438,16 +500,6 @@ function App() {
     }
   }
 
-  async function saveAll() {
-    if (!dirtyCore && !dirtyPluginYaml) return;
-    if (dirtyCore) {
-      await saveCore();
-    }
-    if (dirtyPluginYaml) {
-      await savePluginYaml();
-    }
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -458,40 +510,24 @@ function App() {
 
       <div className="container py-6 lg:py-10">
         <header className="rounded-xl border border-border/80 bg-card/90 p-5 shadow-soft backdrop-blur">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">
-                XsDiscordBotKt
-              </p>
-              <h1 className="font-heading text-2xl font-semibold md:text-3xl">
-                Configuration Dashboard
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Live config editing with immediate plugin toggle apply.
-              </p>
+              <h1 className="font-heading text-2xl font-semibold md:text-3xl">XsDiscordBot 控制面板</h1>
+              <p className="mt-1 text-sm text-muted-foreground">插件開關即時套用，設定與 YAML 以按鈕儲存。</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <Badge variant={health?.status === "ok" ? "success" : "warning"}>
                 <CheckCircle2 className="mr-1.5 size-3.5" />
-                {health?.status === "ok" ? "Server Connected" : "Offline"}
-              </Badge>
-              <Badge variant="secondary">
-                <Globe className="mr-1.5 size-3.5" />
-                {health?.recommendedBaseUrl ?? "http://127.0.0.1:21100"}
+                {health?.status === "ok" ? "Connected" : "Offline"}
               </Badge>
               <Button
-                variant={unsavedCount > 0 ? "warning" : "default"}
-                onClick={() => void saveAll()}
-                disabled={
-                  loading ||
-                  savingCore ||
-                  savingYaml ||
-                  unsavedCount === 0
-                }
+                variant="outline"
+                onClick={() => void refreshAll()}
+                disabled={loading || refreshing || savingCore || savingYaml}
               >
-                <Save className="size-4" />
-                Save Pending {unsavedCount > 0 ? `(${unsavedCount})` : ""}
+                <RefreshCcw className={cn("size-4", (loading || refreshing) && "animate-spin")} />
+                重新整理
               </Button>
             </div>
           </div>
@@ -503,258 +539,197 @@ function App() {
           )}
         </header>
 
-        <main className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="space-y-4">
-            <Card className="bg-card/90 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <LayoutDashboard className="size-4" />
-                  Workspace
-                </CardTitle>
-                <CardDescription>
-                  Runtime snapshot and operation status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-2">
-                  <span className="text-muted-foreground">Core mode</span>
-                  <span className="font-semibold">{health?.mode ?? "loading"}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-2">
-                  <span className="text-muted-foreground">Plugins enabled</span>
-                  <span className="font-semibold">{enabledPluginCount}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-2">
-                  <span className="text-muted-foreground">Pending saves</span>
-                  <span className="font-semibold">{unsavedCount}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => void refreshAll()}
-                  disabled={loading || refreshing || savingCore || savingYaml}
-                >
-                  <RefreshCcw className={cn("size-4", (loading || refreshing) && "animate-spin")} />
-                  Refresh Snapshot
-                </Button>
-              </CardContent>
-            </Card>
+        <main className="mt-6">
+          <Tabs defaultValue="core" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="core">Core Settings</TabsTrigger>
+              <TabsTrigger value="plugins">Plugin Controls</TabsTrigger>
+            </TabsList>
 
-            <Card className="bg-card/90 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="text-base">Plugin Matrix</CardTitle>
-                <CardDescription>Immediate toggle, no save button required</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {plugins.slice(0, 8).map((plugin) => (
-                  <button
-                    key={plugin.name}
-                    type="button"
-                    onClick={() => setSelectedPluginName(plugin.name)}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-md border px-3 py-2 text-left transition-colors",
-                      selectedPlugin?.name === plugin.name
-                        ? "border-primary bg-primary/10"
-                        : "border-border hover:bg-muted/60"
-                    )}
-                  >
-                    <span className="text-sm font-medium">{plugin.name}</span>
-                    <Badge variant={plugin.enabled ? "success" : "secondary"}>
-                      {plugin.enabled ? "ON" : "OFF"}
-                    </Badge>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-          </aside>
-
-          <section>
-            <Tabs defaultValue="core" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="core">Core Settings</TabsTrigger>
-                <TabsTrigger value="plugins">Plugin Controls</TabsTrigger>
-                <TabsTrigger value="connection">Connection</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="core">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle>General</CardTitle>
-                      <CardDescription>Mapped to root `config.yaml`</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Bot token (masked)</label>
-                        <Input value={coreDraft?.general.tokenMasked ?? ""} disabled />
-                        <p className="text-xs text-muted-foreground">
-                          Token is intentionally masked. Dashboard does not edit token directly.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle>Status Changer</CardTitle>
-                      <CardDescription>
-                        Format: <code>TYPE;message;durationMs</code>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {(coreDraft?.builtins.statusMessages ?? []).map((line, index) => (
-                        <div key={`${line}-${index}`} className="flex gap-2">
-                          <Input
-                            value={line}
-                            onChange={(event) => updateStatusMessage(index, event.target.value)}
-                          />
-                          <Button
-                            variant="outline"
-                            onClick={() => removeStatusMessage(index)}
-                            disabled={(coreDraft?.builtins.statusMessages.length ?? 0) <= 1}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                      <Button variant="outline" onClick={addStatusMessage}>
-                        Add Status Line
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card className="mt-4 bg-card/95 backdrop-blur">
-                  <CardHeader>
-                    <CardTitle>Console Logger Targets</CardTitle>
-                    <CardDescription>
-                      Changes apply after clicking Save Core Section
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {(coreDraft?.builtins.consoleTargets ?? []).map((target, index) => (
-                      <div key={`${target.guildId}-${target.channelId}-${index}`} className="rounded-lg border p-4">
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Guild ID</label>
-                            <Input
-                              value={target.guildId}
-                              onChange={(event) =>
-                                updateConsoleTarget(index, {
-                                  guildId: Number(event.target.value) || 0
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Channel ID</label>
-                            <Input
-                              value={target.channelId}
-                              onChange={(event) =>
-                                updateConsoleTarget(index, {
-                                  channelId: Number(event.target.value) || 0
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="space-y-1 md:col-span-2">
-                            <label className="text-xs text-muted-foreground">Format</label>
-                            <Input
-                              value={target.format}
-                              onChange={(event) =>
-                                updateConsoleTarget(index, { format: event.target.value })
-                              }
-                            />
-                          </div>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {(["command", "button", "modal"] as const).map((type) => (
-                            <button
-                              key={type}
-                              type="button"
-                              onClick={() => {
-                                const current = new Set(target.logTypes);
-                                if (current.has(type)) {
-                                  current.delete(type);
-                                } else {
-                                  current.add(type);
-                                }
-                                updateConsoleTarget(index, {
-                                  logTypes: Array.from(current)
-                                });
-                              }}
-                              className={cn(
-                                "rounded-md border px-3 py-1 text-xs font-semibold transition-colors",
-                                target.logTypes.includes(type)
-                                  ? "border-primary bg-primary/15 text-primary"
-                                  : "border-border text-muted-foreground hover:bg-muted"
-                              )}
-                            >
+            <TabsContent value="core" className="space-y-4">
+              <Card className="bg-card/95 backdrop-blur">
+                <CardHeader>
+                  <CardTitle>Status Changer</CardTitle>
+                  <CardDescription>使用 Type / Message / Delay 編輯，不再手動打整串分號格式。</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(coreDraft?.builtins.statusMessages ?? []).map((line, index) => {
+                    const entry = parseStatusLine(line);
+                    return (
+                      <div key={index} className="grid gap-2 md:grid-cols-[170px_1fr_140px_auto]">
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          value={entry.type}
+                          onChange={(event) => updateStatusEntry(index, { type: event.target.value as ActivityType })}
+                        >
+                          {STATUS_TYPES.map((type) => (
+                            <option key={type} value={type}>
                               {type}
-                            </button>
+                            </option>
                           ))}
-                        </div>
+                        </select>
+
+                        <Input
+                          value={entry.content}
+                          onChange={(event) => updateStatusEntry(index, { content: event.target.value })}
+                          placeholder="Status text"
+                        />
+
+                        <Input
+                          type="number"
+                          min={1000}
+                          step={1000}
+                          value={entry.delayMs}
+                          onChange={(event) => updateStatusEntry(index, { delayMs: Number(event.target.value) || 1000 })}
+                        />
 
                         <Button
-                          className="mt-3"
                           variant="outline"
-                          onClick={() => removeConsoleTarget(index)}
-                          disabled={(coreDraft?.builtins.consoleTargets.length ?? 0) <= 1}
+                          onClick={() => removeStatusMessage(index)}
+                          disabled={(coreDraft?.builtins.statusMessages.length ?? 0) <= 1}
                         >
-                          Remove Target
+                          Remove
                         </Button>
                       </div>
-                    ))}
+                    );
+                  })}
 
-                    <Button variant="outline" onClick={addConsoleTarget}>
-                      Add Console Target
-                    </Button>
-                  </CardContent>
-                  <CardFooter>
-                    <Button onClick={() => void saveCore()} disabled={savingCore || loading || !dirtyCore}>
-                      {savingCore ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                      Save Core Section
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
+                  <Button variant="outline" onClick={addStatusMessage}>
+                    Add Status
+                  </Button>
+                </CardContent>
+              </Card>
 
-              <TabsContent value="plugins">
-                <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+              <Card className="bg-card/95 backdrop-blur">
+                <CardHeader>
+                  <CardTitle>Console Logger Targets</CardTitle>
+                  <CardDescription>多欄位設定，按下儲存後套用。</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {(coreDraft?.builtins.consoleTargets ?? []).map((target, index) => (
+                    <div key={index} className="rounded-lg border p-4">
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Guild ID</label>
+                          <Input
+                            value={target.guildId}
+                            onChange={(event) =>
+                              updateConsoleTarget(index, {
+                                guildId: Number(event.target.value) || 0
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Channel ID</label>
+                          <Input
+                            value={target.channelId}
+                            onChange={(event) =>
+                              updateConsoleTarget(index, {
+                                channelId: Number(event.target.value) || 0
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-xs text-muted-foreground">Format</label>
+                          <Input
+                            value={target.format}
+                            onChange={(event) =>
+                              updateConsoleTarget(index, { format: event.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(["command", "button", "modal"] as const).map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => {
+                              const current = new Set(target.logTypes);
+                              if (current.has(type)) {
+                                current.delete(type);
+                              } else {
+                                current.add(type);
+                              }
+                              updateConsoleTarget(index, {
+                                logTypes: Array.from(current)
+                              });
+                            }}
+                            className={cn(
+                              "rounded-md border px-3 py-1 text-xs font-semibold transition-colors",
+                              target.logTypes.includes(type)
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:bg-muted"
+                            )}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Button
+                        className="mt-3"
+                        variant="outline"
+                        onClick={() => removeConsoleTarget(index)}
+                        disabled={(coreDraft?.builtins.consoleTargets.length ?? 0) <= 1}
+                      >
+                        Remove Target
+                      </Button>
+                    </div>
+                  ))}
+
+                  <Button variant="outline" onClick={addConsoleTarget}>
+                    Add Console Target
+                  </Button>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={() => void saveCore()} disabled={savingCore || loading || !dirtyCore}>
+                    {savingCore ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    Save Core Changes
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="plugins">
+              <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.2fr)_minmax(420px,520px)]">
+                <div className="min-w-0 space-y-4">
                   <Card className="bg-card/95 backdrop-blur">
                     <CardHeader>
                       <CardTitle>Installed Plugins</CardTitle>
-                      <CardDescription>
-                        Toggle applies immediately. YAML edits require Save.
-                      </CardDescription>
+                      <CardDescription>有 `enabled` 旗標的插件會顯示即時開關。</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-3 md:grid-cols-2">
-                      {plugins.map((plugin) => {
+                    <CardContent className="grid gap-3 lg:grid-cols-2">
+                      {togglePlugins.map((plugin) => {
                         const busy = Boolean(toggleBusy[plugin.name]);
                         return (
                           <div
                             key={plugin.name}
                             className={cn(
-                              "rounded-lg border p-3 transition-colors",
+                              "min-w-0 rounded-lg border p-3 transition-colors",
                               selectedPlugin?.name === plugin.name
                                 ? "border-primary bg-primary/10"
                                 : "border-border hover:bg-muted/60"
                             )}
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <div>
+                              <div className="min-w-0">
                                 <button
-                                  className="font-semibold hover:text-primary"
+                                  className="w-full truncate text-left font-semibold hover:text-primary"
                                   onClick={() => setSelectedPluginName(plugin.name)}
+                                  title={plugin.name}
                                 >
                                   {plugin.name}
                                 </button>
                                 <p className="text-xs text-muted-foreground">{plugin.category}</p>
                               </div>
+
                               <Switch
                                 checked={plugin.enabled}
-                                disabled={!plugin.canToggle || busy}
+                                disabled={busy}
                                 onCheckedChange={(checked) => {
                                   void togglePluginImmediate(plugin, checked);
                                 }}
@@ -770,7 +745,6 @@ function App() {
                               <Badge variant={plugin.loaded ? "outline" : "secondary"}>
                                 {plugin.loaded ? "Loaded" : "Not Loaded"}
                               </Badge>
-                              {!plugin.canToggle && <Badge variant="warning">No enabled flag</Badge>}
                               {busy && <Badge variant="outline">Applying...</Badge>}
                             </div>
                           </div>
@@ -779,171 +753,151 @@ function App() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        {selectedPlugin
-                          ? (pluginCategoryIcon[selectedPlugin.category] ?? <Puzzle className="size-4" />)
-                          : <CloudOff className="size-4" />}
-                        {selectedPlugin?.name ?? "Select Plugin"}
-                      </CardTitle>
-                      <CardDescription>
-                        Runtime dependencies, intents, and raw YAML editor
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {!selectedPlugin ? (
-                        <p className="text-sm text-muted-foreground">
-                          Select a plugin from the left list to inspect details.
-                        </p>
-                      ) : (
-                        <>
-                          <div className="space-y-1 text-sm">
-                            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Description</p>
-                            <p>{selectedPlugin.description}</p>
+                  {fixedPlugins.length > 0 && (
+                    <Card className="bg-card/95 backdrop-blur">
+                      <CardHeader>
+                        <CardTitle>No Enabled Flag</CardTitle>
+                        <CardDescription>這些插件沒有 `enabled` 欄位，僅可查看資訊與 YAML（若存在）。</CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-3 lg:grid-cols-2">
+                        {fixedPlugins.map((plugin) => (
+                          <div
+                            key={plugin.name}
+                            className={cn(
+                              "min-w-0 rounded-lg border p-3 transition-colors",
+                              selectedPlugin?.name === plugin.name
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:bg-muted/60"
+                            )}
+                          >
+                            <button
+                              className="w-full truncate text-left font-semibold hover:text-primary"
+                              onClick={() => setSelectedPluginName(plugin.name)}
+                              title={plugin.name}
+                            >
+                              {plugin.name}
+                            </button>
+                            <p className="mt-1 text-xs text-muted-foreground">{plugin.category}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">{plugin.description}</p>
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              <Badge variant={plugin.loaded ? "outline" : "secondary"}>
+                                {plugin.loaded ? "Loaded" : "Not Loaded"}
+                              </Badge>
+                              <Badge variant="warning">No enabled flag</Badge>
+                            </div>
                           </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
-                          <Separator />
+                <Card className="min-w-0 bg-card/95 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      {selectedPlugin ? <Puzzle className="size-4" /> : <CloudOff className="size-4" />}
+                      {selectedPlugin?.name ?? "Select Plugin"}
+                    </CardTitle>
+                    <CardDescription>顯示 info.yaml 內容與插件設定檔編輯。</CardDescription>
+                  </CardHeader>
 
+                  <CardContent className="min-w-0 space-y-4">
+                    {!selectedPlugin ? (
+                      <p className="text-sm text-muted-foreground">從左側選擇一個插件以查看細節。</p>
+                    ) : (
+                      <>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                            <p className="text-xs text-muted-foreground">Author</p>
+                            <p className="mt-1 font-medium">{selectedPlugin.author ?? "Unknown"}</p>
+                          </div>
+                          <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                            <p className="text-xs text-muted-foreground">Version</p>
+                            <p className="mt-1 font-medium">{selectedPlugin.version ?? "Unknown"}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 text-sm">
+                          <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Description</p>
+                          <p>{selectedPlugin.description}</p>
+                        </div>
+
+                        <Separator />
+
+                        {renderTagList("requireIntents", selectedPlugin.requireIntents)}
+                        {renderTagList("requireCacheFlags", selectedPlugin.requireCacheFlags)}
+                        {renderTagList("requireMemberCachePolicies", selectedPlugin.requireMemberCachePolicies)}
+                        {renderTagList("dependPlugins", selectedPlugin.dependPlugins)}
+                        {renderTagList("softDependPlugins", selectedPlugin.softDependPlugins)}
+
+                        {selectedPlugin.configPath && (
                           <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                              Runtime Dependencies
+                            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">config.yaml path</p>
+                            <p
+                              className="mt-2 w-full truncate rounded-md bg-muted/70 px-2 py-1 font-mono text-[11px] text-muted-foreground"
+                              title={selectedPlugin.configPath}
+                            >
+                              {selectedPlugin.configPath}
                             </p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {(selectedPlugin.dependencies.length > 0
-                                ? selectedPlugin.dependencies
-                                : ["None"]).map((dep) => (
-                                <Badge key={dep} variant="outline">
-                                  {dep}
-                                </Badge>
-                              ))}
-                            </div>
                           </div>
+                        )}
 
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                              Required Intents
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {(selectedPlugin.intents.length > 0
-                                ? selectedPlugin.intents
-                                : ["None"]).map((intent) => (
-                                <Badge key={intent} variant="secondary">
-                                  {intent}
-                                </Badge>
-                              ))}
-                            </div>
+                        {!selectedPlugin.hasWebEditor ? (
+                          <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                            此插件沒有可編輯的 <code>config.yaml</code>。
                           </div>
-
-                          {!selectedPlugin.hasWebEditor ? (
-                            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                              This plugin has no editable <code>config.yaml</code> file.
+                        ) : (
+                          <div className="space-y-2 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Plugin YAML</p>
+                              {loadingYaml && <LoaderCircle className="size-4 animate-spin text-muted-foreground" />}
                             </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
-                                  Plugin YAML
-                                </p>
-                                {loadingYaml && <LoaderCircle className="size-4 animate-spin text-muted-foreground" />}
-                              </div>
-                              {pluginYaml?.path && (
-                                <p className="rounded-md bg-muted/70 px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                                  {pluginYaml.path}
-                                </p>
-                              )}
-                              <Textarea
-                                className="min-h-[240px] font-mono text-xs"
-                                value={pluginYamlDraft}
-                                onChange={(event) => setPluginYamlDraft(event.target.value)}
-                                disabled={loadingYaml || !pluginYaml}
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                Save applies YAML immediately and reloads this plugin. Toggle is still instant via switch.
+
+                            {pluginYaml?.path && (
+                              <p
+                                className="w-full truncate rounded-md bg-muted/70 px-2 py-1 font-mono text-[11px] text-muted-foreground"
+                                title={pluginYaml.path}
+                              >
+                                {pluginYaml.path}
                               </p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                    <CardFooter className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={!selectedPlugin?.hasWebEditor || loadingYaml || savingYaml}
-                        onClick={() => selectedPlugin && void loadPluginYaml(selectedPlugin.name)}
-                      >
-                        <FileCode2 className="size-4" />
-                        Reload YAML
-                      </Button>
-                      <Button
-                        className="w-full"
-                        disabled={!selectedPlugin?.hasWebEditor || savingYaml || loadingYaml || !dirtyPluginYaml}
-                        onClick={() => void savePluginYaml()}
-                      >
-                        {savingYaml ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                        Save YAML
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              </TabsContent>
+                            )}
 
-              <TabsContent value="connection">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle>Recommended Transport</CardTitle>
-                      <CardDescription>
-                        For local admin, localhost binding is safer than mDNS discovery.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm">
-                      <div className="rounded-lg border border-success/40 bg-success/10 p-3">
-                        <p className="font-semibold text-success">Use localhost by default</p>
-                        <p className="mt-1 text-muted-foreground">
-                          Bind Ktor to <code>127.0.0.1:21100</code> to avoid accidental external exposure.
-                        </p>
-                      </div>
+                            <Textarea
+                              className="min-h-[280px] font-mono text-xs"
+                              value={pluginYamlDraft}
+                              onChange={(event) => setPluginYamlDraft(event.target.value)}
+                              disabled={loadingYaml || !pluginYaml}
+                            />
+                            <p className="text-xs text-muted-foreground">YAML 變更需按 Save，並會立刻 reload 當前插件。</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
 
-                      <div className="space-y-2 rounded-lg border border-border p-3">
-                        <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Runtime env</p>
-                        <Textarea
-                          readOnly
-                          value={
-                            "XSBOT_DASHBOARD_ENABLED=true\n" +
-                            "XSBOT_DASHBOARD_HOST=127.0.0.1\n" +
-                            "XSBOT_DASHBOARD_PORT=21100\n" +
-                            "# Optional LAN mode later: 0.0.0.0"
-                          }
-                          className="min-h-[140px]"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card/95 backdrop-blur">
-                    <CardHeader>
-                      <CardTitle>Save Policy</CardTitle>
-                      <CardDescription>
-                        Which operations are instant and which require Save
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                      <div className="rounded-lg border border-border p-3">
-                        <p className="font-semibold text-foreground">Immediate</p>
-                        <p>Plugin ON/OFF switch sends request immediately and reloads the selected plugin.</p>
-                      </div>
-                      <div className="rounded-lg border border-border p-3">
-                        <p className="font-semibold text-foreground">Save Required</p>
-                        <p>Core settings and plugin YAML edits are multi-field operations and require explicit Save.</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </section>
+                  <CardFooter className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={!selectedPlugin?.hasWebEditor || loadingYaml || savingYaml}
+                      onClick={() => selectedPlugin && void loadPluginYaml(selectedPlugin.name)}
+                    >
+                      <FileCode2 className="size-4" />
+                      Reload YAML
+                    </Button>
+                    <Button
+                      className="w-full"
+                      disabled={!selectedPlugin?.hasWebEditor || savingYaml || loadingYaml || !dirtyPluginYaml}
+                      onClick={() => void savePluginYaml()}
+                    >
+                      {savingYaml ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
+                      Save YAML
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </div>
