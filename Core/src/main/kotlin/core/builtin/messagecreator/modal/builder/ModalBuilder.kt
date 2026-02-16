@@ -1,8 +1,9 @@
-package tw.xinshou.discord.core.builtin.messagecreator.builder
+package tw.xinshou.discord.core.builtin.messagecreator.modal.builder
 
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.modals.Modal
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.ModalDataSerializer
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.modals.Modal
+import tw.xinshou.discord.core.builtin.messagecreator.modal.serializer.ModalDataSerializer
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 import tw.xinshou.discord.core.util.ComponentIdManager
@@ -30,7 +31,7 @@ class ModalBuilder(
     private fun setupModelKeys(): Boolean {
         modalData.modelKey?.let {
             val model = requireNotNull(modelMapper?.get(it)) { "Model with key '$it' not found!" }
-            when (model) {
+            builder = when (model) {
                 is Modal.Builder -> model
                 else -> throw IllegalArgumentException("Unknown message model: $model")
             }
@@ -42,8 +43,11 @@ class ModalBuilder(
     private fun setupTextInputs() {
         modalData.textInputs.let { textInputs ->
             textInputs.forEach { textInput ->
-                builder.addActionRow(
-                    buildTextInput(textInput)
+                builder.addComponents(
+                    Label.of(
+                        parsePlaceholder(textInput.label),
+                        buildTextInput(textInput)
+                    )
                 )
             }
         }
@@ -58,17 +62,18 @@ class ModalBuilder(
             }
         }
 
-        return TextInput.create(
+        val textInputBuilder = TextInput.create(
             parsePlaceholder(textInput.uid),
-            parsePlaceholder(textInput.label),
             textInput.style
-        ).apply {
-            value = textInput.value?.let { parsePlaceholder(it) }
-            placeholder = textInput.placeholder?.let { parsePlaceholder(it) }
-            minLength = textInput.minLength
-            maxLength = textInput.maxLength
-            isRequired = textInput.required
-        }.build()
+        )
+
+        textInput.value?.let { textInputBuilder.setValue(parsePlaceholder(it)) }
+        textInput.placeholder?.let { textInputBuilder.setPlaceholder(parsePlaceholder(it)) }
+        if (textInput.minLength >= 0) textInputBuilder.setMinLength(textInput.minLength)
+        if (textInput.maxLength >= 0) textInputBuilder.setMaxLength(textInput.maxLength)
+        textInputBuilder.setRequired(textInput.required)
+
+        return textInputBuilder.build()
     }
 
 

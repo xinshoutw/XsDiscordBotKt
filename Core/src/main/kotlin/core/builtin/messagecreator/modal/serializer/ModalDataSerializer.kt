@@ -1,8 +1,8 @@
-package tw.xinshou.discord.core.builtin.messagecreator.serializer
+package tw.xinshou.discord.core.builtin.messagecreator.modal.serializer
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
 
 @Serializable
 data class ModalDataSerializer(

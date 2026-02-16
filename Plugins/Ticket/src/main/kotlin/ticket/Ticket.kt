@@ -11,12 +11,12 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
-import tw.xinshou.discord.core.builtin.messagecreator.ModalCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
+import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.json.JsonFileManager
 import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
@@ -265,28 +265,30 @@ internal object Ticket {
         }.flatMap {
             event.hook.sendMessage("請到此頻道 <#${it.id}> 並等待人員回覆繼續!").queue()
 
-            it.sendMessage(builder.toString()).addActionRow(
-                Button.of(
-                    ButtonStyle.SECONDARY,
-                    componentIdManager.build(
-                        mapOf(
-                            "action" to "lock",
-                            "user_id" to event.user.idLong,
-                            "msg_id" to idMap["msg_id"] as String,
-                            "btn_index" to idMap["btn_index"] as String,
-                        )
-                    ), "關閉", Emoji.fromUnicode("🔒")
-                ),
-                Button.of(
-                    ButtonStyle.DANGER,
-                    componentIdManager.build(
-                        mapOf(
-                            "action" to "delete",
-                            "user_id" to event.user.idLong,
-                            "msg_id" to idMap["msg_id"] as String,
-                            "btn_index" to idMap["btn_index"] as String,
-                        )
-                    ), "刪除", Emoji.fromUnicode("🗑")
+            it.sendMessage(builder.toString()).addComponents(
+                ActionRow.of(
+                    Button.of(
+                        ButtonStyle.SECONDARY,
+                        componentIdManager.build(
+                            mapOf(
+                                "action" to "lock",
+                                "user_id" to event.user.idLong,
+                                "msg_id" to idMap["msg_id"] as String,
+                                "btn_index" to idMap["btn_index"] as String,
+                            )
+                        ), "關閉", Emoji.fromUnicode("🔒")
+                    ),
+                    Button.of(
+                        ButtonStyle.DANGER,
+                        componentIdManager.build(
+                            mapOf(
+                                "action" to "delete",
+                                "user_id" to event.user.idLong,
+                                "msg_id" to idMap["msg_id"] as String,
+                                "btn_index" to idMap["btn_index"] as String,
+                            )
+                        ), "刪除", Emoji.fromUnicode("🗑")
+                    )
                 )
             )
         }.queue()
