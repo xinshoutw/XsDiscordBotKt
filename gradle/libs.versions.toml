@@ -25,6 +25,8 @@ jansi = "2.4.2"
 jsoup = "1.22.1"
 kotlin-v = "2.2.21"
 versions-plugin = "0.53.0"
+ktor = "3.2.3"
+kotlinx-serialization-json = "1.9.0"
 
 
 # ██████  ██      ██    ██  ██████  ██ ███    ██ ███████
@@ -77,6 +79,15 @@ kotlin_gradle_plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-p
 idea-ext-gradle-plugin = { group = "org.jetbrains.gradle.plugin.idea-ext", name = "org.jetbrains.gradle.plugin.idea-ext.gradle.plugin", version.ref = "idea-ext" }
 kotlin_reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin-v" }
 kotlin_serialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin-v" }
+ktor_server_core = { group = "io.ktor", name = "ktor-server-core-jvm", version.ref = "ktor" }
+ktor_server_netty = { group = "io.ktor", name = "ktor-server-netty-jvm", version.ref = "ktor" }
+ktor_server_call_logging = { group = "io.ktor", name = "ktor-server-call-logging-jvm", version.ref = "ktor" }
+ktor_server_content_negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation-jvm", version.ref = "ktor" }
+ktor_serialization_kotlinx_json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json-jvm", version.ref = "ktor" }
+ktor_server_cors = { group = "io.ktor", name = "ktor-server-cors-jvm", version.ref = "ktor" }
+ktor_server_status_pages = { group = "io.ktor", name = "ktor-server-status-pages-jvm", version.ref = "ktor" }
+ktor_server_compression = { group = "io.ktor", name = "ktor-server-compression-jvm", version.ref = "ktor" }
+kotlinx_serialization_json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 
 
 # ██████  ██    ██ ███    ██ ██████  ██      ███████ ███████

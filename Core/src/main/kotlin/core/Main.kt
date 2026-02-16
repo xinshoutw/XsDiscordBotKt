@@ -7,9 +7,11 @@ import org.slf4j.LoggerFactory
 
 import tw.xinshou.discord.core.base.BotLoader
 import tw.xinshou.discord.core.cli.JLineManager
+import tw.xinshou.discord.core.dashboard.CoreDashboardBackend
 import tw.xinshou.discord.core.logger.LogBackManager
 import tw.xinshou.discord.core.mongodb.CacheDbServer
 import tw.xinshou.discord.core.util.Arguments
+import tw.xinshou.discord.webdashboard.DashboardServer
 
 
 internal fun main(args: Array<String>) = runBlocking {
@@ -20,6 +22,7 @@ internal fun main(args: Array<String>) = runBlocking {
         LogBackManager.configureSystem()
         Arguments.parse(args)
         CacheDbServer.start()
+        DashboardServer.start(backend = CoreDashboardBackend)
         BotLoader.start()
         JLineManager.start(scope = this, stopSignal = stopSignal)
         stopSignal.await()
@@ -28,6 +31,7 @@ internal fun main(args: Array<String>) = runBlocking {
     } finally {
         CacheDbServer.close()
         BotLoader.stop()
+        DashboardServer.stop()
         JLineManager.stop()
         LogBackManager.uninstall()
         logger.info("Application terminated.")

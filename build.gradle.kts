@@ -67,4 +67,5 @@ val updateReadmeVersion by tasks.registering {
 // This ensures README version is updated during normal development workflow
 tasks.named("build") {
     dependsOn(updateReadmeVersion)
+    dependsOn(":WebDashboard:build")
 }

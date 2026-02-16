@@ -56,6 +56,8 @@ mavenPublishing {
 }
 
 dependencies {
+    implementation(project(":WebDashboard"))
+
     compileOnly(libs.annotations)
     api(libs.jda)
     api(libs.logback.classic)

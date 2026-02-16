@@ -95,20 +95,41 @@ internal object PluginLoader {
      * Run whole plugins
      */
     fun run() {
+        listenersQueue.clear()
         pluginQueue.values.reversed().forEach { plugin ->
             plugin.load()
-            plugin.guildCommands()?.let { guildCommands.addAll(it) }
-            plugin.globalCommands()?.let { globalCommands.addAll(it) }
 
             logger.info("{} load successfully.", plugin.pluginName)
             if (plugin.listener) listenersQueue.add(plugin)
         }
+
+        rebuildCommands()
     }
 
     /**
      * Reloads all plugins by calling their reload methods.
      */
-    fun reload() = pluginQueue.values.forEach { it.reload() }
+    fun reload() {
+        pluginQueue.values.forEach { it.reload() }
+        rebuildCommands()
+    }
+
+    fun reloadPlugin(pluginName: String) {
+        val plugin = pluginQueue[pluginName]
+            ?: throw IllegalArgumentException("Plugin '$pluginName' is not loaded.")
+        plugin.reload()
+        rebuildCommands()
+    }
+
+    fun rebuildCommands() {
+        guildCommands.clear()
+        globalCommands.clear()
+
+        pluginQueue.values.reversed().forEach { plugin ->
+            plugin.guildCommands()?.let { guildCommands.addAll(it) }
+            plugin.globalCommands()?.let { globalCommands.addAll(it) }
+        }
+    }
 
     /**
      * Recursively loads a plugin and its dependencies.

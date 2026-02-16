@@ -37,9 +37,13 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         super.reload()
 
         if (!config.enabled) {
+            NtustCourse.stop()
             logger.warn("NtustCourse is disabled.")
             return
         }
+
+        NtustCourse.stop()
+        NtustCourse.start()
     }
 
     override fun guildCommands(): Array<CommandData> = guildCommands

@@ -77,3 +77,7 @@ project(":Plugins:NtustManager").name = "NtustManager"
 
 include("Plugins:NtustCourse")
 project(":Plugins:NtustCourse").name = "NtustCourse"
+
+include("WebDashboard")
+project(":WebDashboard").projectDir = file("Web-Dashboard")
+project(":WebDashboard").name = "WebDashboard"
