@@ -1,40 +1,44 @@
-embeds:
-  - author:
-      name: "訊息日誌"
-    title:
-      text: "☛ %channel_name% 的頻道設定"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '### 訊息日誌
 
-    fields:
-      - name: "頻道模式"
-        value: "<%cl_channel_mode%>"
-
-      - name: "白名單頻道"
-        value: "%cl_allow_list_format%"
-
-      - name: "黑名單頻道"
-        value: "%cl_block_list_format%"
-
-components:
-  - !ButtonsComponent
-    buttons:
-      - uid:
-          action: "toggle_btn"
-        style: 1
-        label: "切換模式"
-
-      - uid:
-          action: "modify_allow_btn"
-        style: 3
-        label: "設定白名單"
-
-      - uid:
-          action: "modify_block_btn"
-        style: 2
-        label: "設定黑名單"
-
-      - uid:
-          action: "delete_btn"
-        style: 4
-        label: "刪除"
+      ## ☛ %channel_name% 的頻道設定'
+  - type: text_display
+    content: '**頻道模式**\n<%cl_channel_mode%>'
+  - type: text_display
+    content: '**白名單頻道**\n%cl_allow_list_format%'
+  - type: text_display
+    content: '**黑名單頻道**\n%cl_block_list_format%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+- type: separator
+  divider: true
+  spacing: SMALL
+- type: action_row
+  components:
+  - type: button
+    style: 1
+    label: 切換模式
+    uid:
+      action: toggle_btn
+  - type: button
+    style: 3
+    label: 設定白名單
+    uid:
+      action: modify_allow_btn
+  - type: button
+    style: 2
+    label: 設定黑名單
+    uid:
+      action: modify_block_btn
+  - type: button
+    style: 4
+    label: 刪除
+    uid:
+      action: delete_btn

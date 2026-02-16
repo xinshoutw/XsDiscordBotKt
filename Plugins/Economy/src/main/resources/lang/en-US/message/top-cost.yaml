@@ -1,9 +1,17 @@
-embeds:
-  - author:
-      name: "Pocket Board"
-      icon_url: "https://i.imgur.com/PsEXCuY.png"
-    title:
-      text: "☛ Cost Board"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-    description: "%index%.\t%name_mention%\n%economy_board% $\n\n"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: "### Pocket Board\n## ☛ Cost Board\n%index%.\t%name_mention%\n%economy_board% $"
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/PsEXCuY.png
+      description: Pocket Board
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'

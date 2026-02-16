@@ -1,40 +1,44 @@
-embeds:
-  - author:
-      name: "Message Log"
-    title:
-      text: "☛ %channel_name%'s Channel Setting"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '### Message Log
 
-    fields:
-      - name: "Channel Mode"
-        value: "<%cl_channel_mode%>"
-
-      - name: "Allowlist Channels"
-        value: "%cl_allow_list_format%"
-
-      - name: "Blocklist Channels"
-        value: "%cl_block_list_format%"
-
-components:
-  - !ButtonsComponent
-    buttons:
-      - uid:
-          action: "toggle_btn"
-        style: 1
-        label: "Toggle Mode"
-
-      - uid:
-          action: "modify_allow_btn"
-        style: 3
-        label: "Modify Allowlist"
-
-      - uid:
-          action: "modify_block_btn"
-        style: 2
-        label: "Modify Blocklist"
-
-      - uid:
-          action: "delete_btn"
-        style: 4
-        label: "Delete"
+      ## ☛ %channel_name%''s Channel Setting'
+  - type: text_display
+    content: '**Channel Mode**\n<%cl_channel_mode%>'
+  - type: text_display
+    content: '**Allowlist Channels**\n%cl_allow_list_format%'
+  - type: text_display
+    content: '**Blocklist Channels**\n%cl_block_list_format%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+- type: separator
+  divider: true
+  spacing: SMALL
+- type: action_row
+  components:
+  - type: button
+    style: 1
+    label: Toggle Mode
+    uid:
+      action: toggle_btn
+  - type: button
+    style: 3
+    label: Modify Allowlist
+    uid:
+      action: modify_allow_btn
+  - type: button
+    style: 2
+    label: Modify Blocklist
+    uid:
+      action: modify_block_btn
+  - type: button
+    style: 4
+    label: Delete
+    uid:
+      action: delete_btn

@@ -1,24 +1,28 @@
-embeds:
-  - title:
-      text: "☛ 轉換語音頻道"
-      url: "%vl_channel_join_url%"
-    thumbnail_url: "%member_avatar_url%"
-    color_code: "#D0D000"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "`使用者`"
-        value: "%user_mention%\n\n\n"
-
-      - name: "`退出類別`"
-        value: "%vl_category_left_mention%"
-
-      - name: "`退出頻道`"
-        value: "%vl_channel_left_mention% (%vl_channel_left_name%)"
-
-      - name: "`進入類別`"
-        value: "%vl_category_join_mention%"
-
-      - name: "`進入頻道`"
-        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## [☛ 轉換語音頻道](%vl_channel_join_url%)'
+    accessory:
+      type: thumbnail
+      url: '%member_avatar_url%'
+      description: ☛ 轉換語音頻道
+  - type: text_display
+    content: '**`使用者`**\n%user_mention%'
+  - type: text_display
+    content: '**`退出類別`**\n%vl_category_left_mention%'
+  - type: text_display
+    content: '**`退出頻道`**\n%vl_channel_left_mention% (%vl_channel_left_name%)'
+  - type: text_display
+    content: '**`進入類別`**\n%vl_category_join_mention%'
+  - type: text_display
+    content: '**`進入頻道`**\n%vl_channel_join_mention% (%vl_channel_join_name%)'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#D0D000'

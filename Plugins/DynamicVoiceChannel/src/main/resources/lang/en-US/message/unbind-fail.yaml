@@ -1,4 +1,7 @@
-embeds:
-  - title:
-      text: "Unbind fail, the channel is not be found in settings"
-    color_code: "#FF0000"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## Unbind fail, the channel is not be found in settings'
+  accent_color: '#FF0000'

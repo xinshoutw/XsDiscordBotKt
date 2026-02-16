@@ -1,4 +1,7 @@
-embeds:
-  - title:
-      text: "取消綁定失敗，找不到設定記錄"
-    color_code: "#FF0000"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## 取消綁定失敗，找不到設定記錄'
+  accent_color: '#FF0000'

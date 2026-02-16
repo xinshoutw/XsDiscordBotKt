@@ -1,23 +1,28 @@
-embeds:
-  - title:
-      text: "☛ Message Deleted"
-    thumbnail_url: "%member_avatar_url%"
-    color_code: "#C02020"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "`Member`"
-        value: "%user_mention%"
-
-      - name: "`Category`"
-        value: "%cl_category_mention%"
-
-      - name: "`Channel`"
-        value: "%cl_channel_mention%"
-
-      - name: "`Change Count`"
-        value: "%cl_change_count%\n\n\n"
-
-      - name: "`--> Content <--`"
-        value: "%cl_msg_before%"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## ☛ Message Deleted'
+    accessory:
+      type: thumbnail
+      url: '%member_avatar_url%'
+      description: ☛ Message Deleted
+  - type: text_display
+    content: '**`Member`**\n%user_mention%'
+  - type: text_display
+    content: '**`Category`**\n%cl_category_mention%'
+  - type: text_display
+    content: '**`Channel`**\n%cl_channel_mention%'
+  - type: text_display
+    content: '**`Change Count`**\n%cl_change_count%'
+  - type: text_display
+    content: '**`--> Content <--`**\n%cl_msg_before%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#C02020'

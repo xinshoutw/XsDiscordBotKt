@@ -1,16 +1,19 @@
-embeds:
-  - title:
-      text: "國泰世華 - 無卡"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## 國泰世華 - 無卡'
+    accessory:
+      type: thumbnail
+      url: https://i.meee.com.tw/eXLqPPg.png
+      description: 國泰世華 - 無卡
+  - type: text_display
+    content: '**請配合三方驗證**\n在明細寫您的 Discord ID 以及 storA 商城，然後拍照上傳明細
 
-    thumbnail_url: "https://i.meee.com.tw/eXLqPPg.png"
-
-    fields:
-      - name: "請配合三方驗證"
-        value: |-
-          在明細寫您的 Discord ID 以及 storA 商城，然後拍照上傳明細
-          教學 https://youtu.be/s52-kgtvgCs
-
-      - name: "銀行帳號"
-        value: "`699520706023`"
-
-    color_code: "0x9bd9d5"
+      教學 https://youtu.be/s52-kgtvgCs'
+  - type: text_display
+    content: '**銀行帳號**\n`699520706023`'
+  accent_color: '0x9bd9d5'

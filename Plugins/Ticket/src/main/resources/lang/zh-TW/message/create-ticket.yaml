@@ -1,65 +1,68 @@
-embeds:
-  - model_key: "tt@embed-demo"
-
-components:
-  - !ButtonsComponent
-    buttons:
-      - model_key: "tt@btn-demo"
-
-  - !ButtonsComponent
-    buttons:
-      - uid:
-          action: "create"
-          sub_action: "modify-author"
-        style: 1
-        label: "設定作者"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-content"
-        style: 1
-        label: "設定文字"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-category"
-        style: 1
-        label: "設定頻道目錄"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-color"
-        style: 1
-        label: "設定顏色"
-
-  - !ButtonsComponent
-    buttons:
-      - uid:
-          action: "create"
-          sub_action: "modify-btn-text"
-        style: 1
-        label: "設定按鈕文字"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-btn-color"
-        style: 1
-        label: "設定按鈕顏色"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-reason"
-        style: 1
-        label: "設定詢問標題"
-
-      - uid:
-          action: "create"
-          sub_action: "modify-admin"
-        style: 1
-        label: "設定允許身分組"
-
-      - uid:
-          action: "create"
-          sub_action: "confirm-create"
-        style: 3
-        label: "確定建立"
+is_components_v2: true
+components_v2:
+- model_key: tt@embed-demo
+- type: separator
+  divider: true
+  spacing: SMALL
+- type: action_row
+  components:
+  - type: button
+    model_key: tt@btn-demo
+- type: action_row
+  components:
+  - type: button
+    style: 1
+    label: 設定作者
+    uid:
+      action: create
+      sub_action: modify-author
+  - type: button
+    style: 1
+    label: 設定文字
+    uid:
+      action: create
+      sub_action: modify-content
+  - type: button
+    style: 1
+    label: 設定頻道目錄
+    uid:
+      action: create
+      sub_action: modify-category
+  - type: button
+    style: 1
+    label: 設定顏色
+    uid:
+      action: create
+      sub_action: modify-color
+- type: action_row
+  components:
+  - type: button
+    style: 1
+    label: 設定按鈕文字
+    uid:
+      action: create
+      sub_action: modify-btn-text
+  - type: button
+    style: 1
+    label: 設定按鈕顏色
+    uid:
+      action: create
+      sub_action: modify-btn-color
+  - type: button
+    style: 1
+    label: 設定詢問標題
+    uid:
+      action: create
+      sub_action: modify-reason
+  - type: button
+    style: 1
+    label: 設定允許身分組
+    uid:
+      action: create
+      sub_action: modify-admin
+  - type: button
+    style: 3
+    label: 確定建立
+    uid:
+      action: create
+      sub_action: confirm-create

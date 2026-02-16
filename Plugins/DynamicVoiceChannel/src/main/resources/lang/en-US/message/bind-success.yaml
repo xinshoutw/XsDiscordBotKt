@@ -1,4 +1,7 @@
-embeds:
-  - title:
-      text: "Bind success"
-    color_code: "#00FF00"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## Bind success'
+  accent_color: '#00FF00'

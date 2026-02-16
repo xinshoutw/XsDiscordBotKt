@@ -1,9 +1,20 @@
-embeds:
-  - author:
-      name: "口袋失敗"
-      icon_url: "https://i.imgur.com/PsEXCuY.png"
-    title:
-      text: "你沒有權限 ><"
-    color_code: "#FF0000"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '### 口袋失敗
+
+        ## 你沒有權限 ><'
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/PsEXCuY.png
+      description: 口袋失敗
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#FF0000'

@@ -1,21 +1,26 @@
-embeds:
-  - title:
-      text: "☛ Voice Status Deleted"
-      url: "%vl_channel_url%"
-    thumbnail_url: "%member_avatar_url%"
-    color_code: "#C02020"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "`Member`"
-        value: "%user_mention%\n\n\n"
-
-      - name: "`Category`"
-        value: "%vl_category_mention%"
-
-      - name: "`Channel`"
-        value: "%vl_channel_mention%"
-
-      - name: "`--> Status <--`"
-        value: "%vl_status_before%"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## [☛ Voice Status Deleted](%vl_channel_url%)'
+    accessory:
+      type: thumbnail
+      url: '%member_avatar_url%'
+      description: ☛ Voice Status Deleted
+  - type: text_display
+    content: '**`Member`**\n%user_mention%'
+  - type: text_display
+    content: '**`Category`**\n%vl_category_mention%'
+  - type: text_display
+    content: '**`Channel`**\n%vl_channel_mention%'
+  - type: text_display
+    content: '**`--> Status <--`**\n%vl_status_before%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#C02020'

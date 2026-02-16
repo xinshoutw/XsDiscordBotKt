@@ -1,15 +1,23 @@
-embeds:
-  - author:
-      name: "Pocket Set Cost"
-      icon_url: "https://i.imgur.com/PsEXCuY.png"
-    title:
-      text: "☛ %user_name%'s Pocket"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '### Pocket Set Cost
 
-    fields:
-      - name: "Balance"
-        value: "%economy_money% $"
-
-      - name: "Cost [=]"
-        value: "%economy_cost_before% ➣ %economy_cost% $"
+        ## ☛ %user_name%''s Pocket'
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/PsEXCuY.png
+      description: Pocket Set Cost
+  - type: text_display
+    content: '**Balance**\n%economy_money% $'
+  - type: text_display
+    content: '**Cost [=]**\n%economy_cost_before% ➣ %economy_cost% $'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'

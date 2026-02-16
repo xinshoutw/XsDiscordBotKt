@@ -1,17 +1,19 @@
-embeds:
-  - title:
-      text: "中國信託 - 匯款"
-
-    thumbnail_url: "https://i.meee.com.tw/9SF70gL.png"
-
-    fields:
-      - name: "請配合三方驗證"
-        value: "在明細寫您的 Discord ID 以及 storA 商城，然後拍照上傳明細"
-
-      - name: "銀行代號"
-        value: "`822`"
-
-      - name: "銀行帳號"
-        value: "`267540201199`"
-
-    color_code: "0x9bd9d5"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## 中國信託 - 匯款'
+    accessory:
+      type: thumbnail
+      url: https://i.meee.com.tw/9SF70gL.png
+      description: 中國信託 - 匯款
+  - type: text_display
+    content: '**請配合三方驗證**\n在明細寫您的 Discord ID 以及 storA 商城，然後拍照上傳明細'
+  - type: text_display
+    content: '**銀行代號**\n`822`'
+  - type: text_display
+    content: '**銀行帳號**\n`267540201199`'
+  accent_color: '0x9bd9d5'

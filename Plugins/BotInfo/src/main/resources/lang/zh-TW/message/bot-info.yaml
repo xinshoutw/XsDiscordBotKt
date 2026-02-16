@@ -1,17 +1,24 @@
-embeds:
-  - author:
-      name: "狀態查詢"
-      icon_url: "https://i.imgur.com/a7z4ch2.png"
-    title:
-      text: "☛ 序之徒的資訊"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '### 狀態查詢
 
-    fields:
-      - name: "伺服器總數"
-        value: "%guild_counts%"
-
-      - name: "成員總數"
-        value: "%member_counts%"
-
-    color_code: "#00FFFF"
+        ## ☛ 序之徒的資訊'
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/a7z4ch2.png
+      description: 狀態查詢
+  - type: text_display
+    content: '**伺服器總數**\n%guild_counts%'
+  - type: text_display
+    content: '**成員總數**\n%member_counts%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#00FFFF'

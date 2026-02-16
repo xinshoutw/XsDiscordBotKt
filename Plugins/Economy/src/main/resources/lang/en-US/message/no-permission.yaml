@@ -1,9 +1,20 @@
-embeds:
-  - author:
-      name: "Pocket Failed"
-      icon_url: "https://i.imgur.com/PsEXCuY.png"
-    title:
-      text: "You have no permission ><"
-    color_code: "#FF0000"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '### Pocket Failed
+
+        ## You have no permission ><'
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/PsEXCuY.png
+      description: Pocket Failed
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#FF0000'

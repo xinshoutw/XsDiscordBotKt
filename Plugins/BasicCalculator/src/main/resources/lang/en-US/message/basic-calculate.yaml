@@ -1,14 +1,20 @@
-embeds:
-  - title:
-      text: "🔢 Calculator"
-    image_url: "https://blog.xinshou.tw/favicon.ico"
-    color_code: "#00FFFF"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "Formula"
-        value: "```%bc_question%```"
-
-      - name: "Result"
-        value: "```%bc_answer%```"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## 🔢 Calculator'
+  - type: text_display
+    content: '**Formula**\n```%bc_question%```'
+  - type: text_display
+    content: '**Result**\n```%bc_answer%```'
+  - type: media_gallery
+    items:
+    - url: https://blog.xinshou.tw/favicon.ico
+      description: 🔢 Calculator
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#00FFFF'

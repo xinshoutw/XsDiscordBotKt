@@ -1,9 +1,17 @@
-embeds:
-  - author:
-      name: "口袋排行榜"
-      icon_url: "https://i.imgur.com/PsEXCuY.png"
-    title:
-      text: "☛ 總消費"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-    description: "%index%.\t%name_mention%\n%economy_board% 元\n\n"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: "### 口袋排行榜\n## ☛ 總消費\n%index%.\t%name_mention%\n%economy_board% 元"
+    accessory:
+      type: thumbnail
+      url: https://i.imgur.com/PsEXCuY.png
+      description: 口袋排行榜
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'

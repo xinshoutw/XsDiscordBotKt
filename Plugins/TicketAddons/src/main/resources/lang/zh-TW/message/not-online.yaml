@@ -1,7 +1,11 @@
-embeds:
-  - author:
-      name: "白月代購"
-    title:
-      text: "營業時間參考請看 <#1036632849043955753> \n如果老闆沒有馬上回你代表人不在，請等老闆回覆訊息，並且先說出需要購買的商品還有 <#1035435839125196881>"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: "### 白月代購\n## 營業時間參考請看 <#1036632849043955753> \n如果老闆沒有馬上回你代表人不在，請等老闆回覆訊息，並且先說出需要購買的商品還有 <#1035435839125196881>"
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'

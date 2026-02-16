@@ -1,23 +1,28 @@
-embeds:
-  - title:
-      text: "☛ 刪除訊息"
-    thumbnail_url: "%member_avatar_url%"
-    color_code: "#C02020"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "`類別`"
-        value: "%cl_category_mention%"
-
-      - name: "`頻道`"
-        value: "%cl_channel_mention%"
-
-      - name: "`使用者`"
-        value: "%user_mention%"
-
-      - name: "`變更次數`"
-        value: "%cl_change_count%\n\n\n"
-
-      - name: "`--> 內容 <--`"
-        value: "%cl_msg_before%"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## ☛ 刪除訊息'
+    accessory:
+      type: thumbnail
+      url: '%member_avatar_url%'
+      description: ☛ 刪除訊息
+  - type: text_display
+    content: '**`類別`**\n%cl_category_mention%'
+  - type: text_display
+    content: '**`頻道`**\n%cl_channel_mention%'
+  - type: text_display
+    content: '**`使用者`**\n%user_mention%'
+  - type: text_display
+    content: '**`變更次數`**\n%cl_change_count%'
+  - type: text_display
+    content: '**`--> 內容 <--`**\n%cl_msg_before%'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#C02020'

@@ -1,18 +1,24 @@
-embeds:
-  - title:
-      text: "☛ Voice Channel Joined"
-      url: "%vl_channel_join_url%"
-    thumbnail_url: "%member_avatar_url%"
-    color_code: "#0EE000"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "`Member`"
-        value: "%user_mention%\n\n\n"
-
-      - name: "`Category`"
-        value: "%vl_category_join_mention%"
-
-      - name: "`Channel`"
-        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: section
+    components:
+    - type: text_display
+      content: '## [☛ Voice Channel Joined](%vl_channel_join_url%)'
+    accessory:
+      type: thumbnail
+      url: '%member_avatar_url%'
+      description: ☛ Voice Channel Joined
+  - type: text_display
+    content: '**`Member`**\n%user_mention%'
+  - type: text_display
+    content: '**`Category`**\n%vl_category_join_mention%'
+  - type: text_display
+    content: '**`Channel`**\n%vl_channel_join_mention% (%vl_channel_join_name%)'
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#0EE000'

@@ -1,11 +1,14 @@
-components:
-  - !EntitySelectMenu
+is_components_v2: true
+components_v2:
+- type: action_row
+  components:
+  - type: entity_select_menu
     uid:
-      action: "modify_allow_menu"
-    placeholder: "選擇頻道、類別或在此搜尋"
+      action: modify_allow_menu
+    placeholder: 選擇頻道、類別或在此搜尋
     min: 1
     max: 25
-    select_target_type: "CHANNEL"
+    select_target_type: CHANNEL
     channel_types:
-      - "VOICE"
-      - "CATEGORY"
+    - VOICE
+    - CATEGORY

@@ -1,14 +1,20 @@
-embeds:
-  - title:
-      text: "🔢 計算機"
-    image_url: "https://blog.xinshou.tw/favicon.ico"
-    color_code: "#C02020"
-    footer:
-      text: "❖ ORDERLY SERVER ❖"
-
-    fields:
-      - name: "算式"
-        value: "```%bc_question%```"
-
-      - name: "結果"
-        value: "```%bc_error%```"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## 🔢 計算機'
+  - type: text_display
+    content: '**算式**\n```%bc_question%```'
+  - type: text_display
+    content: '**結果**\n```%bc_error%```'
+  - type: media_gallery
+    items:
+    - url: https://blog.xinshou.tw/favicon.ico
+      description: 🔢 計算機
+  - type: separator
+    divider: true
+    spacing: SMALL
+  - type: text_display
+    content: '*❖ ORDERLY SERVER ❖*'
+  accent_color: '#C02020'

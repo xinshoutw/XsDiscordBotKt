@@ -1,4 +1,7 @@
-embeds:
-  - title:
-      text: "The channel must be under the category"
-    color_code: "#FF0000"
+is_components_v2: true
+components_v2:
+- type: container
+  components:
+  - type: text_display
+    content: '## The channel must be under the category'
+  accent_color: '#FF0000'
