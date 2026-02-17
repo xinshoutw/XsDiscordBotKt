@@ -1,4 +1,4 @@
-package tw.xinshou.discord.core.builtin.messagecreator.serializer
+package tw.xinshou.discord.core.builtin.messagecreator.v1.serializer
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName

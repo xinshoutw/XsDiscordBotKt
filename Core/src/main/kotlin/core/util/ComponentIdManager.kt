@@ -1,6 +1,6 @@
 package tw.xinshou.discord.core.util
 
-import net.dv8tion.jda.api.interactions.components.buttons.Button.ID_MAX_LENGTH
+import net.dv8tion.jda.api.components.buttons.Button.ID_MAX_LENGTH
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 

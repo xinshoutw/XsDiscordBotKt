@@ -1,16 +1,17 @@
-package tw.xinshou.discord.core.builtin.messagecreator
+package tw.xinshou.discord.core.builtin.messagecreator.modal
 
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.modals.Modal
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.builtin.messagecreator.builder.ModalBuilder
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.ModalDataSerializer
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.TextInputStyleSerializer
+import tw.xinshou.discord.core.builtin.messagecreator.modal.builder.ModalBuilder
+import tw.xinshou.discord.core.builtin.messagecreator.modal.serializer.ModalDataSerializer
+import tw.xinshou.discord.core.builtin.messagecreator.modal.serializer.TextInputStyleSerializer
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 import tw.xinshou.discord.core.util.ComponentIdManager
@@ -33,7 +34,7 @@ class ModalCreator(
     init {
         val yaml = Yaml(
             serializersModule = SerializersModule {
-                contextual(TextInputStyleSerializer)
+                contextual(TextInputStyle::class, TextInputStyleSerializer)
             }
         )
 

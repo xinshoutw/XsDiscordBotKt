@@ -67,6 +67,7 @@ dependencies {
     api(libs.mongodb.driver.kotlin.sync)
     api(libs.moshi.kotlin)
     api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.serialization.json)
 
     implementation(libs.embed.mongo)
     implementation(libs.protobuf.java)

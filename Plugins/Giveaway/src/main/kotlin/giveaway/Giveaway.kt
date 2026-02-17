@@ -5,21 +5,22 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.selections.EntitySelectMenu
+import net.dv8tion.jda.api.components.selections.SelectOption
+import net.dv8tion.jda.api.components.selections.StringSelectMenu
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.modals.Modal
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.giveaway.Event.componentPrefix
@@ -542,6 +543,23 @@ internal object Giveaway {
         }
     }
 
+    private fun buildModalTextInput(
+        inputId: String,
+        label: String,
+        placeholder: String? = null,
+        value: String? = null,
+        required: Boolean,
+        maxLength: Int? = null,
+        style: TextInputStyle = TextInputStyle.SHORT,
+    ): Label {
+        val inputBuilder = TextInput.create(inputId, style)
+        placeholder?.let(inputBuilder::setPlaceholder)
+        value?.let(inputBuilder::setValue)
+        inputBuilder.setRequired(required)
+        maxLength?.let(inputBuilder::setMaxLength)
+        return Label.of(label, inputBuilder.build())
+    }
+
     /**
      * Check if time configuration is set
      */
@@ -609,13 +627,13 @@ internal object Giveaway {
             ),
             "設定抽獎名稱"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("giveaway_name", "抽獎名稱", TextInputStyle.SHORT)
-                    .setPlaceholder("請輸入抽獎名稱...")
-                    .setValue(config.giveawayName)
-                    .setRequired(true)
-                    .setMaxLength(100)
-                    .build()
+            buildModalTextInput(
+                inputId = "giveaway_name",
+                label = "抽獎名稱",
+                placeholder = "請輸入抽獎名稱...",
+                value = config.giveawayName,
+                required = true,
+                maxLength = 100
             )
         ).build()
 
@@ -635,13 +653,13 @@ internal object Giveaway {
             ),
             "設定獎品名稱"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("prize_name", "獎品名稱", TextInputStyle.SHORT)
-                    .setPlaceholder("請輸入獎品名稱...")
-                    .setValue(config.prizeName)
-                    .setRequired(true)
-                    .setMaxLength(100)
-                    .build()
+            buildModalTextInput(
+                inputId = "prize_name",
+                label = "獎品名稱",
+                placeholder = "請輸入獎品名稱...",
+                value = config.prizeName,
+                required = true,
+                maxLength = 100
             )
         ).build()
 
@@ -661,26 +679,26 @@ internal object Giveaway {
             ),
             "設定抽獎時間"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("end_time", "結束時間 (優先級最高)", TextInputStyle.SHORT)
-                    .setPlaceholder("格式: 2024-12-31 23:59 或留空")
-                    .setValue(config.endTime?.toString())
-                    .setRequired(false)
-                    .build()
+            buildModalTextInput(
+                inputId = "end_time",
+                label = "結束時間 (優先級最高)",
+                placeholder = "格式: 2024-12-31 23:59 或留空",
+                value = config.endTime?.toString(),
+                required = false
             ),
-            ActionRow.of(
-                TextInput.create("start_time", "開始時間", TextInputStyle.SHORT)
-                    .setPlaceholder("格式: 2024-12-31 12:00 或留空")
-                    .setValue(config.startTime?.toString())
-                    .setRequired(false)
-                    .build()
+            buildModalTextInput(
+                inputId = "start_time",
+                label = "開始時間",
+                placeholder = "格式: 2024-12-31 12:00 或留空",
+                value = config.startTime?.toString(),
+                required = false
             ),
-            ActionRow.of(
-                TextInput.create("duration", "持續時間 (秒)", TextInputStyle.SHORT)
-                    .setPlaceholder("例如: 3600 (1小時) 或留空")
-                    .setValue(config.duration?.toString())
-                    .setRequired(false)
-                    .build()
+            buildModalTextInput(
+                inputId = "duration",
+                label = "持續時間 (秒)",
+                placeholder = "例如: 3600 (1小時) 或留空",
+                value = config.duration?.toString(),
+                required = false
             )
         ).build()
 
@@ -700,13 +718,13 @@ internal object Giveaway {
             ),
             "設定中獎人數"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("winner_count", "中獎人數", TextInputStyle.SHORT)
-                    .setPlaceholder("請輸入中獎人數 (預設: 1)")
-                    .setValue(config.winnerCount.toString())
-                    .setRequired(true)
-                    .setMaxLength(3)
-                    .build()
+            buildModalTextInput(
+                inputId = "winner_count",
+                label = "中獎人數",
+                placeholder = "請輸入中獎人數 (預設: 1)",
+                value = config.winnerCount.toString(),
+                required = true,
+                maxLength = 3
             )
         ).build()
 
@@ -727,13 +745,13 @@ internal object Giveaway {
             ),
             "設定贊助商"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("sponsor", "贊助商", TextInputStyle.SHORT)
-                    .setPlaceholder("贊助商名稱 (預設: $serverName)")
-                    .setValue(config.sponsor.ifEmpty { serverName })
-                    .setRequired(false)
-                    .setMaxLength(100)
-                    .build()
+            buildModalTextInput(
+                inputId = "sponsor",
+                label = "贊助商",
+                placeholder = "贊助商名稱 (預設: $serverName)",
+                value = config.sponsor.ifEmpty { serverName },
+                required = false,
+                maxLength = 100
             )
         ).build()
 
@@ -753,13 +771,13 @@ internal object Giveaway {
             ),
             "設定縮圖URL"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("thumbnail_url", "縮圖URL", TextInputStyle.SHORT)
-                    .setPlaceholder("請輸入圖片URL (可選)")
-                    .setValue(config.thumbnailUrl)
-                    .setRequired(false)
-                    .setMaxLength(500)
-                    .build()
+            buildModalTextInput(
+                inputId = "thumbnail_url",
+                label = "縮圖URL",
+                placeholder = "請輸入圖片URL (可選)",
+                value = config.thumbnailUrl,
+                required = false,
+                maxLength = 500
             )
         ).build()
 
@@ -1116,13 +1134,13 @@ internal object Giveaway {
             ),
             "設定身份組權重"
         ).addComponents(
-            ActionRow.of(
-                TextInput.create("weight", "權重值", TextInputStyle.SHORT)
-                    .setPlaceholder("請輸入權重值 (填入1代表取消設定)")
-                    .setValue("1")
-                    .setRequired(true)
-                    .setMaxLength(3)
-                    .build()
+            buildModalTextInput(
+                inputId = "weight",
+                label = "權重值",
+                placeholder = "請輸入權重值 (填入1代表取消設定)",
+                value = "1",
+                required = true,
+                maxLength = 3
             )
         ).build()
 

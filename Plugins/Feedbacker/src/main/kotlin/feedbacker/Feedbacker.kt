@@ -2,16 +2,17 @@ package tw.xinshou.discord.plugin.feedbacker
 
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.Component
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import tw.xinshou.discord.core.base.BotLoader.jdaBot
-import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
-import tw.xinshou.discord.core.builtin.messagecreator.ModalCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
+import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
@@ -112,12 +113,15 @@ internal object Feedbacker {
             return
         }
 
-        val newComponents = event.message.components.map { actionRow ->
+        val newComponents = event.message.components
+            .filter { it.type == Component.Type.ACTION_ROW }
+            .map { topLevel ->
+                val actionRow = topLevel.asActionRow()
             ActionRow.of(
                 actionRow.components.map { component ->
                     when (component) {
                         is Button -> component.withStyle(
-                            if (component.id == event.componentId) ButtonStyle.PRIMARY
+                            if (component.customId == event.componentId) ButtonStyle.PRIMARY
                             else ButtonStyle.SECONDARY
                         )
 
@@ -125,7 +129,7 @@ internal object Feedbacker {
                     }
                 }
             )
-        }
+            }
 
         event.deferEdit().flatMap {
             event.hook.editOriginalComponents(newComponents)
@@ -141,12 +145,16 @@ internal object Feedbacker {
 
         val locale = event.userLocale
         var stars: Int = -1
-        event.message.components[0].forEachIndexed { index, button ->
-            if ((button as Button).style == ButtonStyle.PRIMARY) {
+        event.message.components
+            .firstOrNull { it.type == Component.Type.ACTION_ROW }
+            ?.asActionRow()
+            ?.buttons
+            ?.forEachIndexed { index, button ->
+            if (button.style == ButtonStyle.PRIMARY) {
                 stars = index + 1
                 return@forEachIndexed
             }
-        }
+            }
 
         if (stars == -1) {
             event.reply(config.formWarning).setEphemeral(true).queue()

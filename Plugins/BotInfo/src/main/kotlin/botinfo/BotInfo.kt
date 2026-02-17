@@ -3,7 +3,7 @@ package tw.xinshou.discord.plugin.botinfo
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.plugin.botinfo.Event.pluginDirectory
 

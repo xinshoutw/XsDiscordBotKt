@@ -1,12 +1,13 @@
 package tw.xinshou.discord.plugin.ticket.create
 
 import net.dv8tion.jda.api.entities.emoji.Emoji
+import net.dv8tion.jda.api.components.Component
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.plugin.ticket.Ticket.componentIdManager
 import tw.xinshou.discord.plugin.ticket.Ticket.jsonGuildManager
@@ -35,7 +36,11 @@ internal object StepManager {
         event.messageChannel.retrieveMessageById(messageId)
             .onErrorFlatMap { i -> event.hook.editOriginal("Cannot found the message by id: $messageId") }
             .flatMap {
-                if (!it.actionRows.isEmpty() && it.actionRows[0].components.size == 5) {
+                val firstActionRow = it.components
+                    .firstOrNull { component -> component.type == Component.Type.ACTION_ROW }
+                    ?.asActionRow()
+
+                if (firstActionRow != null && firstActionRow.components.size == 5) {
                     event.hook.editOriginal("This message is full of buttons, please recreate a new message")
                 } else {
                     val step = Step(event.hook, it)

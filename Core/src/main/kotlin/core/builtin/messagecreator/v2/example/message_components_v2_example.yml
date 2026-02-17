@@ -1,0 +1,158 @@
+# Full example for MessageCreator v2
+# - `is_components_v2: true` enforces Discord Components V2 mode.
+# - `content` and `embeds` must stay empty in this mode.
+is_components_v2: true
+
+components_v2:
+  # 1) Section with text + button accessory
+  - type: "section"
+    id: 1001
+    components:
+      - type: "text_display"
+        content: "## Welcome\nUse the controls below to continue."
+    accessory:
+      type: "button"
+      uid:
+        action: "example"
+        sub_action: "open-help"
+      style: "PRIMARY"
+      label: "Open Help"
+      emoji: "📘"
+
+  # 2) Section with text + thumbnail accessory
+  - type: "section"
+    id: 1002
+    components:
+      - type: "text_display"
+        content: "### Profile\nThis section demonstrates thumbnail accessory."
+    accessory:
+      type: "thumbnail"
+      url: "https://cdn.discordapp.com/embed/avatars/0.png"
+      description: "User avatar"
+      spoiler: false
+
+  # 3) Action row with regular and link button
+  - type: "action_row"
+    id: 1003
+    components:
+      - type: "button"
+        uid:
+          action: "example"
+          sub_action: "confirm"
+        style: "SUCCESS"
+        label: "Confirm"
+      - type: "button"
+        uid:
+          action: "example"
+          sub_action: "cancel"
+        style: "DANGER"
+        label: "Cancel"
+      - type: "button"
+        style: "LINK"
+        url: "https://docs.discord.com/developers/components/using-message-components"
+        label: "Discord Docs"
+
+  # 4) Premium button example (requires valid sku/sku_id)
+  - type: "action_row"
+    id: 1004
+    components:
+      - type: "button"
+        style: "PREMIUM"
+        sku_id: "123456789012345678"
+
+  # 5) String select menu
+  - type: "action_row"
+    id: 1005
+    components:
+      - type: "string_select_menu"
+        uid:
+          action: "example"
+          sub_action: "pick-tier"
+        placeholder: "Choose a tier"
+        min: 1
+        max: 1
+        options:
+          - label: "Free"
+            value: "free"
+            description: "Basic plan"
+          - label: "Pro"
+            value: "pro"
+            description: "Advanced plan"
+            emoji: "⭐"
+            default: true
+        default_values:
+          - "pro"
+
+  # 6) Entity select menu
+  - type: "action_row"
+    id: 1006
+    components:
+      - type: "entity_select_menu"
+        uid:
+          action: "example"
+          sub_action: "pick-target"
+        placeholder: "Choose channels"
+        select_targets: ["CHANNEL"]
+        channel_types: ["TEXT", "VOICE", "FORUM"]
+        min: 1
+        max: 2
+
+  # 7) Media gallery with image items
+  - type: "media_gallery"
+    id: 1007
+    items:
+      - url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
+        description: "Landscape"
+      - url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+        description: "Mountain"
+        spoiler: true
+
+  # 8) Separator
+  - type: "separator"
+    id: 1008
+    divider: true
+    spacing: "LARGE"
+
+  # 9) File display (references attachment filename)
+  #    You must attach a file named `report.pdf` when sending this message.
+  - type: "file_display"
+    id: 1009
+    file_name: "report.pdf"
+    spoiler: false
+
+  # 10) Container with mixed child components
+  - type: "container"
+    id: 1010
+    accent_color: "#4A90E2"
+    spoiler: false
+    components:
+      - type: "text_display"
+        content: "### Container Block\nYou can group content and controls in one visual block."
+      - type: "separator"
+        divider: true
+        spacing: "SMALL"
+      - type: "section"
+        components:
+          - type: "text_display"
+            content: "Container section with accessory button."
+        accessory:
+          type: "button"
+          uid:
+            action: "example"
+            sub_action: "container-action"
+          style: "SECONDARY"
+          label: "Do Action"
+      - type: "action_row"
+        components:
+          - type: "button"
+            uid:
+              action: "example"
+              sub_action: "container-confirm"
+            style: 3
+            label: "Confirm"
+          - type: "button"
+            uid:
+              action: "example"
+              sub_action: "container-close"
+            style: 2
+            label: "Close"

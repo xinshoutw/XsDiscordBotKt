@@ -7,24 +7,27 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xinshou.discord.common.Version
 import tw.xinshou.discord.core.plugin.PluginEvent
 import tw.xinshou.discord.core.plugin.yaml.InfoSerializer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.ArrayDeque
+import java.util.EnumSet
+import java.util.LinkedHashMap
 import java.util.jar.JarFile
 import kotlin.io.path.extension
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 
-/**
- * Manages the lifecycle of all plugins, loading and unloading them as required.
- */
 internal object PluginLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val dir: Path = Paths.get("plugins")
     private val pluginInfos: MutableMap<String, InfoSimple> = HashMap()
+    private val pluginVersionPattern = Regex("^\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.-]+)?$")
+
     val intents: EnumSet<GatewayIntent> = EnumSet.noneOf(GatewayIntent::class.java)
     val cacheFlags: EnumSet<CacheFlag> = EnumSet.noneOf(CacheFlag::class.java)
     val memberCachePolicies: MutableSet<String> = mutableSetOf("OWNER", "VOICE")
@@ -33,16 +36,12 @@ internal object PluginLoader {
     val listenersQueue = ArrayDeque<PluginEvent>()
     val pluginQueue = LinkedHashMap<String, PluginEvent>()
 
-    /**
-     * Loads all plugins from the plugins directory.
-     */
     fun preLoad() {
-        var success = 0
-        var fail = 0
+        var discovered = 0
+        var failed = 0
         logger.info("Start loading plugins...")
 
-        val loader = tw.xinshou.discord.core.plugin.ClassLoader
-
+        resetState()
         Files.createDirectories(dir)
 
         dir.listDirectoryEntries()
@@ -51,49 +50,98 @@ internal object PluginLoader {
             .forEach { path ->
                 JarFile(path.toFile()).use { jarFile ->
                     try {
-                        jarFile.getInputStream(jarFile.getEntry("info.yaml")).use { inputStream ->
+                        val infoEntry = jarFile.getEntry("info.yaml")
+                        if (infoEntry == null) {
+                            failed++
+                            logger.error("Missing info.yaml in plugin jar: {}", path.name)
+                            return@forEach
+                        }
+
+                        jarFile.getInputStream(infoEntry).use { inputStream ->
                             val config = Yaml().decodeFromStream<InfoSerializer>(inputStream)
-                            logger.debug("-------> {}", config.name)
 
-                            if (pluginInfos.containsKey(config.name)) {
-                                logger.error("Duplicate plugin name: {}!", path.name)
-                                fail++
-                                return
+                            if (config.name in pluginInfos) {
+                                failed++
+                                logger.error("Duplicate plugin name: {} ({})", config.name, path.name)
+                                return@forEach
                             }
-                            loader.addJar(path, config.main)
 
-                            loader.getClass(config.main)?.let {
-                                pluginInfos[config.name] =
-                                    InfoSimple(config.name, it, config.dependPlugins, config.softDependPlugins)
-                                success++
-                            } ?: run { fail++ }
+                            if (!validatePluginInfo(path, config)) {
+                                failed++
+                                return@forEach
+                            }
 
-                            intents.addAll(config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() })
-                            cacheFlags.addAll(config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() })
+                            val dependJars = resolveDependencyJars(path, config) ?: run {
+                                failed++
+                                return@forEach
+                            }
+
+                            pluginInfos[config.name] = InfoSimple(
+                                name = config.name,
+                                mainClass = config.main,
+                                path = path,
+                                depend = config.dependPlugins,
+                                softDepend = config.softDependPlugins,
+                                dependJars = dependJars,
+                                prefix = config.prefix,
+                                componentPrefix = config.componentPrefix
+                            )
+
+                            intents.addAll(
+                                config.requireIntents.mapNotNull { runCatching { GatewayIntent.valueOf(it) }.getOrNull() }
+                            )
+                            cacheFlags.addAll(
+                                config.requireCacheFlags.mapNotNull { runCatching { CacheFlag.valueOf(it) }.getOrNull() }
+                            )
                             memberCachePolicies.addAll(config.requireMemberCachePolicies)
-                            logger.info("==ADD==> {}", config.name)
+                            discovered++
                         }
                     } catch (e: Exception) {
-                        fail++
+                        failed++
                         logger.error("Error occurred with file: {}!", path.name, e)
                     }
                 }
             }
 
+        val ordered = LinkedHashMap<String, InfoSimple>()
         pluginInfos.values.forEach { info ->
-            if (!pluginQueue.containsKey(info.name) && addPluginToQueue(info)) {
-                logger.error("Stopped loading plugins due to missing dependencies.")
-                return
+            if (!ordered.containsKey(info.name) && addPluginToQueue(info, ordered, mutableSetOf())) {
+                failed++
             }
         }
 
-        if (fail > 0) logger.error("{} plugin(s) failed to find.", fail)
-        logger.info("{} plugin(s) found successfully.", success)
+        ordered.values.forEach { info ->
+            try {
+                tw.xinshou.discord.core.plugin.ClassLoader.createPluginLoader(
+                    pluginName = info.name,
+                    primaryJar = info.path,
+                    dependencyPluginNames = info.depend + info.softDepend.filter(pluginInfos::containsKey),
+                    additionalJars = info.dependJars
+                )
+
+                val pluginClass = tw.xinshou.discord.core.plugin.ClassLoader.getClass(info.name, info.mainClass)
+                    ?: throw ClassNotFoundException(info.mainClass)
+
+                val pluginInstance = pluginClass.getDeclaredField("INSTANCE").get(null) as? PluginEvent
+                    ?: throw IllegalStateException("Cannot get object instance of plugin: ${info.name}")
+
+                pluginQueue[info.name] = pluginInstance.apply {
+                    pluginName = info.name
+                    prefix = info.prefix.ifBlank { info.name }
+                    componentPrefix = normalizeComponentPrefix(info.name, info.componentPrefix)
+                }
+
+                logger.info("==ADD==> {}", info.name)
+            } catch (e: Exception) {
+                failed++
+                logger.error("Failed to initialize plugin: {}", info.name, e)
+            }
+        }
+
+        if (failed > 0) logger.error("{} plugin(s) failed to load.", failed)
+        logger.info("{} plugin(s) found successfully.", discovered)
     }
 
-    /**
-     * Run whole plugins
-     */
     fun run() {
         listenersQueue.clear()
         pluginQueue.values.reversed().forEach { plugin ->
@@ -131,61 +179,132 @@ internal object PluginLoader {
         }
     }
 
-    /**
-     * Recursively loads a plugin and its dependencies.
-     *
-     * @param pluginInfo Information about the plugin to load.
-     * @return True if there is a failure in dependency loading, false otherwise.
-     */
-    private fun addPluginToQueue(pluginInfo: InfoSimple?): Boolean {
-        // Check if all mandatory dependencies are loaded successfully.
-        pluginInfo?.depend?.forEach { depend ->
-            // If the dependency is not already loaded, and it exists in the plugin list, try to load it.
-            if (pluginQueue.containsKey(depend))
-                return@forEach
+    fun closeClassLoaders() {
+        tw.xinshou.discord.core.plugin.ClassLoader.clear()
+    }
 
-            if (pluginInfos.containsKey(depend)) {
-                // If loading the dependency fails, log and return true to indicate a failure.
-                if (addPluginToQueue(pluginInfos[depend])) {
-                    logger.error("Failed to load dependency {} for plugin {}.", depend, pluginInfo.name)
-                    return true
-                }
-            } else {
-                // If the dependency does not exist, log an error and return true.
-                logger.error("Plugin: {} is missing dependency: {}", pluginInfo.name, depend)
+    private fun addPluginToQueue(
+        pluginInfo: InfoSimple?,
+        orderedPlugins: LinkedHashMap<String, InfoSimple>,
+        visiting: MutableSet<String>,
+    ): Boolean {
+        pluginInfo ?: return true
+        if (pluginInfo.name in orderedPlugins) return false
+
+        if (!visiting.add(pluginInfo.name)) {
+            logger.error("Detected circular plugin dependency around '{}'.", pluginInfo.name)
+            return true
+        }
+
+        pluginInfo.depend.forEach { depend ->
+            if (depend !in pluginInfos) {
+                logger.error("Plugin '{}' is missing dependency '{}'.", pluginInfo.name, depend)
+                return true
+            }
+
+            if (addPluginToQueue(pluginInfos[depend], orderedPlugins, visiting)) {
+                logger.error("Failed to load dependency '{}' for plugin '{}'.", depend, pluginInfo.name)
                 return true
             }
         }
 
-        // Check soft dependencies but do not fail if they are missing.
-        pluginInfo?.softDepend?.forEach { depend ->
-            if (!pluginQueue.containsKey(depend) && pluginInfos.containsKey(depend)) {
-                addPluginToQueue(pluginInfos[depend])
+        pluginInfo.softDepend.forEach { depend ->
+            if (depend in pluginInfos) {
+                addPluginToQueue(pluginInfos[depend], orderedPlugins, visiting)
             }
         }
 
-        pluginInfo?.let {
-            if (!pluginQueue.containsKey(it.name)) {
-                logger.info("Initializing {}.", it.name)
-                val event: PluginEvent = it.pluginInstance.getDeclaredField("INSTANCE").get(null) as PluginEvent
-                if (event == null) {
-                    logger.error("Cannot get object instance of plugin: {}", it.name)
-                    return@let
-                }
-
-                pluginQueue[it.name] = (it.pluginInstance.getDeclaredField("INSTANCE").get(null) as PluginEvent).apply {
-                    pluginName = it.name
-                }
-            }
-        }
-
+        visiting.remove(pluginInfo.name)
+        orderedPlugins[pluginInfo.name] = pluginInfo
         return false
+    }
+
+    private fun validatePluginInfo(path: Path, config: InfoSerializer): Boolean {
+        if (config.coreApi != Version.CORE_API) {
+            logger.error(
+                "Plugin '{}' ({}) is built for coreApi '{}', current coreApi is '{}'.",
+                config.name,
+                path.name,
+                config.coreApi,
+                Version.CORE_API
+            )
+            return false
+        }
+
+        if (!pluginVersionPattern.matches(config.version)) {
+            logger.error(
+                "Plugin '{}' ({}) has invalid version format '{}'.",
+                config.name,
+                path.name,
+                config.version
+            )
+            return false
+        }
+
+        return true
+    }
+
+    private fun resolveDependencyJars(path: Path, config: InfoSerializer): Set<Path>? {
+        val baseDir = path.parent ?: Paths.get(".")
+        val jars = linkedSetOf<Path>()
+
+        config.dependJars.forEach { jarPath ->
+            val resolved = resolveJarPath(baseDir, jarPath)
+            if (!resolved.isRegularFile()) {
+                logger.error("Plugin '{}' missing required dependency jar: {}", config.name, resolved)
+                return null
+            }
+            jars.add(resolved)
+        }
+
+        config.softDependJars.forEach { jarPath ->
+            val resolved = resolveJarPath(baseDir, jarPath)
+            if (resolved.isRegularFile()) {
+                jars.add(resolved)
+            } else {
+                logger.warn("Plugin '{}' optional dependency jar not found: {}", config.name, resolved)
+            }
+        }
+
+        return jars
+    }
+
+    private fun resolveJarPath(baseDir: Path, rawPath: String): Path {
+        val path = Paths.get(rawPath)
+        return if (path.isAbsolute) path.normalize() else baseDir.resolve(path).normalize()
+    }
+
+    private fun normalizeComponentPrefix(pluginName: String, infoComponentPrefix: String): String {
+        if (infoComponentPrefix.isNotBlank()) return infoComponentPrefix
+
+        if (pluginName.length > 10) {
+            logger.warn("Plugin name '{}' is too long, generated component prefix may exceed limits.", pluginName)
+        }
+
+        return pluginName.lowercase() + "@"
+    }
+
+    private fun resetState() {
+        pluginInfos.clear()
+        intents.clear()
+        cacheFlags.clear()
+        memberCachePolicies.clear()
+        memberCachePolicies += setOf("OWNER", "VOICE")
+        guildCommands.clear()
+        globalCommands.clear()
+        listenersQueue.clear()
+        pluginQueue.clear()
+        closeClassLoaders()
     }
 }
 
-private class InfoSimple(
+private data class InfoSimple(
     val name: String,
-    val pluginInstance: Class<*>,
+    val mainClass: String,
+    val path: Path,
     val depend: Set<String>,
-    val softDepend: Set<String>
+    val softDepend: Set<String>,
+    val dependJars: Set<Path>,
+    val prefix: String,
+    val componentPrefix: String,
 )

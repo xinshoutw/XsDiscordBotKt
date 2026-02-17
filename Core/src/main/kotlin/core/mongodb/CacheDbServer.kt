@@ -76,7 +76,7 @@ object CacheDbServer : AutoCloseable {
                     )
             )
             .build()
-            .start(Version.Main.V4_4) // ancient version, because Raspberry Pi 4B doesn't support newer versions
+            .start(Version.Main.V8_2) // ancient version, because Raspberry Pi 4B doesn't support newer versions
 
         val serverAddress: ServerAddress = runningMongod.current().serverAddress
         mongoClient = MongoClients.create("mongodb://${serverAddress.host}:${serverAddress.port}")

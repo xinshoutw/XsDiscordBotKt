@@ -61,6 +61,8 @@ class FileGetter(private val pluginDirFile: File, private val clazz: Class<*>) {
     fun export(resourcePath: String, destination: File? = null, replace: Boolean = false) {
         val cleanPath = resourcePath.removePrefix("/").let { it.ifEmpty { "" } }
         val resourceUrl = clazz.getResource(cleanPath)
+            ?: clazz.getResource("/$cleanPath")
+            ?: clazz.classLoader.getResource(cleanPath)
             ?: throw FileNotFoundException("Resource path not found: $cleanPath")
 
         val jarConnection = resourceUrl.openConnection()

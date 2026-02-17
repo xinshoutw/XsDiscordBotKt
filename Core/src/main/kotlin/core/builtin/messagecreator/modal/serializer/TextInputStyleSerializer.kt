@@ -1,4 +1,4 @@
-package tw.xinshou.discord.core.builtin.messagecreator.serializer
+package tw.xinshou.discord.core.builtin.messagecreator.modal.serializer
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -6,7 +6,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
 
 internal object TextInputStyleSerializer : KSerializer<TextInputStyle> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TextInputStyle", PrimitiveKind.STRING)

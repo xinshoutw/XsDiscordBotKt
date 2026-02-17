@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xinshou.discord.core.util.Arguments
 
 /**
  * This class handles logging of different types of interaction events on Discord.
@@ -22,7 +23,9 @@ internal object InteractionLogger : ListenerAdapter() {
      * @param event SlashCommandInteractionEvent provided by JDA when a slash command is executed.
      */
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        event.deferReply(true).queue()  // Defer the initial response to handle asynchronously.
+        if (Arguments.autoDeferInteractionReplies && !event.isAcknowledged) {
+            event.deferReply(true).queue()
+        }
         logger.info("[CMD] {}: {}", event.user.name, event.commandString)
     }
 
@@ -31,7 +34,9 @@ internal object InteractionLogger : ListenerAdapter() {
      * @param event MessageContextInteractionEvent provided by JDA when a context menu item is used on a message.
      */
     override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
-        event.deferReply(true).queue()  // Defer the initial response to handle asynchronously.
+        if (Arguments.autoDeferInteractionReplies && !event.isAcknowledged) {
+            event.deferReply(true).queue()
+        }
         logger.info("[MSG] {}: {}", event.user.name, event.commandString)
     }
 
