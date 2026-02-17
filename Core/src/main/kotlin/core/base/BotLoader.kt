@@ -141,9 +141,9 @@ object BotLoader {
         synchronized(lifecycleLock) {
             if (!::jdaBot.isInitialized) return
 
-            jdaBot.updateCommands().addCommands(PluginLoader.globalCommands).complete()
+            jdaBot.updateCommands().addCommands(PluginLoader.globalCommands).queue()
             jdaBot.guilds.forEach { guild: Guild ->
-                guild.updateCommands().addCommands(PluginLoader.guildCommands).complete()
+                guild.updateCommands().addCommands(PluginLoader.guildCommands).queue()
             }
         }
     }
