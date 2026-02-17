@@ -13,18 +13,15 @@ import java.io.File
 
 abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     lateinit var pluginName: String
+    open var prefix: String = ""
+    open var componentPrefix: String = ""
+
     open val logger: Logger by lazy { LoggerFactory.getLogger(javaClass) }
     open val fileGetter: FileGetter by lazy { FileGetter(pluginDirectory, javaClass) }
     open val pluginDirectory: File by lazy { File("plugins", pluginName) }
-    open val componentPrefix: String by lazy {
-        if (pluginName.length > 10) {
-            logger.warn("Plugin name is too long, it may cause UID too long.")
-        }
-        pluginName.lowercase() + "@"
-    }
 
     open fun load() {
-        javaClass.getResource("lang")?.let {
+        if (hasResource("lang/")) {
             fileGetter.export(resourcePath = "lang/", replace = Arguments.forceRenewLangResources)
         }
 
@@ -36,7 +33,7 @@ abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     }
 
     open fun reload() {
-        javaClass.getResource("lang")?.let {
+        if (hasResource("lang/")) {
             fileGetter.export(resourcePath = "lang/", replace = Arguments.forceRenewLangResources)
         }
     }
@@ -44,6 +41,13 @@ abstract class PluginEvent(val listener: Boolean) : ListenerAdapter() {
     open fun guildCommands(): Array<CommandData>? = null
 
     open fun globalCommands(): Array<CommandData>? = null
+
+    private fun hasResource(path: String): Boolean {
+        val cleanPath = path.removePrefix("/")
+        return javaClass.getResource(cleanPath) != null
+            || javaClass.getResource("/$cleanPath") != null
+            || javaClass.classLoader.getResource(cleanPath) != null
+    }
 }
 
 abstract class PluginEventConfigure<C : Any>(

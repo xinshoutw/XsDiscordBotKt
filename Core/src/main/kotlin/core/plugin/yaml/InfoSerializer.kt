@@ -31,6 +31,12 @@ internal data class InfoSerializer(
 
     @SerialName("soft_depend_plugins")
     val softDependPlugins: Set<String> = emptySet(),
+
+    @SerialName("depend_jars")
+    val dependJars: Set<String> = emptySet(),
+
+    @SerialName("soft_depend_jars")
+    val softDependJars: Set<String> = emptySet(),
 )
 
 fun processMemberCachePolicy(list: Set<String>): MemberCachePolicy {

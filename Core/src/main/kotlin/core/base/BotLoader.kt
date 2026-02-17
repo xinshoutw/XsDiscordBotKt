@@ -166,6 +166,7 @@ object BotLoader {
                     plugin.unload()
                     logger.info("{} unloaded successfully.", name)
                 }
+                closeClassLoaders()
             }
 
             StatusChanger.stop()
