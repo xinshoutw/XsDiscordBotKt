@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.builtin.messagecreator.MessageCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.mongodb.CacheDbManager
 import tw.xinshou.discord.core.mongodb.ICacheDb

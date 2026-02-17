@@ -5,7 +5,6 @@ import com.charleskorn.kaml.decodeFromStream
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import okhttp3.internal.toImmutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -94,7 +93,7 @@ class StringLocalizer<D : Any>(
         }
 
         exploreFields(obj, "")
-        return result.toImmutableMap()
+        return result.toMap()
     }
 
     fun getLocaleData(key: String): LocalStringMap {

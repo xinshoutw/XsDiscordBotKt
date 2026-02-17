@@ -1,4 +1,4 @@
-package tw.xinshou.discord.core.builtin.messagecreator
+package tw.xinshou.discord.core.builtin.messagecreator.v1
 
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.decodeFromString
@@ -10,8 +10,8 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.builtin.messagecreator.builder.MessageBuilder
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer
+import tw.xinshou.discord.core.builtin.messagecreator.v1.builder.MessageBuilder
+import tw.xinshou.discord.core.builtin.messagecreator.v1.serializer.MessageDataSerializer
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 import tw.xinshou.discord.core.util.ComponentIdManager

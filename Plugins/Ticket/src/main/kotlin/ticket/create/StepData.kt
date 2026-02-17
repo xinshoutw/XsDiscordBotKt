@@ -1,16 +1,20 @@
 package tw.xinshou.discord.plugin.ticket.create
 
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.components.Component
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponent
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
-import net.dv8tion.jda.internal.interactions.component.ButtonImpl
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import tw.xinshou.discord.core.util.ComponentField
 import tw.xinshou.discord.plugin.ticket.Ticket.componentIdManager
 import tw.xinshou.discord.plugin.ticket.Ticket.messageCreator
@@ -109,18 +113,7 @@ internal class Step(
                 locale,
                 modelMapper = mapOf(
                     "tt@embed" to previewEmbed,
-                    "tt@btn" to ButtonImpl(
-                        componentIdManager.build(
-                            mapOf(
-                                "action" to "press",
-                                "btn_index" to "0"
-                            )
-                        ),
-                        data.btnText,
-                        data.btnStyle,
-                        false,
-                        data.btnEmoji
-                    ),
+                    "tt@btn" to buildTicketButton("0"),
                 )
             ).build()
 
@@ -130,29 +123,20 @@ internal class Step(
         // modify the original message
         // TODO: currently, we only support modifying the message components
         //       we should also support modifying the message content soon
-        val messageEditData = messageCreator.getEditBuilder(
-            "confirm-add",
-            locale,
-            modelMapper = mapOf(
-                "tt@embed" to previewEmbed,
-                "tt@btn" to message.actionRows[0].components.apply {
-                    add(
-                        ButtonImpl(
-                            componentIdManager.build(
-                                mapOf(
-                                    "action" to "press",
-                                    "btn_index" to size.toString()
-                                )
-                            ),
-                            data.btnText,
-                            data.btnStyle,
-                            false,
-                            data.btnEmoji
-                        )
-                    )
-                }
-            )
-        ).build()
+        val actionRow = message.components
+            .firstOrNull { it.type == Component.Type.ACTION_ROW }
+            ?.asActionRow()
+            ?: throw IllegalStateException("Cannot find action row in the target message.")
+
+        val updatedButtons = actionRow.components
+            .map { it as ActionRowChildComponent }
+            .toMutableList()
+            .apply { add(buildTicketButton(size.toString())) }
+
+        val messageEditData = MessageEditBuilder()
+            .setEmbeds(previewEmbed)
+            .setComponents(ActionRow.of(updatedButtons))
+            .build()
 
         return message.editMessage(messageEditData)
     }
@@ -169,12 +153,27 @@ internal class Step(
             return message.embeds[0]
         }
 
-    val previewComponent: ButtonImpl
-        get() = ButtonImpl(
+    val previewComponent: Button
+        get() = Button.of(
+            data.btnStyle ?: ButtonStyle.SUCCESS,
             componentIdManager.build(
                 ComponentField("sub_action", "prev"),
-            ), data.btnText, data.btnStyle, false, data.btnEmoji
+            ), data.btnText, data.btnEmoji
         )
+
+    private fun buildTicketButton(index: String): Button {
+        return Button.of(
+            data.btnStyle ?: ButtonStyle.SUCCESS,
+            componentIdManager.build(
+                mapOf(
+                    "action" to "press",
+                    "btn_index" to index
+                )
+            ),
+            data.btnText,
+            data.btnEmoji
+        )
+    }
 
 }
 

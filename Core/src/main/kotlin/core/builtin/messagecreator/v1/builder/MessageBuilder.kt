@@ -1,24 +1,19 @@
-package tw.xinshou.discord.core.builtin.messagecreator.builder
+package tw.xinshou.discord.core.builtin.messagecreator.v1.builder
 
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.components.MessageTopLevelComponent
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.selections.EntitySelectMenu
+import net.dv8tion.jda.api.components.selections.SelectOption
+import net.dv8tion.jda.api.components.selections.StringSelectMenu
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.emoji.Emoji
-import net.dv8tion.jda.api.interactions.components.ActionRow
-import net.dv8tion.jda.api.interactions.components.LayoutComponent
-import net.dv8tion.jda.api.interactions.components.buttons.Button
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
-import net.dv8tion.jda.internal.interactions.component.ButtonImpl
 import org.apache.commons.lang3.StringUtils.isNumeric
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer.ActionRowSetting.*
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer.ActionRowSetting.ButtonsSetting.ButtonSetting
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer.ActionRowSetting.StringSelectMenuSetting.OptionSetting
-import tw.xinshou.discord.core.builtin.messagecreator.serializer.MessageDataSerializer.EmbedSetting
+import tw.xinshou.discord.core.builtin.messagecreator.v1.serializer.MessageDataSerializer
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 import tw.xinshou.discord.core.util.ComponentIdManager
@@ -82,7 +77,7 @@ internal class MessageBuilder(
     }
 
     /* Process Embed Functions */
-    private fun buildEmbeds(embedSettings: List<EmbedSetting>): List<MessageEmbed> {
+    private fun buildEmbeds(embedSettings: List<MessageDataSerializer.EmbedSetting>): List<MessageEmbed> {
         val finalEmbeds = mutableListOf<MessageEmbed>()
 
         embedSettings.forEach { embedSetting ->
@@ -101,7 +96,7 @@ internal class MessageBuilder(
         return finalEmbeds
     }
 
-    private fun buildEmbed(embedSetting: EmbedSetting): MessageEmbed? {
+    private fun buildEmbed(embedSetting: MessageDataSerializer.EmbedSetting): MessageEmbed? {
         val builder = EmbedBuilder().apply {
             setupAuthor(embedSetting.author) { name, url, iconUrl -> setAuthor(name, url, iconUrl) }
             setupTitle(embedSetting.title) { title, url -> setTitle(title, url) }
@@ -123,7 +118,7 @@ internal class MessageBuilder(
     }
 
     private fun setupAuthor(
-        author: EmbedSetting.AuthorSetting?,
+        author: MessageDataSerializer.EmbedSetting.AuthorSetting?,
         setAuthor: (name: String?, url: String?, iconUrl: String?) -> EmbedBuilder
     ) = author?.let { author ->
         setAuthor(
@@ -134,7 +129,7 @@ internal class MessageBuilder(
     }
 
     private fun setupTitle(
-        title: EmbedSetting.TitleSetting?,
+        title: MessageDataSerializer.EmbedSetting.TitleSetting?,
         setTitle: (title: String?, url: String?) -> EmbedBuilder
     ) = title?.let { title ->
         setTitle(
@@ -176,7 +171,7 @@ internal class MessageBuilder(
     }
 
     private fun setupFooter(
-        footer: EmbedSetting.FooterSetting?,
+        footer: MessageDataSerializer.EmbedSetting.FooterSetting?,
         setFooter: (text: String?, iconUrl: String?) -> EmbedBuilder
     ) = footer?.let { footer ->
         setFooter(
@@ -191,7 +186,7 @@ internal class MessageBuilder(
     ) = timestamp?.let { setTimestamp(parseTimestamp(it)) }
 
     private fun setupFields(
-        embedSetting: EmbedSetting,
+        embedSetting: MessageDataSerializer.EmbedSetting,
         addField: (name: String, value: String, inline: Boolean) -> EmbedBuilder,
         addFieldModel: (field: MessageEmbed.Field?) -> EmbedBuilder,
     ) = embedSetting.fields.forEach { field ->
@@ -214,16 +209,16 @@ internal class MessageBuilder(
 
 
     /* Process Component Functions */
-    private fun buildComponents(actionRowSettings: List<MessageDataSerializer.ActionRowSetting>): List<LayoutComponent> {
+    private fun buildComponents(actionRowSettings: List<MessageDataSerializer.ActionRowSetting>): List<MessageTopLevelComponent> {
         requireNotNull(componentIdManager) { "You have to pass componentIdManager to create message with components!" }
 
-        val finalActionRows = mutableListOf<LayoutComponent>()
+        val finalActionRows = mutableListOf<MessageTopLevelComponent>()
 
         actionRowSettings.forEach { actionRowSetting ->
             actionRowSetting.modelKey?.let {
                 val model = requireNotNull(modelMapper?.get(it)) { "Model with key '$it' not found!" }
                 when (model) {
-                    is LayoutComponent -> finalActionRows.add(model)
+                    is MessageTopLevelComponent -> finalActionRows.add(model)
                     else -> throw IllegalArgumentException("Unknown component model: $model")
                 }
                 return@forEach
@@ -247,14 +242,14 @@ internal class MessageBuilder(
         }
 
         return when (actionRowSetting) {
-            is ButtonsSetting -> buildButtons(actionRowSetting.buttons)
-            is StringSelectMenuSetting -> buildStringSelectMenu(actionRowSetting)
-            is EntitySelectMenuSetting -> buildEntitySelectMenu(actionRowSetting)
+            is MessageDataSerializer.ActionRowSetting.ButtonsSetting -> buildButtons(actionRowSetting.buttons)
+            is MessageDataSerializer.ActionRowSetting.StringSelectMenuSetting -> buildStringSelectMenu(actionRowSetting)
+            is MessageDataSerializer.ActionRowSetting.EntitySelectMenuSetting -> buildEntitySelectMenu(actionRowSetting)
         }
     }
 
     private fun buildButtons(
-        buttonsSetting: List<ButtonSetting>,
+        buttonsSetting: List<MessageDataSerializer.ActionRowSetting.ButtonsSetting.ButtonSetting>,
     ): ActionRow {
         // Check again, IDE doesn't recognize the check in the caller function
         requireNotNull(componentIdManager) { "You have to pass componentIdManager to create message with components!" }
@@ -271,104 +266,105 @@ internal class MessageBuilder(
                 return@forEach
             }
 
-            finalButtons.add(
-                ButtonImpl(
-                    /* id = */ buttonSetting.uid?.let { componentIdManager.build(substitutor, it) }
-                        ?: buttonSetting.url?.let { strKey ->
-                            parsePlaceholder(strKey)
-                        } ?: throw NullPointerException("Either uid or url must be provided!"),
-                    /* label = */ buttonSetting.label?.let { parsePlaceholder(it) },
-                    /* style = */ when (buttonSetting.style) {
-                        1 -> ButtonStyle.PRIMARY
-                        2 -> ButtonStyle.SECONDARY
-                        3 -> ButtonStyle.SUCCESS
-                        4 -> ButtonStyle.DANGER
-                        5 -> ButtonStyle.LINK
-                        else -> throw IllegalArgumentException("Unknown style code: ${buttonSetting.style}")
-                    },
-                    /* disabled = */ buttonSetting.disabled,
-                    /* emoji = */ buttonSetting.emoji?.let { emojiSetting ->
-                        emojiSetting.modelKey?.let {
-                            val model = requireNotNull(modelMapper?.get(it)) { "Model with key '$it' not found!" }
-                            when (model) {
-                                is Emoji -> model
-                                else -> throw IllegalArgumentException("Unknown component model: $model")
-                            }
-                        } ?: Emoji.fromFormatted(parsePlaceholder(emojiSetting.formatted!!))
+            val style = when (buttonSetting.style) {
+                1 -> ButtonStyle.PRIMARY
+                2 -> ButtonStyle.SECONDARY
+                3 -> ButtonStyle.SUCCESS
+                4 -> ButtonStyle.DANGER
+                5 -> ButtonStyle.LINK
+                else -> throw IllegalArgumentException("Unknown style code: ${buttonSetting.style}")
+            }
+
+            val emoji = buttonSetting.emoji?.let { emojiSetting ->
+                emojiSetting.modelKey?.let {
+                    val model = requireNotNull(modelMapper?.get(it)) { "Model with key '$it' not found!" }
+                    when (model) {
+                        is Emoji -> model
+                        else -> throw IllegalArgumentException("Unknown component model: $model")
                     }
-                )
-            )
+                } ?: Emoji.fromFormatted(parsePlaceholder(emojiSetting.formatted!!))
+            }
+
+            val label = buttonSetting.label?.let(::parsePlaceholder)
+            val button = when (style) {
+                ButtonStyle.LINK -> {
+                    val url = parsePlaceholder(
+                        requireNotNull(buttonSetting.url) { "Link button requires `url`!" }
+                    )
+                    Button.of(style, url, label, emoji)
+                }
+
+                else -> {
+                    val customId = componentIdManager.build(
+                        substitutor,
+                        requireNotNull(buttonSetting.uid) { "Non-link button requires `uid`!" }
+                    )
+                    Button.of(style, customId, label, emoji)
+                }
+            }
+
+            finalButtons.add(button.withDisabled(buttonSetting.disabled))
         }
 
         return ActionRow.of(finalButtons)
     }
 
     private fun buildStringSelectMenu(
-        stringSelectMenuSetting: StringSelectMenuSetting,
+        stringSelectMenuSetting: MessageDataSerializer.ActionRowSetting.StringSelectMenuSetting,
     ): ActionRow {
         // Check again, IDE doesn't recognize the check in the caller function
         requireNotNull(componentIdManager) { "You have to pass componentIdManager to create message with components!" }
 
-        val menu = StringSelectMenu
-            .create(
-                parsePlaceholder(componentIdManager.build(stringSelectMenuSetting.uid))
-            ).apply {
-                placeholder = stringSelectMenuSetting.placeholder?.let { parsePlaceholder(it) }
-                minValues = stringSelectMenuSetting.min
-                maxValues = stringSelectMenuSetting.max
-                setupOptions(stringSelectMenuSetting.options, ::addOption, ::addOptions)
-            }
+        val menuBuilder = StringSelectMenu.create(
+            parsePlaceholder(componentIdManager.build(stringSelectMenuSetting.uid))
+        )
+        stringSelectMenuSetting.placeholder?.let { menuBuilder.setPlaceholder(parsePlaceholder(it)) }
+        menuBuilder.setRequiredRange(stringSelectMenuSetting.min, stringSelectMenuSetting.max)
+        menuBuilder.addOptions(buildSelectOptions(stringSelectMenuSetting.options))
 
-        return ActionRow.of(menu.build())
+        return ActionRow.of(menuBuilder.build())
     }
 
     private fun buildEntitySelectMenu(
-        entitySelectMenuSetting: EntitySelectMenuSetting,
+        entitySelectMenuSetting: MessageDataSerializer.ActionRowSetting.EntitySelectMenuSetting,
     ): ActionRow {
         // Check again, IDE doesn't recognize the check in the caller function
         requireNotNull(componentIdManager) { "You have to pass componentIdManager to create message with components!" }
 
-        val menu = EntitySelectMenu
-            .create(
-                parsePlaceholder(componentIdManager.build(entitySelectMenuSetting.uid)),
-                EntitySelectMenu.SelectTarget.valueOf(entitySelectMenuSetting.selectTargetType.uppercase())
-            ).apply {
-                placeholder = entitySelectMenuSetting.placeholder?.let { parsePlaceholder(it) }
-                minValues = entitySelectMenuSetting.min
-                maxValues = entitySelectMenuSetting.max
-            }
+        val menu = EntitySelectMenu.create(
+            parsePlaceholder(componentIdManager.build(entitySelectMenuSetting.uid)),
+            EntitySelectMenu.SelectTarget.valueOf(entitySelectMenuSetting.selectTargetType.uppercase())
+        )
+        entitySelectMenuSetting.placeholder?.let { menu.setPlaceholder(parsePlaceholder(it)) }
+        menu.setRequiredRange(entitySelectMenuSetting.min, entitySelectMenuSetting.max)
         if (entitySelectMenuSetting.selectTargetType.uppercase() == "CHANNEL") {
             require(entitySelectMenuSetting.channelTypes.isNotEmpty()) {
                 "'channel_types' cannot be empty when 'select_target_type' is set to 'CHANNEL'!"
             }
-            menu.setChannelTypes(entitySelectMenuSetting.channelTypes.map { ChannelType.valueOf(it) })
+            menu.setChannelTypes(entitySelectMenuSetting.channelTypes.map { ChannelType.valueOf(it.uppercase()) })
         }
 
         return ActionRow.of(menu.build())
     }
 
-    private fun setupOptions(
-        options: List<OptionSetting>,
-        addOption: (String, String, String?, Emoji?) -> Unit,
-        addOptions: (SelectOption) -> Unit
-    ) {
-
-        options.forEach { option ->
+    private fun buildSelectOptions(
+        options: List<MessageDataSerializer.ActionRowSetting.StringSelectMenuSetting.OptionSetting>,
+    ): List<SelectOption> {
+        return options.map { option ->
             option.modelKey?.let {
                 val model = requireNotNull(modelMapper?.get(it)) { "Model with key '$it' not found!" }
                 when (model) {
-                    is SelectOption -> addOptions(model)
+                    is SelectOption -> return@map model
                     else -> throw IllegalArgumentException("Unknown option model: $model")
                 }
-                return@forEach
             }
 
-            addOption(
-                /* label = */ parsePlaceholder(option.label),
-                /* value = */ parsePlaceholder(option.value),
-                /* description = */ option.description?.let { parsePlaceholder(it) },
-                /* emoji = */ option.emoji?.let { Emoji.fromUnicode(option.emoji.name) }
-            )
+            SelectOption.of(
+                parsePlaceholder(option.label),
+                parsePlaceholder(option.value),
+            ).withDescription(option.description?.let(::parsePlaceholder))
+                .withDefault(option.default)
+                .withEmoji(option.emoji?.let { Emoji.fromFormatted(parsePlaceholder(it.name)) })
         }
     }
 
