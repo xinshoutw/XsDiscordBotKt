@@ -1,26 +1,22 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## [☛ New Voice Status](%vl_channel_url%)'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ New Voice Status
-  - type: text_display
-    content: '**`Member`**\n%user_mention%'
-  - type: text_display
-    content: '**`Category`**\n%vl_category_mention%'
-  - type: text_display
-    content: '**`Channel`**\n%vl_channel_mention%'
-  - type: text_display
-    content: '**`--> Content <--`**\n%vl_status_after%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#0EE000'
+embeds:
+  - title:
+      text: "☛ New Voice Status"
+      url: "%vl_channel_url%"
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#0EE000"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+
+    fields:
+      - name: "`Member`"
+        value: "%user_mention%\n\n\n"
+
+      - name: "`Category`"
+        value: "%vl_category_mention%"
+
+      - name: "`Channel`"
+        value: "%vl_channel_mention%"
+
+      - name: "`--> Content <--`"
+        value: "%vl_status_after%"
+

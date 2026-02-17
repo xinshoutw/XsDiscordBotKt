@@ -1,10 +1,7 @@
-is_components_v2: true
-components_v2:
-- model_key: tt@embed
-- type: separator
-  divider: true
-  spacing: SMALL
-- type: action_row
-  components:
-  - type: button
-    model_key: tt@btn
+embeds:
+  - model_key: "tt@embed"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn"

@@ -1,28 +1,24 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## [☛ Voice Channel Switch](%vl_channel_join_url%)'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ Voice Channel Switch
-  - type: text_display
-    content: '**`Member`**\n%user_mention%'
-  - type: text_display
-    content: '**`Category Left`**\n%vl_category_left_mention%'
-  - type: text_display
-    content: '**`Channel Left`**\n%vl_channel_left_mention% (%vl_channel_left_name%)'
-  - type: text_display
-    content: '**`Category Join`**\n%vl_category_join_mention%'
-  - type: text_display
-    content: '**`Channel Join`**\n%vl_channel_join_mention% (%vl_channel_join_name%)'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#D0D000'
+embeds:
+  - title:
+      text: "☛ Voice Channel Switch"
+      url: "%vl_channel_join_url%"
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#D0D000"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+
+    fields:
+      - name: "`Member`"
+        value: "%user_mention%\n\n\n"
+
+      - name: "`Category Left`"
+        value: "%vl_category_left_mention%"
+
+      - name: "`Channel Left`"
+        value: "%vl_channel_left_mention% (%vl_channel_left_name%)"
+
+      - name: "`Category Join`"
+        value: "%vl_category_join_mention%"
+
+      - name: "`Channel Join`"
+        value: "%vl_channel_join_mention% (%vl_channel_join_name%)"

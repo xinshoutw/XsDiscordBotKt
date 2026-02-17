@@ -1,7 +1,4 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '## 語音頻道必須在類別(Category)下'
-  accent_color: '#FF0000'
+embeds:
+  - title:
+      text: "語音頻道必須在類別(Category)下"
+    color_code: "#FF0000"

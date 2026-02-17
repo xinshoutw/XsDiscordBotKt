@@ -1,7 +1,4 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '## 綁定成功'
-  accent_color: '#00FF00'
+embeds:
+  - title:
+      text: "綁定成功"
+    color_code: "#00FF00"

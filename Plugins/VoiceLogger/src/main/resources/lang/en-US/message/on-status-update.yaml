@@ -1,28 +1,24 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## [☛ Voice Status Updated](%vl_channel_url%)'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ Voice Status Updated
-  - type: text_display
-    content: '**`Member`**\n%user_mention%'
-  - type: text_display
-    content: '**`Category`**\n%vl_category_mention%'
-  - type: text_display
-    content: '**`Channel`**\n%vl_channel_mention%'
-  - type: text_display
-    content: '**`--> Before <--`**\n%vl_status_before%'
-  - type: text_display
-    content: '**`==> After <==`**\n%vl_status_after%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#D0D000'
+embeds:
+  - title:
+      text: "☛ Voice Status Updated"
+      url: "%vl_channel_url%"
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#D0D000"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+
+    fields:
+      - name: "`Member`"
+        value: "%user_mention%\n\n\n"
+
+
+      - name: "`Category`"
+        value: "%vl_category_mention%"
+
+      - name: "`Channel`"
+        value: "%vl_channel_mention%"
+      - name: "`--> Before <--`"
+        value: "%vl_status_before%"
+
+      - name: "`==> After <==`"
+        value: "%vl_status_after%"

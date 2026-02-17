@@ -1,26 +1,21 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## [☛ 新增語音狀態](%vl_channel_url%)'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ 新增語音狀態
-  - type: text_display
-    content: '**`使用者`**\n%user_mention%'
-  - type: text_display
-    content: '**`類別`**\n%vl_category_mention%'
-  - type: text_display
-    content: '**`頻道`**\n%vl_channel_mention%'
-  - type: text_display
-    content: '**`--> 狀態 <--`**\n%vl_status_after%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#0EE000'
+embeds:
+  - title:
+      text: "☛ 新增語音狀態"
+      url: "%vl_channel_url%"
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#0EE000"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+
+    fields:
+      - name: "`使用者`"
+        value: "%user_mention%\n\n\n"
+
+      - name: "`類別`"
+        value: "%vl_category_mention%"
+
+      - name: "`頻道`"
+        value: "%vl_channel_mention%"
+
+      - name: "`--> 狀態 <--`"
+        value: "%vl_status_after%"

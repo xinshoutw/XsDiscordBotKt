@@ -1,68 +1,65 @@
-is_components_v2: true
-components_v2:
-- model_key: tt@embed-demo
-- type: separator
-  divider: true
-  spacing: SMALL
-- type: action_row
-  components:
-  - type: button
-    model_key: tt@btn-demo
-- type: action_row
-  components:
-  - type: button
-    style: 1
-    label: set author
-    uid:
-      action: create
-      sub_action: modify-author
-  - type: button
-    style: 1
-    label: set content
-    uid:
-      action: create
-      sub_action: modify-content
-  - type: button
-    style: 1
-    label: set category
-    uid:
-      action: create
-      sub_action: modify-category
-  - type: button
-    style: 1
-    label: set color
-    uid:
-      action: create
-      sub_action: modify-color
-- type: action_row
-  components:
-  - type: button
-    style: 1
-    label: set btn text
-    uid:
-      action: create
-      sub_action: modify-btn-text
-  - type: button
-    style: 1
-    label: set btn color
-    uid:
-      action: create
-      sub_action: modify-btn-color
-  - type: button
-    style: 1
-    label: set ask title
-    uid:
-      action: create
-      sub_action: modify-reason
-  - type: button
-    style: 1
-    label: set allow role
-    uid:
-      action: create
-      sub_action: modify-admin
-  - type: button
-    style: 3
-    label: confirm create
-    uid:
-      action: create
-      sub_action: confirm-create
+embeds:
+  - model_key: "tt@embed-demo"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "tt@btn-demo"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "modify-author"
+        style: 1
+        label: "set author"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-content"
+        style: 1
+        label: "set content"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-category"
+        style: 1
+        label: "set category"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-color"
+        style: 1
+        label: "set color"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "modify-btn-text"
+        style: 1
+        label: "set btn text"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-btn-color"
+        style: 1
+        label: "set btn color"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-reason"
+        style: 1
+        label: "set ask title"
+
+      - uid:
+          action: "create"
+          sub_action: "modify-admin"
+        style: 1
+        label: "set allow role"
+
+      - uid:
+          action: "create"
+          sub_action: "confirm-create"
+        style: 3
+        label: "confirm create"

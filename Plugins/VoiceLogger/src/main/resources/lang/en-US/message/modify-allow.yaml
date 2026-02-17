@@ -1,14 +1,11 @@
-is_components_v2: true
-components_v2:
-- type: action_row
-  components:
-  - type: entity_select_menu
+components:
+  - !EntitySelectMenu
     uid:
-      action: modify_allow_menu
-    placeholder: choose channels, categories or search here
+      action: "modify_allow_menu"
+    placeholder: "choose channels, categories or search here"
     min: 1
     max: 25
-    select_target_type: CHANNEL
+    select_target_type: "CHANNEL"
     channel_types:
-    - VOICE
-    - CATEGORY
+      - "VOICE"
+      - "CATEGORY"

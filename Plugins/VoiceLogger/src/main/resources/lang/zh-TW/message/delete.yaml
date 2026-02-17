@@ -1,16 +1,9 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '### 語音日誌
-
-      ## ☛ %channel_name% 的頻道設定
-
-      刪除完成'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#00FFFF'
+embeds:
+  - author:
+      name: "語音日誌"
+    title:
+      text: "☛ %channel_name% 的頻道設定"
+    description: "刪除完成"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+    color_code: "#00FFFF"

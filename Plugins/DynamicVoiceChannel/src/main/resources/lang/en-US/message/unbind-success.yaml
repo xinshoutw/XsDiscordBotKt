@@ -1,7 +1,4 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '## Unbind success'
-  accent_color: '#00FF00'
+embeds:
+  - title:
+      text: "Unbind success"
+    color_code: "#00FF00"

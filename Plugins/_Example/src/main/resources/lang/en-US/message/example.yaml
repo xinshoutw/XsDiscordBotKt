@@ -1,18 +1,16 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '### Example Reply
+embeds:
+  - author:
+      name: "Example Reply"
+    title:
+      text: "This is an example reply."
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
 
-      ## This is an example reply.'
-  - type: text_display
-    content: '**Option 1**\n%_Example@option1%'
-  - type: text_display
-    content: '**Option 2**\n%_Example@option2%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#00FFFF'
+    fields:
+      - name: "Option 1"
+        value: "%_Example@option1%"
+
+      - name: "Option 2"
+        value: "%_Example@option2%"
+
+    color_code: "#00FFFF"

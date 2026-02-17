@@ -1,22 +1,12 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## ☛ 來自 %user_name% 的新評價
+embeds:
+  - title:
+      text: "☛ 來自 %user_name% 的新評價"
+    description: "%fb_stars%" # Ignorable, 4096 length limit
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#60C0C0"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
 
-        %fb_stars%'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ 來自 %user_name% 的新評價
-  - type: text_display
-    content: '**評價內容**\n%fb_content%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#60C0C0'
+    fields:
+      - name: "評價內容"
+        value: "%fb_content%"

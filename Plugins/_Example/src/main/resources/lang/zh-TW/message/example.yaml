@@ -1,18 +1,16 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '### 範例回覆
+embeds:
+  - author:
+      name: "範例回覆"
+    title:
+      text: "這是一個範例回覆"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
 
-      ## 這是一個範例回覆'
-  - type: text_display
-    content: '**選項 1**\n%_Example@option1%'
-  - type: text_display
-    content: '**選項 2**\n%_Example@option2%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#00FFFF'
+    fields:
+      - name: "選項 1"
+        value: "%_Example@option1%"
+
+      - name: "選項 2"
+        value: "%_Example@option2%"
+
+    color_code: "#00FFFF"

@@ -1,23 +1,15 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '### 口袋扣款
+embeds:
+  - author:
+      name: "口袋扣款"
+      icon_url: "https://i.imgur.com/PsEXCuY.png"
+    title:
+      text: "☛ %user_name% 的口袋"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
 
-        ## ☛ %user_name% 的口袋'
-    accessory:
-      type: thumbnail
-      url: https://i.imgur.com/PsEXCuY.png
-      description: 口袋扣款
-  - type: text_display
-    content: '**餘額 [-]**\n%economy_money_before% ➣ %economy_money% 元'
-  - type: text_display
-    content: '**總消費 [+]**\n%economy_cost_before% ➣ %economy_cost% 元'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
+    fields:
+      - name: "餘額 [-]"
+        value: "%economy_money_before% ➣ %economy_money% 元"
+
+      - name: "總消費 [+]"
+        value: "%economy_cost_before% ➣ %economy_cost% 元"

@@ -1,16 +1,9 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: text_display
-    content: '### Voice Log
-
-      ## ☛ %channel_name%''s Channel Setting
-
-      Deleted Successfully'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#00FFFF'
+embeds:
+  - author:
+      name: "Voice Log"
+    title:
+      text: "☛ %channel_name%'s Channel Setting"
+    description: "Deleted Successfully"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
+    color_code: "#00FFFF"

@@ -1,22 +1,12 @@
-is_components_v2: true
-components_v2:
-- type: container
-  components:
-  - type: section
-    components:
-    - type: text_display
-      content: '## ☛ New Review from %user_name%
+embeds:
+  - title:
+      text: "☛ New Review from %user_name%"
+    description: "%fb_stars%" # Ignorable, 4096 length limit
+    thumbnail_url: "%member_avatar_url%"
+    color_code: "#60C0C0"
+    footer:
+      text: "❖ ORDERLY SERVER ❖"
 
-        %fb_stars%'
-    accessory:
-      type: thumbnail
-      url: '%member_avatar_url%'
-      description: ☛ New Review from %user_name%
-  - type: text_display
-    content: '**Review Content**\n%fb_content%'
-  - type: separator
-    divider: true
-    spacing: SMALL
-  - type: text_display
-    content: '*❖ ORDERLY SERVER ❖*'
-  accent_color: '#60C0C0'
+    fields:
+      - name: "Review Content"
+        value: "%fb_content%"
