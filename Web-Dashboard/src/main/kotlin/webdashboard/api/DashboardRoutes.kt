@@ -20,8 +20,13 @@ import tw.xinshou.discord.webdashboard.model.HealthDto
 import tw.xinshou.discord.webdashboard.model.PluginToggleRequestDto
 import tw.xinshou.discord.webdashboard.model.PluginYamlUpdateRequestDto
 import tw.xinshou.discord.webdashboard.model.SaveResponseDto
+import java.util.concurrent.ConcurrentHashMap
 
 private const val DEV_ENTRY = """<script type="module" src="/src/main.tsx"></script>"""
+
+private data class CachedAsset(val bytes: ByteArray, val contentType: ContentType)
+
+private val assetCache = ConcurrentHashMap<String, CachedAsset>()
 
 internal fun Application.configureDashboardRoutes(host: String, port: Int, backend: DashboardBackend) {
     routing {
@@ -41,33 +46,33 @@ internal fun Application.configureDashboardRoutes(host: String, port: Int, backe
                 return@get
             }
 
-            val resourcePath = "dashboard/assets/$relativePath"
-            val resourceBytes = this::class.java.classLoader
-                .getResourceAsStream(resourcePath)
-                ?.readBytes()
+            val cached = assetCache.getOrPut(relativePath) {
+                val resourcePath = "dashboard/assets/$relativePath"
+                val resourceBytes = this::class.java.classLoader
+                    .getResourceAsStream(resourcePath)
+                    ?.readBytes()
+                    ?: return@get call.respond(HttpStatusCode.NotFound)
 
-            if (resourceBytes == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
+                val contentType = when (relativePath.substringAfterLast('.', "").lowercase()) {
+                    "js", "mjs" -> ContentType.Application.JavaScript
+                    "css" -> ContentType.Text.CSS
+                    "svg" -> ContentType.Image.SVG
+                    "png" -> ContentType.Image.PNG
+                    "jpg", "jpeg" -> ContentType.Image.JPEG
+                    "webp" -> ContentType("image", "webp")
+                    "gif" -> ContentType.Image.GIF
+                    "json" -> ContentType.Application.Json
+                    "map" -> ContentType.Application.Json
+                    "woff" -> ContentType("font", "woff")
+                    "woff2" -> ContentType("font", "woff2")
+                    else -> ContentType.Application.OctetStream
+                }
 
-            val contentType = when (relativePath.substringAfterLast('.', "").lowercase()) {
-                "js", "mjs" -> ContentType.Application.JavaScript
-                "css" -> ContentType.Text.CSS
-                "svg" -> ContentType.Image.SVG
-                "png" -> ContentType.Image.PNG
-                "jpg", "jpeg" -> ContentType.Image.JPEG
-                "webp" -> ContentType("image", "webp")
-                "gif" -> ContentType.Image.GIF
-                "json" -> ContentType.Application.Json
-                "map" -> ContentType.Application.Json
-                "woff" -> ContentType("font", "woff")
-                "woff2" -> ContentType("font", "woff2")
-                else -> ContentType.Application.OctetStream
+                CachedAsset(resourceBytes, contentType)
             }
 
             call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
-            call.respondBytes(resourceBytes, contentType)
+            call.respondBytes(cached.bytes, cached.contentType)
         }
 
         route("/api/v1") {
