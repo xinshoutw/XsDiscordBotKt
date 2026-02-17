@@ -123,7 +123,7 @@ object CoreDashboardBackend : DashboardBackend {
                 softDependPlugins = meta?.softDependPlugins ?: emptyList(),
                 loaded = PluginLoader.pluginQueue.containsKey(pluginName),
                 canToggle = hasEnabled,
-                configPath = pluginConfig.takeIf { it.exists() }?.absolutePath,
+                configPath = pluginConfig.takeIf { it.exists() }?.let { "plugins/$pluginName/config.yaml" },
                 hasWebEditor = pluginConfig.exists(),
             )
         }.sortedBy { it.name.lowercase() }
