@@ -31,6 +31,15 @@ internal object Arguments : CliktCommand() {
                 help = "Do not let bot online"
             ).flag(default = false)
 
+    val autoDeferInteractionReplies: Boolean
+            by option(
+                "--auto-defer-interactions",
+                help = "Automatically defer slash/context interactions before plugin handlers."
+            ).flag(
+                "--no-auto-defer-interactions",
+                default = true
+            )
+
     val botToken: String?
             by option(
                 "-t",

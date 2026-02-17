@@ -105,7 +105,11 @@ object BotLoader {
      */
     internal fun reload() {
         try {
-            reloadAllStrict()
+            synchronized(lifecycleLock) {
+                logger.info("Reload requested, restarting bot runtime...")
+                stop()
+                start()
+            }
             logger.info("Application reloaded successfully.")
         } catch (e: Exception) {
             logger.error("Failed to reload application:", e)
