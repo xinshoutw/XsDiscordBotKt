@@ -20,12 +20,13 @@ import tw.xinshou.discord.webdashboard.model.HealthDto
 import tw.xinshou.discord.webdashboard.model.PluginToggleRequestDto
 import tw.xinshou.discord.webdashboard.model.PluginYamlUpdateRequestDto
 import tw.xinshou.discord.webdashboard.model.SaveResponseDto
+import java.util.concurrent.ConcurrentHashMap
 
 private const val DEV_ENTRY = """<script type="module" src="/src/main.tsx"></script>"""
 
 private data class CachedAsset(val bytes: ByteArray, val contentType: ContentType)
 
-private val assetCache = mutableMapOf<String, CachedAsset>()
+private val assetCache = ConcurrentHashMap<String, CachedAsset>()
 
 internal fun Application.configureDashboardRoutes(host: String, port: Int, backend: DashboardBackend) {
     routing {
