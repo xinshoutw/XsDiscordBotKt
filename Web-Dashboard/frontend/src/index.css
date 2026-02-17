@@ -1,0 +1,56 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 225 23% 9%;
+    --foreground: 210 30% 94%;
+
+    --card: 224 19% 13%;
+    --card-foreground: 210 30% 94%;
+
+    --primary: 191 92% 56%;
+    --primary-foreground: 225 23% 10%;
+
+    --secondary: 228 17% 20%;
+    --secondary-foreground: 213 27% 89%;
+
+    --muted: 226 17% 18%;
+    --muted-foreground: 214 14% 68%;
+
+    --accent: 35 92% 57%;
+    --accent-foreground: 25 90% 13%;
+
+    --success: 155 67% 45%;
+    --success-foreground: 155 20% 11%;
+
+    --warning: 39 100% 60%;
+    --warning-foreground: 31 87% 16%;
+
+    --border: 226 17% 27%;
+    --input: 226 17% 27%;
+    --ring: 191 92% 56%;
+
+    --radius: 0.9rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 10% 0%, hsl(191 88% 52% / 0.18), transparent 34%),
+      radial-gradient(circle at 100% 24%, hsl(35 100% 58% / 0.16), transparent 34%),
+      linear-gradient(180deg, hsl(225 28% 11%), hsl(229 22% 8%));
+    background-attachment: fixed;
+  }
+
+  code {
+    @apply rounded bg-muted px-1.5 py-0.5 text-[0.8em] font-semibold text-foreground;
+  }
+}

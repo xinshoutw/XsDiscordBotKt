@@ -11,43 +11,81 @@ import org.slf4j.LoggerFactory
 import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import tw.xinshou.discord.core.base.SettingsLoader
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 internal object ConsoleLogger : ListenerAdapter() {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val lock = ReentrantLock()
     private val commandConsoles: MutableList<ConsoleChannel> = ArrayList()
     private val buttonConsoles: MutableList<ConsoleChannel> = ArrayList()
     private val modalConsoles: MutableList<ConsoleChannel> = ArrayList()
-    private val consoleChannelList = SettingsLoader.config.builtinSettings?.consoleLoggerSetting
-    fun run() {
-        if (consoleChannelList.isNullOrEmpty()) {
-            logger.info("No console channel bind")
-            return
-        }
+    private var listenerRegistered = false
 
-        consoleChannelList.forEach { consoleData ->
-            val guild = jdaBot.getGuildById(consoleData.guildId)
-            if (guild == null) {
-                logger.warn("Skipped, Cannot found Guild: {}", consoleData.guildId)
-                return@forEach
+    fun run() = reload()
+
+    fun reload() {
+        lock.withLock {
+            unregisterListenerIfNeeded()
+            commandConsoles.clear()
+            buttonConsoles.clear()
+            modalConsoles.clear()
+
+            val consoleChannelList = SettingsLoader.config.builtinSettings?.consoleLoggerSetting
+            if (consoleChannelList.isNullOrEmpty()) {
+                logger.info("No console channel bind")
+                return
             }
 
-            val channel = jdaBot.getTextChannelById(consoleData.channelId)
-            if (channel == null) {
-                logger.warn("Skipped, Cannot found Channel: {}", consoleData.channelId)
-                return@forEach
-            }
+            consoleChannelList.forEach { consoleData ->
+                val guild = jdaBot.getGuildById(consoleData.guildId)
+                if (guild == null) {
+                    logger.warn("Skipped, Cannot found Guild: {}", consoleData.guildId)
+                    return@forEach
+                }
 
-            val console = ConsoleChannel(channel, consoleData.format)
-            consoleData.logType.forEach { type ->
-                when (type) {
-                    "command" -> commandConsoles.add(console)
-                    "button" -> buttonConsoles.add(console)
-                    "modal" -> modalConsoles.add(console)
+                val channel = jdaBot.getTextChannelById(consoleData.channelId)
+                if (channel == null) {
+                    logger.warn("Skipped, Cannot found Channel: {}", consoleData.channelId)
+                    return@forEach
+                }
+
+                val console = ConsoleChannel(channel, consoleData.format)
+                consoleData.logType.forEach { type ->
+                    when (type) {
+                        "command" -> commandConsoles.add(console)
+                        "button" -> buttonConsoles.add(console)
+                        "modal" -> modalConsoles.add(console)
+                    }
                 }
             }
-        }
 
-        jdaBot.addEventListener(this)
+            if (commandConsoles.isEmpty() && buttonConsoles.isEmpty() && modalConsoles.isEmpty()) {
+                logger.info("Console logger has no valid channels after reload.")
+                return
+            }
+
+            jdaBot.addEventListener(this)
+            listenerRegistered = true
+            logger.info("Console logger reloaded with {} command, {} button, {} modal targets.",
+                commandConsoles.size, buttonConsoles.size, modalConsoles.size)
+        }
+    }
+
+    fun stop() {
+        lock.withLock {
+            unregisterListenerIfNeeded()
+            commandConsoles.clear()
+            buttonConsoles.clear()
+            modalConsoles.clear()
+        }
+    }
+
+    private fun unregisterListenerIfNeeded() {
+        if (listenerRegistered) {
+            jdaBot.removeEventListener(this)
+            listenerRegistered = false
+        }
     }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {

@@ -2,12 +2,14 @@ package tw.xinshou.discord.core.base
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tw.xinshou.discord.core.base.SettingsLoader.token
+import tw.xinshou.discord.core.builtin.consolelogger.ConsoleLogger
 import tw.xinshou.discord.core.builtin.statuschanger.StatusChanger
 import tw.xinshou.discord.core.logger.InteractionLogger
 import tw.xinshou.discord.core.plugin.yaml.processMemberCachePolicy
@@ -19,6 +21,7 @@ import java.nio.file.Paths
  */
 object BotLoader {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val lifecycleLock = Any()
     val ROOT_PATH: String = Paths.get("").toAbsolutePath().toString()
     lateinit var jdaBot: JDA
         private set
@@ -102,12 +105,46 @@ object BotLoader {
      */
     internal fun reload() {
         try {
-            PluginLoader.reload()
-            SettingsLoader.run()
-            StatusChanger.run()
+            reloadAllStrict()
             logger.info("Application reloaded successfully.")
         } catch (e: Exception) {
             logger.error("Failed to reload application:", e)
+        }
+    }
+
+    internal fun reloadAllStrict() {
+        synchronized(lifecycleLock) {
+            PluginLoader.reload()
+            reloadCoreSettingsStrict()
+            refreshCommandsStrict()
+        }
+    }
+
+    internal fun reloadPluginStrict(pluginName: String) {
+        synchronized(lifecycleLock) {
+            PluginLoader.reloadPlugin(pluginName)
+            refreshCommandsStrict()
+        }
+    }
+
+    internal fun reloadCoreSettingsStrict() {
+        synchronized(lifecycleLock) {
+            SettingsLoader.run()
+            if (::jdaBot.isInitialized) {
+                StatusChanger.run()
+                ConsoleLogger.reload()
+            }
+        }
+    }
+
+    internal fun refreshCommandsStrict() {
+        synchronized(lifecycleLock) {
+            if (!::jdaBot.isInitialized) return
+
+            jdaBot.updateCommands().addCommands(PluginLoader.globalCommands).queue()
+            jdaBot.guilds.forEach { guild: Guild ->
+                guild.updateCommands().addCommands(PluginLoader.guildCommands).queue()
+            }
         }
     }
 
@@ -132,6 +169,7 @@ object BotLoader {
             }
 
             StatusChanger.stop()
+            ConsoleLogger.stop()
             logger.info("Bot shutdown completed.")
         } catch (e: Exception) {
             logger.error("Failed to stop BotLoader:", e)
