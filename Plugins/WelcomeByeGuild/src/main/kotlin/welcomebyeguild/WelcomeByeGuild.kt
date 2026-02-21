@@ -1,106 +1,45 @@
 package tw.xinshou.discord.plugin.welcomebyeguild
 
 import com.squareup.moshi.JsonAdapter
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.channel.ChannelType
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
+import tw.xinshou.discord.core.builtin.placeholder.Placeholder
+import tw.xinshou.discord.core.builtin.placeholder.Substitutor
 import tw.xinshou.discord.core.json.JsonFileManager
 import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.discord.core.json.JsonGuildFileManager
-import tw.xinshou.discord.core.util.ComponentIdManager
-import tw.xinshou.discord.core.util.FieldType
-import tw.xinshou.discord.plugin.welcomebyeguild.Event.componentPrefix
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
 import java.io.File
 
 internal object WelcomeByeGuild {
-    internal object Actions {
-        const val SELECT_CHANNEL = "select-channel"
-        const val MODAL_WELCOME_TEXT = "modal-welcome-text"
-        const val MODAL_BYE_TEXT = "modal-bye-text"
-        const val MODAL_IMAGES = "modal-images"
-        const val MODAL_COLORS = "modal-colors"
-        const val PREVIEW_JOIN = "preview-join"
-        const val PREVIEW_LEAVE = "preview-leave"
-        const val CONFIRM_CREATE = "confirm-create"
-    }
+    private val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
 
-    internal object Inputs {
-        const val TITLE = "title"
-        const val DESCRIPTION = "description"
-        const val THUMBNAIL = "thumbnail"
-        const val IMAGE = "image"
-        const val WELCOME_COLOR = "welcome-color"
-        const val BYE_COLOR = "bye-color"
-    }
-
-    internal object MessageKeys {
-        const val GUILD_ONLY = "guild-only"
-        const val INVALID_COLOR = "invalid-color"
-        const val CHANNEL_NOT_SET = "channel-not-set"
-
-        const val SETUP_PANEL = "setup-panel"
-        const val SETUP_SAVED = "setup-saved"
-
-        const val DEFAULT_JOIN = "default-join"
-        const val DEFAULT_LEAVE = "default-leave"
-    }
-
-    internal object ModalKeys {
-        const val WELCOME_TEXT = "welcome-text"
-        const val LEAVE_TEXT = "leave-text"
-        const val IMAGES = "images"
-        const val COLORS = "colors"
-    }
-
-    internal object Models {
-        const val PREVIEW_EMBED = "wbg@preview-embed"
-    }
-
-    internal val colorRegex = Regex("^#?[0-9a-fA-F]{6}$")
-    internal val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
-
-    internal val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
-    internal val jsonGuildManager = JsonGuildFileManager(
+    private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
+    private val jsonGuildManager = JsonGuildFileManager(
         dataDirectory = File(pluginDirectory, "data"),
         adapter = jsonAdapter,
         defaultInstance = GuildSetting()
     )
 
-    internal val componentIdManager = ComponentIdManager(
-        prefix = componentPrefix,
-        idKeys = mapOf(
-            "action" to FieldType.STRING,
-        )
-    )
-
-    internal lateinit var messageCreator: MessageCreator
-    internal lateinit var modalCreator: ModalCreator
-    internal val steps: MutableMap<Long, CreateStep> = hashMapOf()
+    private lateinit var messageCreator: MessageCreator
 
     internal fun load() {
         messageCreator = MessageCreator(
             pluginDirFile = pluginDirectory,
             defaultLocale = defaultLocale,
-            componentIdManager = componentIdManager,
-        )
-
-        modalCreator = ModalCreator(
-            langDirFile = File(pluginDirectory, "lang"),
-            componentIdManager = componentIdManager,
-            defaultLocale = defaultLocale
         )
     }
 
     internal fun reload() {
-        steps.clear()
         load()
     }
 
@@ -109,26 +48,234 @@ internal object WelcomeByeGuild {
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        handleSlashCommandInteraction(event)
-    }
+        val guild = event.guild ?: run {
+            reply(event, WelcomeByeGuildMessageKeys.GUILD_ONLY)
+            return
+        }
 
-    fun onButtonInteraction(event: ButtonInteractionEvent) {
-        handleButtonInteraction(event)
-    }
+        val setting = jsonGuildManager[guild.idLong].data
+        val commandSubstitutor = WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
 
-    fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        handleEntitySelectInteraction(event)
-    }
+        if (!hasAdminPermission(event)) {
+            reply(event, WelcomeByeGuildMessageKeys.NO_PERMISSION, commandSubstitutor)
+            return
+        }
 
-    fun onModalInteraction(event: ModalInteractionEvent) {
-        handleModalInteraction(event)
+        when (event.name) {
+            "welcome-channel-bind" -> bindWelcomeChannel(event, guild)
+            "welcome-channel-unbind" -> unbindWelcomeChannel(event, guild)
+            "bye-channel-bind" -> bindByeChannel(event, guild)
+            "bye-channel-unbind" -> unbindByeChannel(event, guild)
+        }
     }
 
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
-        handleGuildMemberJoin(event)
+        val guild = event.guild
+        val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        val channelId = setting.welcomeChannelId
+        if (channelId == 0L) return
+
+        val channel = guild.getTextChannelById(channelId) ?: return
+        val substitutor = WelcomeByeGuildSubstitutorFactory.forMemberEvent(
+            guild = guild,
+            setting = setting,
+            user = event.user,
+            member = event.member,
+            eventType = "join",
+        )
+
+        channel.sendMessage(
+            messageCreator.getCreateBuilder(WelcomeByeGuildMessageKeys.WELCOME, guild.locale, substitutor).build()
+        ).queue()
     }
 
     fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
-        handleGuildMemberRemove(event)
+        val guild = event.guild
+        val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        val channelId = setting.byeChannelId
+        if (channelId == 0L) return
+
+        val channel = guild.getTextChannelById(channelId) ?: return
+        val substitutor = WelcomeByeGuildSubstitutorFactory.forMemberEvent(
+            guild = guild,
+            setting = setting,
+            user = event.user,
+            member = null,
+            eventType = "leave",
+        )
+
+        channel.sendMessage(
+            messageCreator.getCreateBuilder(WelcomeByeGuildMessageKeys.BYE, guild.locale, substitutor).build()
+        ).queue()
+    }
+
+    private fun bindWelcomeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val channel = getTextChannelOption(event) ?: run {
+            val setting = jsonGuildManager[guild.idLong].data
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
+        val dataManager = jsonGuildManager[guild.idLong]
+        val setting = dataManager.data
+
+        if (setting.welcomeChannelId == channel.idLong) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.WELCOME_BIND_ALREADY,
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                )
+            )
+            return
+        }
+
+        setting.welcomeChannelId = channel.idLong
+        dataManager.save()
+
+        reply(
+            event,
+            WelcomeByeGuildMessageKeys.WELCOME_BIND_SUCCESS,
+            WelcomeByeGuildSubstitutorFactory.forCommand(
+                event = event,
+                guild = guild,
+                setting = setting,
+                selectedChannel = channel,
+            )
+        )
+    }
+
+    private fun unbindWelcomeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val dataManager = jsonGuildManager[guild.idLong]
+        val setting = dataManager.data
+
+        val oldChannelId = setting.welcomeChannelId
+        if (oldChannelId == 0L) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.WELCOME_UNBIND_EMPTY,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
+        setting.welcomeChannelId = 0L
+        dataManager.save()
+
+        reply(
+            event,
+            WelcomeByeGuildMessageKeys.WELCOME_UNBIND_SUCCESS,
+            WelcomeByeGuildSubstitutorFactory.forCommand(
+                event = event,
+                guild = guild,
+                setting = setting,
+                oldChannelId = oldChannelId,
+            )
+        )
+    }
+
+    private fun bindByeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val channel = getTextChannelOption(event) ?: run {
+            val setting = jsonGuildManager[guild.idLong].data
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
+        val dataManager = jsonGuildManager[guild.idLong]
+        val setting = dataManager.data
+
+        if (setting.byeChannelId == channel.idLong) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.BYE_BIND_ALREADY,
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                )
+            )
+            return
+        }
+
+        setting.byeChannelId = channel.idLong
+        dataManager.save()
+
+        reply(
+            event,
+            WelcomeByeGuildMessageKeys.BYE_BIND_SUCCESS,
+            WelcomeByeGuildSubstitutorFactory.forCommand(
+                event = event,
+                guild = guild,
+                setting = setting,
+                selectedChannel = channel,
+            )
+        )
+    }
+
+    private fun unbindByeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val dataManager = jsonGuildManager[guild.idLong]
+        val setting = dataManager.data
+
+        val oldChannelId = setting.byeChannelId
+        if (oldChannelId == 0L) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.BYE_UNBIND_EMPTY,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
+        setting.byeChannelId = 0L
+        dataManager.save()
+
+        reply(
+            event,
+            WelcomeByeGuildMessageKeys.BYE_UNBIND_SUCCESS,
+            WelcomeByeGuildSubstitutorFactory.forCommand(
+                event = event,
+                guild = guild,
+                setting = setting,
+                oldChannelId = oldChannelId,
+            )
+        )
+    }
+
+    private fun hasAdminPermission(event: SlashCommandInteractionEvent): Boolean {
+        return event.member?.hasPermission(Permission.ADMINISTRATOR) == true
+    }
+
+    private fun getTextChannelOption(event: SlashCommandInteractionEvent): TextChannel? {
+        val channel = event.getOption("channel")?.asChannel ?: return null
+        return if (channel.type == ChannelType.TEXT) channel.asTextChannel() else null
+    }
+
+    private fun reply(
+        event: SlashCommandInteractionEvent,
+        messageKey: String,
+        substitutor: Substitutor = Placeholder.globalSubstitutor,
+    ) {
+        val editData: MessageEditData = messageCreator.getEditBuilder(messageKey, event.userLocale, substitutor).build()
+
+        if (event.isAcknowledged) {
+            event.hook.editOriginal(editData).queue()
+            return
+        }
+
+        event.deferReply(true).queue { hook ->
+            hook.editOriginal(editData).queue()
+        }
     }
 }

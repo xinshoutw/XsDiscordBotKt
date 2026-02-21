@@ -3,10 +3,7 @@ package tw.xinshou.discord.plugin.welcomebyeguild
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import tw.xinshou.discord.core.localizations.StringLocalizer
@@ -66,24 +63,6 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         if (!config.enabled) return
         if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
         WelcomeByeGuild.onSlashCommandInteraction(event)
-    }
-
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        WelcomeByeGuild.onButtonInteraction(event)
-    }
-
-    override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        WelcomeByeGuild.onEntitySelectInteraction(event)
-    }
-
-    override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
-        WelcomeByeGuild.onModalInteraction(event)
     }
 
     override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
