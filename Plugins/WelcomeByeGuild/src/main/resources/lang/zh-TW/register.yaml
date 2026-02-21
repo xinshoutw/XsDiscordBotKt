@@ -1,0 +1,3 @@
+create_welcome_bye_guild:
+  name: "建立歡迎離開"
+  description: "建立成員加入/離開時的 embed 訊息"

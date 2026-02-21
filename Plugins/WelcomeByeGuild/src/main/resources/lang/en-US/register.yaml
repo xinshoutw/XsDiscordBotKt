@@ -1,0 +1,3 @@
+create_welcome_bye_guild:
+  name: "create-welcome-bye-guild"
+  description: "Configure join/leave embed messages"
