@@ -15,8 +15,6 @@ embeds:
     thumbnail_url: "%wbg@user_avatar_url%"
     image_url: "%wbg@guild_banner_url%"
     color_code: "#ED4245"
-    footer:
-      text: "事件時間：<t:%wbg@event_timestamp_unix%:F>"
     fields:
       - name: "`離開訊息頻道`"
         value: "%wbg@bye_channel_mention%"

@@ -16,8 +16,6 @@ embeds:
     thumbnail_url: "%wbg@user_avatar_url%"
     image_url: "%wbg@guild_banner_url%"
     color_code: "#57F287"
-    footer:
-      text: "Joined at: <t:%wbg@event_timestamp_unix%:F>"
     fields:
       - name: "`Welcome Channel`"
         value: "%wbg@welcome_channel_mention%"
