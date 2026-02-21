@@ -1,0 +1,50 @@
+response:
+  guildOnly: "此指令只能在伺服器內使用。"
+  saveDone: "WelcomeByeGuild 設定已儲存，已開始監聽成員加入/離開事件。"
+  invalidColor: "顏色格式錯誤，請輸入 #RRGGBB。"
+
+setup:
+  title: "WelcomeByeGuild 建立精靈"
+  description: "請設定加入/離開通知內容，完成後按下 `儲存設定`。"
+  selectChannelPlaceholder: "選擇訊息輸出頻道"
+  buttons:
+    welcomeText: "設定歡迎訊息"
+    leaveText: "設定離開訊息"
+    images: "設定圖片"
+    colors: "設定顏色"
+    previewJoin: "預覽加入"
+    previewLeave: "預覽離開"
+    save: "儲存設定"
+  fields:
+    outputChannel: "輸出頻道"
+    welcomeMessage: "歡迎訊息"
+    leaveMessage: "離開訊息"
+    thumbnail: "縮圖 (thumbnail)"
+    image: "主圖 (photo/image)"
+    welcomeColor: "歡迎顏色"
+    leaveColor: "離開顏色"
+  outputChannelNotSet: "尚未設定"
+  thumbnailNotSet: "未設定 (將使用使用者頭像)"
+  imageNotSet: "未設定"
+
+modal:
+  welcomeTitle: "設定歡迎訊息"
+  leaveTitle: "設定離開訊息"
+  imagesTitle: "設定圖片"
+  colorsTitle: "設定顏色"
+  labels:
+    title: "標題"
+    description: "描述"
+    thumbnailUrl: "縮圖 URL"
+    imageUrl: "主圖 URL"
+    welcomeColor: "歡迎顏色 (#RRGGBB)"
+    leaveColor: "離開顏色 (#RRGGBB)"
+  placeholders:
+    thumbnailUrl: "留空 = 使用使用者頭像"
+    imageUrl: "留空 = 不使用主圖"
+
+defaults:
+  welcomeTitle: "🎉 歡迎 {userMention}"
+  welcomeDescription: "歡迎來到 **{guildName}**！你是第 **{memberCount}** 位成員。"
+  leaveTitle: "😢 {userName} 離開了"
+  leaveDescription: "祝你一切順利，期待再次見面。"

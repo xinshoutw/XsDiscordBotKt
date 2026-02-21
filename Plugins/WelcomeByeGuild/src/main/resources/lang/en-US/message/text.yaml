@@ -1,0 +1,50 @@
+response:
+  guildOnly: "This command can only be used in a guild."
+  saveDone: "WelcomeByeGuild settings saved. Join/leave notifications are now active."
+  invalidColor: "Invalid color format. Please use #RRGGBB."
+
+setup:
+  title: "WelcomeByeGuild Setup"
+  description: "Configure join/leave notification messages, then click `Save`."
+  selectChannelPlaceholder: "Select output channel"
+  buttons:
+    welcomeText: "Welcome text"
+    leaveText: "Leave text"
+    images: "Images"
+    colors: "Colors"
+    previewJoin: "Preview join"
+    previewLeave: "Preview leave"
+    save: "Save"
+  fields:
+    outputChannel: "Output channel"
+    welcomeMessage: "Welcome message"
+    leaveMessage: "Leave message"
+    thumbnail: "Thumbnail"
+    image: "Image"
+    welcomeColor: "Welcome color"
+    leaveColor: "Leave color"
+  outputChannelNotSet: "Not set"
+  thumbnailNotSet: "Not set (uses user avatar)"
+  imageNotSet: "Not set"
+
+modal:
+  welcomeTitle: "Set welcome message"
+  leaveTitle: "Set leave message"
+  imagesTitle: "Set images"
+  colorsTitle: "Set colors"
+  labels:
+    title: "Title"
+    description: "Description"
+    thumbnailUrl: "Thumbnail URL"
+    imageUrl: "Image URL"
+    welcomeColor: "Welcome color (#RRGGBB)"
+    leaveColor: "Leave color (#RRGGBB)"
+  placeholders:
+    thumbnailUrl: "Empty = use user avatar"
+    imageUrl: "Empty = no image"
+
+defaults:
+  welcomeTitle: "🎉 Welcome {userMention}"
+  welcomeDescription: "Welcome to **{guildName}**! You are member **#{memberCount}**."
+  leaveTitle: "😢 {userName} left"
+  leaveDescription: "Wish you all the best. See you again."

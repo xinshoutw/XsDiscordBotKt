@@ -27,10 +27,12 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
 import tw.xinshou.discord.core.json.JsonFileManager
 import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.discord.core.json.JsonGuildFileManager
+import tw.xinshou.discord.core.localizations.StringLocalizer
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.componentPrefix
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
+import tw.xinshou.discord.plugin.welcomebyeguild.message.MsgFileSerializer
 import java.awt.Color
 import java.io.File
 import java.time.Instant
@@ -56,6 +58,52 @@ internal object WelcomeByeGuild {
         const val BYE_COLOR = "bye-color"
     }
 
+    private object TextKeys {
+        const val RESPONSE_GUILD_ONLY = "response.guildOnly"
+        const val RESPONSE_SAVE_DONE = "response.saveDone"
+        const val RESPONSE_INVALID_COLOR = "response.invalidColor"
+
+        const val SETUP_TITLE = "setup.title"
+        const val SETUP_DESCRIPTION = "setup.description"
+        const val SETUP_SELECT_CHANNEL_PLACEHOLDER = "setup.selectChannelPlaceholder"
+        const val SETUP_BTN_WELCOME_TEXT = "setup.buttons.welcomeText"
+        const val SETUP_BTN_LEAVE_TEXT = "setup.buttons.leaveText"
+        const val SETUP_BTN_IMAGES = "setup.buttons.images"
+        const val SETUP_BTN_COLORS = "setup.buttons.colors"
+        const val SETUP_BTN_PREVIEW_JOIN = "setup.buttons.previewJoin"
+        const val SETUP_BTN_PREVIEW_LEAVE = "setup.buttons.previewLeave"
+        const val SETUP_BTN_SAVE = "setup.buttons.save"
+
+        const val SETUP_FIELD_OUTPUT_CHANNEL = "setup.fields.outputChannel"
+        const val SETUP_FIELD_WELCOME_MESSAGE = "setup.fields.welcomeMessage"
+        const val SETUP_FIELD_LEAVE_MESSAGE = "setup.fields.leaveMessage"
+        const val SETUP_FIELD_THUMBNAIL = "setup.fields.thumbnail"
+        const val SETUP_FIELD_IMAGE = "setup.fields.image"
+        const val SETUP_FIELD_WELCOME_COLOR = "setup.fields.welcomeColor"
+        const val SETUP_FIELD_LEAVE_COLOR = "setup.fields.leaveColor"
+        const val SETUP_OUTPUT_CHANNEL_NOT_SET = "setup.outputChannelNotSet"
+        const val SETUP_THUMBNAIL_NOT_SET = "setup.thumbnailNotSet"
+        const val SETUP_IMAGE_NOT_SET = "setup.imageNotSet"
+
+        const val MODAL_WELCOME_TITLE = "modal.welcomeTitle"
+        const val MODAL_LEAVE_TITLE = "modal.leaveTitle"
+        const val MODAL_IMAGES_TITLE = "modal.imagesTitle"
+        const val MODAL_COLORS_TITLE = "modal.colorsTitle"
+        const val MODAL_LABEL_TITLE = "modal.labels.title"
+        const val MODAL_LABEL_DESCRIPTION = "modal.labels.description"
+        const val MODAL_LABEL_THUMBNAIL_URL = "modal.labels.thumbnailUrl"
+        const val MODAL_LABEL_IMAGE_URL = "modal.labels.imageUrl"
+        const val MODAL_LABEL_WELCOME_COLOR = "modal.labels.welcomeColor"
+        const val MODAL_LABEL_LEAVE_COLOR = "modal.labels.leaveColor"
+        const val MODAL_PLACEHOLDER_THUMBNAIL_URL = "modal.placeholders.thumbnailUrl"
+        const val MODAL_PLACEHOLDER_IMAGE_URL = "modal.placeholders.imageUrl"
+
+        const val DEFAULT_WELCOME_TITLE = "defaults.welcomeTitle"
+        const val DEFAULT_WELCOME_DESCRIPTION = "defaults.welcomeDescription"
+        const val DEFAULT_LEAVE_TITLE = "defaults.leaveTitle"
+        const val DEFAULT_LEAVE_DESCRIPTION = "defaults.leaveDescription"
+    }
+
     private val colorRegex = Regex("^#?[0-9a-fA-F]{6}$")
 
     private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
@@ -72,10 +120,22 @@ internal object WelcomeByeGuild {
         )
     )
 
+    private lateinit var textLocalizer: StringLocalizer<MsgFileSerializer>
+
     private val steps: MutableMap<Long, CreateStep> = hashMapOf()
+
+    internal fun load() {
+        textLocalizer = StringLocalizer(
+            pluginDirFile = pluginDirectory,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            clazzSerializer = MsgFileSerializer::class,
+            fileName = "message/text.yaml"
+        )
+    }
 
     internal fun reload() {
         steps.clear()
+        load()
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
@@ -84,11 +144,13 @@ internal object WelcomeByeGuild {
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: run {
-            event.reply("This command can only be used in a guild.").setEphemeral(true).queue()
+            event.reply(text(event.userLocale, TextKeys.RESPONSE_GUILD_ONLY)).setEphemeral(true).queue()
             return
         }
 
-        val initialData = jsonGuildManager[guild.idLong].data.copy()
+        val initialData = jsonGuildManager[guild.idLong].data.copy().also {
+            ensureDefaults(it, event.userLocale)
+        }
 
         fun setup(hook: InteractionHook) {
             val step = CreateStep(hook, guild.idLong, initialData)
@@ -113,7 +175,7 @@ internal object WelcomeByeGuild {
                 event.replyModal(
                     buildTextModal(
                         modalAction = Actions.MODAL_WELCOME_TEXT,
-                        title = if (isZhLocale(event.userLocale)) "設定歡迎訊息" else "Set welcome message",
+                        title = text(event.userLocale, TextKeys.MODAL_WELCOME_TITLE),
                         defaultTitle = step.data.welcomeTitle,
                         defaultDescription = step.data.welcomeDescription,
                         locale = event.userLocale,
@@ -125,7 +187,7 @@ internal object WelcomeByeGuild {
                 event.replyModal(
                     buildTextModal(
                         modalAction = Actions.MODAL_BYE_TEXT,
-                        title = if (isZhLocale(event.userLocale)) "設定離開訊息" else "Set leave message",
+                        title = text(event.userLocale, TextKeys.MODAL_LEAVE_TITLE),
                         defaultTitle = step.data.byeTitle,
                         defaultDescription = step.data.byeDescription,
                         locale = event.userLocale,
@@ -161,16 +223,10 @@ internal object WelcomeByeGuild {
                 manager.save()
                 steps.remove(event.user.idLong)
 
-                val doneMessage = if (isZhLocale(event.userLocale)) {
-                    "WelcomeByeGuild 設定已儲存，已開始監聽成員加入/離開事件。"
-                } else {
-                    "WelcomeByeGuild settings saved. Join/leave notifications are now active."
-                }
-
                 event.deferEdit().flatMap {
                     step.hook.editOriginal(
                         MessageEditBuilder()
-                            .setContent(doneMessage)
+                            .setContent(text(event.userLocale, TextKeys.RESPONSE_SAVE_DONE))
                             .setEmbeds(buildSetupEmbed(step.data, event.userLocale))
                             .setComponents(emptyList())
                             .build()
@@ -205,19 +261,19 @@ internal object WelcomeByeGuild {
         when (action) {
             Actions.MODAL_WELCOME_TEXT -> {
                 step.data.welcomeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    defaultWelcomeTitle
+                    text(event.userLocale, TextKeys.DEFAULT_WELCOME_TITLE)
                 }
                 step.data.welcomeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    defaultWelcomeDescription
+                    text(event.userLocale, TextKeys.DEFAULT_WELCOME_DESCRIPTION)
                 }
             }
 
             Actions.MODAL_BYE_TEXT -> {
                 step.data.byeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    defaultByeTitle
+                    text(event.userLocale, TextKeys.DEFAULT_LEAVE_TITLE)
                 }
                 step.data.byeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    defaultByeDescription
+                    text(event.userLocale, TextKeys.DEFAULT_LEAVE_DESCRIPTION)
                 }
             }
 
@@ -234,12 +290,7 @@ internal object WelcomeByeGuild {
                 val byeColor = parseColor(byeColorRaw)
 
                 if (welcomeColor == null || byeColor == null) {
-                    val errorMessage = if (isZhLocale(event.userLocale)) {
-                        "顏色格式錯誤，請輸入 #RRGGBB。"
-                    } else {
-                        "Invalid color format. Please use #RRGGBB."
-                    }
-                    event.reply(errorMessage).setEphemeral(true).queue()
+                    event.reply(text(event.userLocale, TextKeys.RESPONSE_INVALID_COLOR)).setEphemeral(true).queue()
                     return
                 }
 
@@ -256,6 +307,8 @@ internal object WelcomeByeGuild {
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
         val guild = event.guild
         val data = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        ensureDefaults(data, DiscordLocale.CHINESE_TAIWAN)
+
         val channel: TextChannel = guild.getTextChannelById(data.channelId) ?: return
 
         channel.sendMessageEmbeds(
@@ -272,6 +325,8 @@ internal object WelcomeByeGuild {
     fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
         val guild = event.guild
         val data = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        ensureDefaults(data, DiscordLocale.CHINESE_TAIWAN)
+
         val channel: TextChannel = guild.getTextChannelById(data.channelId) ?: return
 
         channel.sendMessageEmbeds(
@@ -286,48 +341,46 @@ internal object WelcomeByeGuild {
     }
 
     private fun renderSetup(step: CreateStep, locale: DiscordLocale): WebhookMessageEditAction<Message?> {
-        val isZh = isZhLocale(locale)
-
         val channelSelector = EntitySelectMenu.create(
             componentIdManager.build(mapOf("action" to Actions.SELECT_CHANNEL)),
             EntitySelectMenu.SelectTarget.CHANNEL
         )
             .setChannelTypes(ChannelType.TEXT, ChannelType.NEWS)
             .setRequiredRange(1, 1)
-            .setPlaceholder(if (isZh) "選擇訊息輸出頻道" else "Select output channel")
+            .setPlaceholder(text(locale, TextKeys.SETUP_SELECT_CHANNEL_PLACEHOLDER))
             .build()
 
         val row2 = ActionRow.of(
             Button.primary(
                 componentIdManager.build(mapOf("action" to Actions.MODAL_WELCOME_TEXT)),
-                if (isZh) "設定歡迎訊息" else "Welcome text"
+                text(locale, TextKeys.SETUP_BTN_WELCOME_TEXT)
             ),
             Button.primary(
                 componentIdManager.build(mapOf("action" to Actions.MODAL_BYE_TEXT)),
-                if (isZh) "設定離開訊息" else "Leave text"
+                text(locale, TextKeys.SETUP_BTN_LEAVE_TEXT)
             ),
             Button.secondary(
                 componentIdManager.build(mapOf("action" to Actions.MODAL_IMAGES)),
-                if (isZh) "設定圖片" else "Images"
+                text(locale, TextKeys.SETUP_BTN_IMAGES)
             ),
             Button.secondary(
                 componentIdManager.build(mapOf("action" to Actions.MODAL_COLORS)),
-                if (isZh) "設定顏色" else "Colors"
+                text(locale, TextKeys.SETUP_BTN_COLORS)
             )
         )
 
         val row3 = ActionRow.of(
             Button.secondary(
                 componentIdManager.build(mapOf("action" to Actions.PREVIEW_JOIN)),
-                if (isZh) "預覽加入" else "Preview join"
+                text(locale, TextKeys.SETUP_BTN_PREVIEW_JOIN)
             ),
             Button.secondary(
                 componentIdManager.build(mapOf("action" to Actions.PREVIEW_LEAVE)),
-                if (isZh) "預覽離開" else "Preview leave"
+                text(locale, TextKeys.SETUP_BTN_PREVIEW_LEAVE)
             ),
             Button.success(
                 componentIdManager.build(mapOf("action" to Actions.CONFIRM_CREATE)),
-                if (isZh) "儲存設定" else "Save"
+                text(locale, TextKeys.SETUP_BTN_SAVE)
             ).withDisabled(step.data.channelId == 0L)
         )
 
@@ -341,66 +394,47 @@ internal object WelcomeByeGuild {
     }
 
     private fun buildSetupEmbed(data: GuildSetting, locale: DiscordLocale) = EmbedBuilder().apply {
-        val isZh = isZhLocale(locale)
-        setTitle(if (isZh) "WelcomeByeGuild 建立精靈" else "WelcomeByeGuild Setup")
-        setDescription(
-            if (isZh) {
-                "請設定加入/離開通知內容，完成後按下 `儲存設定`。"
-            } else {
-                "Configure join/leave notification messages, then click `Save`."
-            }
-        )
+        setTitle(text(locale, TextKeys.SETUP_TITLE))
+        setDescription(text(locale, TextKeys.SETUP_DESCRIPTION))
 
         addField(
-            if (isZh) "輸出頻道" else "Output channel",
-            if (data.channelId == 0L) {
-                if (isZh) "尚未設定" else "Not set"
-            } else {
-                "<#${data.channelId}>"
-            },
+            text(locale, TextKeys.SETUP_FIELD_OUTPUT_CHANNEL),
+            if (data.channelId == 0L) text(locale, TextKeys.SETUP_OUTPUT_CHANNEL_NOT_SET) else "<#${data.channelId}>",
             false
         )
 
         addField(
-            if (isZh) "歡迎訊息" else "Welcome message",
+            text(locale, TextKeys.SETUP_FIELD_WELCOME_MESSAGE),
             truncateLine("${data.welcomeTitle}\n${data.welcomeDescription}"),
             false
         )
 
         addField(
-            if (isZh) "離開訊息" else "Leave message",
+            text(locale, TextKeys.SETUP_FIELD_LEAVE_MESSAGE),
             truncateLine("${data.byeTitle}\n${data.byeDescription}"),
             false
         )
 
         addField(
-            if (isZh) "縮圖 (thumbnail)" else "Thumbnail",
-            if (data.thumbnailUrl.isBlank()) {
-                if (isZh) "未設定 (將使用使用者頭像)" else "Not set (uses user avatar)"
-            } else {
-                data.thumbnailUrl
-            },
+            text(locale, TextKeys.SETUP_FIELD_THUMBNAIL),
+            if (data.thumbnailUrl.isBlank()) text(locale, TextKeys.SETUP_THUMBNAIL_NOT_SET) else data.thumbnailUrl,
             false
         )
 
         addField(
-            if (isZh) "主圖 (photo/image)" else "Image",
-            if (data.imageUrl.isBlank()) {
-                if (isZh) "未設定" else "Not set"
-            } else {
-                data.imageUrl
-            },
+            text(locale, TextKeys.SETUP_FIELD_IMAGE),
+            if (data.imageUrl.isBlank()) text(locale, TextKeys.SETUP_IMAGE_NOT_SET) else data.imageUrl,
             false
         )
 
         addField(
-            if (isZh) "歡迎顏色" else "Welcome color",
+            text(locale, TextKeys.SETUP_FIELD_WELCOME_COLOR),
             String.format("#%06X", data.welcomeColor and 0xFFFFFF),
             true
         )
 
         addField(
-            if (isZh) "離開顏色" else "Leave color",
+            text(locale, TextKeys.SETUP_FIELD_LEAVE_COLOR),
             String.format("#%06X", data.byeColor and 0xFFFFFF),
             true
         )
@@ -416,8 +450,6 @@ internal object WelcomeByeGuild {
         defaultDescription: String,
         locale: DiscordLocale,
     ): Modal {
-        val isZh = isZhLocale(locale)
-
         val titleInput = TextInput.create(Inputs.TITLE, TextInputStyle.SHORT)
             .setRequired(true)
             .setMaxLength(256)
@@ -432,43 +464,39 @@ internal object WelcomeByeGuild {
 
         return Modal.create(componentIdManager.build(mapOf("action" to modalAction)), title)
             .addComponents(
-                Label.of(if (isZh) "標題" else "Title", titleInput),
-                Label.of(if (isZh) "描述" else "Description", descriptionInput),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_TITLE), titleInput),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_DESCRIPTION), descriptionInput),
             )
             .build()
     }
 
     private fun buildImageModal(step: CreateStep, locale: DiscordLocale): Modal {
-        val isZh = isZhLocale(locale)
-
         val thumbnailInput = TextInput.create(Inputs.THUMBNAIL, TextInputStyle.SHORT)
             .setRequired(false)
             .setMaxLength(1000)
-            .setPlaceholder(if (isZh) "留空 = 使用使用者頭像" else "Empty = use user avatar")
+            .setPlaceholder(text(locale, TextKeys.MODAL_PLACEHOLDER_THUMBNAIL_URL))
             .setValue(step.data.thumbnailUrl.ifBlank { null })
             .build()
 
         val imageInput = TextInput.create(Inputs.IMAGE, TextInputStyle.SHORT)
             .setRequired(false)
             .setMaxLength(1000)
-            .setPlaceholder(if (isZh) "留空 = 不使用主圖" else "Empty = no image")
+            .setPlaceholder(text(locale, TextKeys.MODAL_PLACEHOLDER_IMAGE_URL))
             .setValue(step.data.imageUrl.ifBlank { null })
             .build()
 
         return Modal.create(
             componentIdManager.build(mapOf("action" to Actions.MODAL_IMAGES)),
-            if (isZh) "設定圖片" else "Set images"
+            text(locale, TextKeys.MODAL_IMAGES_TITLE)
         )
             .addComponents(
-                Label.of(if (isZh) "縮圖 URL" else "Thumbnail URL", thumbnailInput),
-                Label.of(if (isZh) "主圖 URL" else "Image URL", imageInput),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_THUMBNAIL_URL), thumbnailInput),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_IMAGE_URL), imageInput),
             )
             .build()
     }
 
     private fun buildColorModal(step: CreateStep, locale: DiscordLocale): Modal {
-        val isZh = isZhLocale(locale)
-
         val welcomeColor = TextInput.create(Inputs.WELCOME_COLOR, TextInputStyle.SHORT)
             .setRequired(true)
             .setMinLength(7)
@@ -485,11 +513,11 @@ internal object WelcomeByeGuild {
 
         return Modal.create(
             componentIdManager.build(mapOf("action" to Actions.MODAL_COLORS)),
-            if (isZh) "設定顏色" else "Set colors"
+            text(locale, TextKeys.MODAL_COLORS_TITLE)
         )
             .addComponents(
-                Label.of(if (isZh) "歡迎顏色 (#RRGGBB)" else "Welcome color (#RRGGBB)", welcomeColor),
-                Label.of(if (isZh) "離開顏色 (#RRGGBB)" else "Leave color (#RRGGBB)", byeColor),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_WELCOME_COLOR), welcomeColor),
+                Label.of(text(locale, TextKeys.MODAL_LABEL_LEAVE_COLOR), byeColor),
             )
             .build()
     }
@@ -538,27 +566,39 @@ internal object WelcomeByeGuild {
         return value.take(maxLength - 3) + "..."
     }
 
-    private fun isZhLocale(locale: DiscordLocale): Boolean =
-        locale == DiscordLocale.CHINESE_TAIWAN || locale == DiscordLocale.CHINESE_CHINA
+    private fun ensureDefaults(data: GuildSetting, locale: DiscordLocale) {
+        if (data.welcomeTitle.isBlank()) {
+            data.welcomeTitle = text(locale, TextKeys.DEFAULT_WELCOME_TITLE)
+        }
+
+        if (data.welcomeDescription.isBlank()) {
+            data.welcomeDescription = text(locale, TextKeys.DEFAULT_WELCOME_DESCRIPTION)
+        }
+
+        if (data.byeTitle.isBlank()) {
+            data.byeTitle = text(locale, TextKeys.DEFAULT_LEAVE_TITLE)
+        }
+
+        if (data.byeDescription.isBlank()) {
+            data.byeDescription = text(locale, TextKeys.DEFAULT_LEAVE_DESCRIPTION)
+        }
+    }
+
+    private fun text(locale: DiscordLocale, key: String): String = textLocalizer.get(key, locale)
 
     private data class CreateStep(
         val hook: InteractionHook,
         val guildId: Long,
         val data: GuildSetting,
     )
-
-    private const val defaultWelcomeTitle = "🎉 歡迎 {userMention}"
-    private const val defaultWelcomeDescription = "歡迎來到 **{guildName}**！你是第 **{memberCount}** 位成員。"
-    private const val defaultByeTitle = "😢 {userName} 離開了"
-    private const val defaultByeDescription = "祝你一切順利，期待再次見面。"
 }
 
 internal data class GuildSetting(
     var channelId: Long = 0L,
-    var welcomeTitle: String = "🎉 歡迎 {userMention}",
-    var welcomeDescription: String = "歡迎來到 **{guildName}**！你是第 **{memberCount}** 位成員。",
-    var byeTitle: String = "😢 {userName} 離開了",
-    var byeDescription: String = "祝你一切順利，期待再次見面。",
+    var welcomeTitle: String = "",
+    var welcomeDescription: String = "",
+    var byeTitle: String = "",
+    var byeDescription: String = "",
     var thumbnailUrl: String = "",
     var imageUrl: String = "",
     var welcomeColor: Int = 0x57F287,

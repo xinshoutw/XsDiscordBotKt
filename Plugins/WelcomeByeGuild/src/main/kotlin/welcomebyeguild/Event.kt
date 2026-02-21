@@ -33,6 +33,8 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             clazzSerializer = CmdFileSerializer::class,
         )
+
+        WelcomeByeGuild.load()
     }
 
     override fun reload() {
