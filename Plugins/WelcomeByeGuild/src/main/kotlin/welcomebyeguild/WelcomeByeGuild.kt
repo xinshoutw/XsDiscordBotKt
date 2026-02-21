@@ -110,7 +110,7 @@ internal object WelcomeByeGuild {
     }
 
     private fun bindWelcomeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
-        val channel = getTextChannelOption(event) ?: run {
+        val channel = resolveTargetTextChannel(event) ?: run {
             val setting = jsonGuildManager[guild.idLong].data
             reply(
                 event,
@@ -153,6 +153,16 @@ internal object WelcomeByeGuild {
     }
 
     private fun unbindWelcomeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val channel = resolveTargetTextChannel(event) ?: run {
+            val setting = jsonGuildManager[guild.idLong].data
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
         val dataManager = jsonGuildManager[guild.idLong]
         val setting = dataManager.data
 
@@ -161,7 +171,27 @@ internal object WelcomeByeGuild {
             reply(
                 event,
                 WelcomeByeGuildMessageKeys.WELCOME_UNBIND_EMPTY,
-                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                )
+            )
+            return
+        }
+
+        if (oldChannelId != channel.idLong) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.WELCOME_UNBIND_NOT_BOUND,
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                    oldChannelId = oldChannelId,
+                )
             )
             return
         }
@@ -176,13 +206,14 @@ internal object WelcomeByeGuild {
                 event = event,
                 guild = guild,
                 setting = setting,
+                selectedChannel = channel,
                 oldChannelId = oldChannelId,
             )
         )
     }
 
     private fun bindByeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
-        val channel = getTextChannelOption(event) ?: run {
+        val channel = resolveTargetTextChannel(event) ?: run {
             val setting = jsonGuildManager[guild.idLong].data
             reply(
                 event,
@@ -225,6 +256,16 @@ internal object WelcomeByeGuild {
     }
 
     private fun unbindByeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
+        val channel = resolveTargetTextChannel(event) ?: run {
+            val setting = jsonGuildManager[guild.idLong].data
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+            )
+            return
+        }
+
         val dataManager = jsonGuildManager[guild.idLong]
         val setting = dataManager.data
 
@@ -233,7 +274,27 @@ internal object WelcomeByeGuild {
             reply(
                 event,
                 WelcomeByeGuildMessageKeys.BYE_UNBIND_EMPTY,
-                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                )
+            )
+            return
+        }
+
+        if (oldChannelId != channel.idLong) {
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.BYE_UNBIND_NOT_BOUND,
+                WelcomeByeGuildSubstitutorFactory.forCommand(
+                    event = event,
+                    guild = guild,
+                    setting = setting,
+                    selectedChannel = channel,
+                    oldChannelId = oldChannelId,
+                )
             )
             return
         }
@@ -248,6 +309,7 @@ internal object WelcomeByeGuild {
                 event = event,
                 guild = guild,
                 setting = setting,
+                selectedChannel = channel,
                 oldChannelId = oldChannelId,
             )
         )
@@ -257,9 +319,14 @@ internal object WelcomeByeGuild {
         return event.member?.hasPermission(Permission.ADMINISTRATOR) == true
     }
 
-    private fun getTextChannelOption(event: SlashCommandInteractionEvent): TextChannel? {
-        val channel = event.getOption("channel")?.asChannel ?: return null
-        return if (channel.type == ChannelType.TEXT) channel.asTextChannel() else null
+    private fun resolveTargetTextChannel(event: SlashCommandInteractionEvent): TextChannel? {
+        val optionChannel = event.getOption("channel")?.asChannel
+        if (optionChannel != null) {
+            return if (optionChannel.type == ChannelType.TEXT) optionChannel.asTextChannel() else null
+        }
+
+        val currentChannel = event.guildChannel
+        return if (currentChannel.type == ChannelType.TEXT) currentChannel.asTextChannel() else null
     }
 
     private fun reply(

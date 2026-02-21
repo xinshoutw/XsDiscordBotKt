@@ -7,19 +7,19 @@ import tw.xinshou.discord.core.localizations.LocalTemplate
 @Serializable
 internal data class CmdFileSerializer(
     @SerialName("welcome_channel_bind")
-    val welcomeChannelBind: BindCommand,
+    val welcomeChannelBind: ChannelCommand,
 
     @SerialName("welcome_channel_unbind")
-    val welcomeChannelUnbind: LocalTemplate.NameDescriptionString,
+    val welcomeChannelUnbind: ChannelCommand,
 
     @SerialName("bye_channel_bind")
-    val byeChannelBind: BindCommand,
+    val byeChannelBind: ChannelCommand,
 
     @SerialName("bye_channel_unbind")
-    val byeChannelUnbind: LocalTemplate.NameDescriptionString,
+    val byeChannelUnbind: ChannelCommand,
 ) {
     @Serializable
-    internal data class BindCommand(
+    internal data class ChannelCommand(
         val name: String,
         val description: String,
         val options: Options,
