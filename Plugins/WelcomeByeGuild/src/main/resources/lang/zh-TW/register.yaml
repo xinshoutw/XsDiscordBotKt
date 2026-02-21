@@ -1,0 +1,31 @@
+welcome_channel_bind:
+  name: "welcome-channel-bind"
+  description: "綁定成員加入歡迎訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "可選，不填則使用當前文字頻道"
+
+welcome_channel_unbind:
+  name: "welcome-channel-unbind"
+  description: "解除綁定成員加入歡迎訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "可選，不填則使用當前文字頻道"
+
+bye_channel_bind:
+  name: "bye-channel-bind"
+  description: "綁定成員離開難過訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "可選，不填則使用當前文字頻道"
+
+bye_channel_unbind:
+  name: "bye-channel-unbind"
+  description: "解除綁定成員離開難過訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "可選，不填則使用當前文字頻道"

@@ -1,0 +1,27 @@
+# Placeholder examples (you can reuse these in any section)
+# - %wbg@user_name% -> xinshou
+# - %wbg@guild_owner_mention% -> <@123456789012345678>
+# - %wbg@bye_channel_mention% -> <#123456789012345678>
+# - <t:%wbg@event_timestamp_unix%:R> -> Discord relative timestamp format
+embeds:
+  - author:
+      name: "%wbg@guild_name%"
+      icon_url: "%wbg@guild_icon_url%"
+    title:
+      text: "😢 %wbg@user_effective_name% has left"
+    description: |
+      %wbg@user_mention% left **%wbg@guild_name%**.
+      Current member count: **%wbg@guild_member_count%**
+    thumbnail_url: "%wbg@user_avatar_url%"
+    image_url: "%wbg@guild_banner_url%"
+    color_code: "#ED4245"
+    fields:
+      - name: "`Leave Channel`"
+        value: "%wbg@bye_channel_mention%"
+        inline: true
+      - name: "`Account Created`"
+        value: "<t:%wbg@user_created_unix%:R>"
+        inline: true
+      - name: "`Server Owner`"
+        value: "%wbg@guild_owner_mention%"
+        inline: true

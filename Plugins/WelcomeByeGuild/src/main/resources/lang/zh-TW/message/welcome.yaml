@@ -1,0 +1,28 @@
+# Placeholder 範例（可擴充到任意段落）
+# - %wbg@user_mention% -> <@123456789012345678>
+# - %wbg@member_roles_mentions% -> <@&111111111111111111> <@&222222222222222222>（僅加入事件）
+# - %wbg@guild_rules_channel_mention% -> <#123456789012345678>
+# - <t:%wbg@event_timestamp_unix%:F> -> Discord 完整時間顯示
+embeds:
+  - author:
+      name: "%wbg@guild_name%"
+      icon_url: "%wbg@guild_icon_url%"
+    title:
+      text: "🎉 歡迎 %wbg@user_effective_name% 加入伺服器"
+    description: |
+      歡迎 %wbg@user_mention%！
+      你是 **%wbg@guild_name%** 的第 **%wbg@guild_member_count%** 位成員。
+      請先閱讀規則：%wbg@guild_rules_channel_mention%
+    thumbnail_url: "%wbg@user_avatar_url%"
+    image_url: "%wbg@guild_banner_url%"
+    color_code: "#57F287"
+    fields:
+      - name: "`歡迎頻道`"
+        value: "%wbg@welcome_channel_mention%"
+        inline: true
+      - name: "`帳號建立`"
+        value: "<t:%wbg@user_created_unix%:R>"
+        inline: true
+      - name: "`身分組數量`"
+        value: "%wbg@member_roles_count%"
+        inline: true
