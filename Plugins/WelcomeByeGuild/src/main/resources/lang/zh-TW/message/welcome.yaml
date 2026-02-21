@@ -1,0 +1,39 @@
+embeds:
+  - author:
+      name: "WelcomeByeGuild"
+      icon_url: "%wbg@guild_icon_url%"
+    title:
+      text: "🎉 歡迎 %wbg@member_display_name% 加入 %wbg@guild_name%"
+    description: |
+      嗨 %wbg@user_mention%，歡迎加入 **%wbg@guild_name%**！
+      你是本伺服器第 **%wbg@guild_member_count%** 位成員。
+      歡迎訊息會發送到：%wbg@welcome_channel_mention%
+    thumbnail_url: "%wbg@member_avatar_url%"
+    image_url: "%wbg@welcome_photo_url%"
+    color_code: "%wbg@welcome_color%"
+    footer:
+      text: "User ID: %wbg@user_id% | Event: %wbg@event_type%"
+      icon_url: "%wbg@guild_icon_url%"
+    fields:
+      - name: "`暱稱 / 顯示名稱`"
+        value: "%wbg@member_nickname_or_name%"
+        inline: true
+      - name: "`帳號建立時間`"
+        value: "<t:%wbg@user_created_unix%:F>"
+        inline: true
+      - name: "`加入時間`"
+        value: "<t:%wbg@member_joined_unix%:F>"
+        inline: true
+      - name: "`身分組數量`"
+        value: "%wbg@member_roles_count%"
+        inline: true
+      - name: "`伺服器 Boost 數`"
+        value: "%wbg@guild_booster_count%"
+        inline: true
+      - name: "`規則頻道`"
+        value: "%wbg@guild_rules_channel_mention%"
+        inline: true
+      - name: "`身分組清單`"
+        value: "%wbg@member_roles_mentions%"
+      - name: "`事件時間戳`"
+        value: "<t:%wbg@event_timestamp_unix%:F>"

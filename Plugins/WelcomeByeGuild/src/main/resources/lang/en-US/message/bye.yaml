@@ -1,0 +1,37 @@
+embeds:
+  - author:
+      name: "WelcomeByeGuild"
+      icon_url: "%wbg@guild_icon_url%"
+    title:
+      text: "😢 %wbg@user_effective_name% left %wbg@guild_name%"
+    description: |
+      %wbg@user_mention% has left the server.
+      Current member count: **%wbg@guild_member_count%**
+      Leave messages are sent in: %wbg@bye_channel_mention%
+    thumbnail_url: "%wbg@member_avatar_url%"
+    image_url: "%wbg@bye_photo_url%"
+    color_code: "%wbg@bye_color%"
+    footer:
+      text: "User ID: %wbg@user_id% | Event: %wbg@event_type%"
+      icon_url: "%wbg@guild_icon_url%"
+    fields:
+      - name: "`Username`"
+        value: "%wbg@user_name%"
+        inline: true
+      - name: "`Global Name`"
+        value: "%wbg@user_global_name%"
+        inline: true
+      - name: "`Account Created`"
+        value: "<t:%wbg@user_created_unix%:F>"
+        inline: true
+      - name: "`Bound Channels`"
+        value: "Welcome: %wbg@welcome_channel_mention%\nBye: %wbg@bye_channel_mention%"
+        inline: true
+      - name: "`Server Owner`"
+        value: "%wbg@guild_owner_mention%"
+        inline: true
+      - name: "`Event Timestamp`"
+        value: "<t:%wbg@event_timestamp_unix%:F>"
+        inline: true
+      - name: "`Note`"
+        value: "If this was accidental, you can always come back."

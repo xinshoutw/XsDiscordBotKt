@@ -1,3 +1,23 @@
-create_welcome_bye_guild:
-  name: "建立歡迎離開"
-  description: "建立成員加入/離開時的 embed 訊息"
+welcome_channel_bind:
+  name: "welcome-channel-bind"
+  description: "綁定成員加入歡迎訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "選擇要發送歡迎訊息的文字頻道"
+
+welcome_channel_unbind:
+  name: "welcome-channel-unbind"
+  description: "解除綁定成員加入歡迎訊息頻道"
+
+bye_channel_bind:
+  name: "bye-channel-bind"
+  description: "綁定成員離開難過訊息頻道"
+  options:
+    channel:
+      name: "channel"
+      description: "選擇要發送離開訊息的文字頻道"
+
+bye_channel_unbind:
+  name: "bye-channel-unbind"
+  description: "解除綁定成員離開難過訊息頻道"
