@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "😢 %user_name% left"
+    description: "Wish you all the best. See you again."

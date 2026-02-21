@@ -1,5 +1,6 @@
+content: "目前顯示的是範例結果（使用你的名稱）。可用下方按鈕切換加入/離開預覽。"
 embeds:
-  - model_key: "wbg@setup-embed"
+  - model_key: "wbg@preview-embed"
 
 components:
   - !EntitySelectMenu

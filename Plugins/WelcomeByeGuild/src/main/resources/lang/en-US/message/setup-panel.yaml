@@ -1,5 +1,6 @@
+content: "You are now seeing the preview result using your current name. Use buttons below to switch join/leave preview."
 embeds:
-  - model_key: "wbg@setup-embed"
+  - model_key: "wbg@preview-embed"
 
 components:
   - !EntitySelectMenu

@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "🎉 歡迎 %user_mention%"
+    description: "歡迎來到 **%wbg@guild_name%**！你是第 **%wbg@member_count%** 位成員。"

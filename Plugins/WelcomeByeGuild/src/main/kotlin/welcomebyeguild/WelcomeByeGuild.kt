@@ -56,16 +56,9 @@ internal object WelcomeByeGuild {
 
         const val SETUP_PANEL = "setup-panel"
         const val SETUP_SAVED = "setup-saved"
-        const val SETUP_EMBED = "setup-embed"
 
-        const val SETUP_CHANNEL_NOT_SET = "setup-channel-not-set"
-        const val SETUP_THUMBNAIL_NOT_SET = "setup-thumbnail-not-set"
-        const val SETUP_IMAGE_NOT_SET = "setup-image-not-set"
-
-        const val DEFAULT_WELCOME_TITLE = "default-welcome-title"
-        const val DEFAULT_WELCOME_DESCRIPTION = "default-welcome-description"
-        const val DEFAULT_LEAVE_TITLE = "default-leave-title"
-        const val DEFAULT_LEAVE_DESCRIPTION = "default-leave-description"
+        const val DEFAULT_JOIN = "default-join"
+        const val DEFAULT_LEAVE = "default-leave"
     }
 
     private object ModalKeys {
@@ -76,7 +69,7 @@ internal object WelcomeByeGuild {
     }
 
     private object Models {
-        const val SETUP_EMBED = "wbg@setup-embed"
+        const val PREVIEW_EMBED = "wbg@preview-embed"
     }
 
     private val colorRegex = Regex("^#?[0-9a-fA-F]{6}$")
@@ -135,7 +128,14 @@ internal object WelcomeByeGuild {
         }
 
         fun setup(hook: InteractionHook) {
-            val step = CreateStep(hook, guild.idLong, initialData)
+            val step = CreateStep(
+                hook = hook,
+                guildId = guild.idLong,
+                previewUser = event.user,
+                previewGuildName = guild.name,
+                previewMemberCount = guild.memberCount,
+                data = initialData
+            )
             steps[event.user.idLong] = step
             renderSetup(step, event.userLocale).queue()
         }
@@ -214,17 +214,17 @@ internal object WelcomeByeGuild {
             }
 
             Actions.PREVIEW_JOIN -> {
-                val guild = event.guild ?: return event.deferEdit().queue()
-                event.replyEmbeds(createMemberEmbed(step.data, event.user, guild.name, guild.memberCount, true))
-                    .setEphemeral(true)
-                    .queue()
+                step.previewType = PreviewType.JOIN
+                event.deferEdit().flatMap {
+                    renderSetup(step, event.userLocale)
+                }.queue()
             }
 
             Actions.PREVIEW_LEAVE -> {
-                val guild = event.guild ?: return event.deferEdit().queue()
-                event.replyEmbeds(createMemberEmbed(step.data, event.user, guild.name, guild.memberCount, false))
-                    .setEphemeral(true)
-                    .queue()
+                step.previewType = PreviewType.LEAVE
+                event.deferEdit().flatMap {
+                    renderSetup(step, event.userLocale)
+                }.queue()
             }
 
             Actions.CONFIRM_CREATE -> {
@@ -238,14 +238,13 @@ internal object WelcomeByeGuild {
                 manager.save()
                 steps.remove(event.user.idLong)
 
-                val setupEmbed = buildSetupEmbed(step.data, event.userLocale)
                 event.deferEdit().flatMap {
                     step.hook.editOriginal(
                         messageCreator.getEditBuilder(
                             MessageKeys.SETUP_SAVED,
                             event.userLocale,
                             modelMapper = mapOf(
-                                Models.SETUP_EMBED to setupEmbed,
+                                Models.PREVIEW_EMBED to createPreviewEmbed(step),
                             )
                         ).build()
                     )
@@ -279,19 +278,19 @@ internal object WelcomeByeGuild {
         when (action) {
             Actions.MODAL_WELCOME_TEXT -> {
                 step.data.welcomeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    messageContent(MessageKeys.DEFAULT_WELCOME_TITLE, event.userLocale)
+                    defaultTemplate(MessageKeys.DEFAULT_JOIN, event.userLocale).title
                 }
                 step.data.welcomeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    messageContent(MessageKeys.DEFAULT_WELCOME_DESCRIPTION, event.userLocale)
+                    defaultTemplate(MessageKeys.DEFAULT_JOIN, event.userLocale).description
                 }
             }
 
             Actions.MODAL_BYE_TEXT -> {
                 step.data.byeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    messageContent(MessageKeys.DEFAULT_LEAVE_TITLE, event.userLocale)
+                    defaultTemplate(MessageKeys.DEFAULT_LEAVE, event.userLocale).title
                 }
                 step.data.byeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    messageContent(MessageKeys.DEFAULT_LEAVE_DESCRIPTION, event.userLocale)
+                    defaultTemplate(MessageKeys.DEFAULT_LEAVE, event.userLocale).description
                 }
             }
 
@@ -359,50 +358,24 @@ internal object WelcomeByeGuild {
     }
 
     private fun renderSetup(step: CreateStep, locale: DiscordLocale): WebhookMessageEditAction<Message?> {
-        val setupEmbed = buildSetupEmbed(step.data, locale)
-
         return step.hook.editOriginal(
             messageCreator.getEditBuilder(
                 MessageKeys.SETUP_PANEL,
                 locale,
                 modelMapper = mapOf(
-                    Models.SETUP_EMBED to setupEmbed,
+                    Models.PREVIEW_EMBED to createPreviewEmbed(step),
                 )
             ).build()
         )
     }
 
-    private fun buildSetupEmbed(data: GuildSetting, locale: DiscordLocale): MessageEmbed {
-        val replaceMap = mapOf(
-            "wbg@channel" to (
-                if (data.channelId == 0L) {
-                    messageContent(MessageKeys.SETUP_CHANNEL_NOT_SET, locale)
-                } else {
-                    "<#${data.channelId}>"
-                }
-                ),
-            "wbg@welcome-message" to truncateLine("${data.welcomeTitle}\n${data.welcomeDescription}"),
-            "wbg@leave-message" to truncateLine("${data.byeTitle}\n${data.byeDescription}"),
-            "wbg@thumbnail" to if (data.thumbnailUrl.isBlank()) {
-                messageContent(MessageKeys.SETUP_THUMBNAIL_NOT_SET, locale)
-            } else {
-                data.thumbnailUrl
-            },
-            "wbg@image" to if (data.imageUrl.isBlank()) {
-                messageContent(MessageKeys.SETUP_IMAGE_NOT_SET, locale)
-            } else {
-                data.imageUrl
-            },
-            "wbg@welcome-color" to String.format("#%06X", data.welcomeColor and 0xFFFFFF),
-            "wbg@leave-color" to String.format("#%06X", data.byeColor and 0xFFFFFF),
-        )
-
-        return messageCreator
-            .getCreateBuilder(MessageKeys.SETUP_EMBED, locale, replaceMap)
-            .build()
-            .embeds
-            .first()
-    }
+    private fun createPreviewEmbed(step: CreateStep): MessageEmbed = createMemberEmbed(
+        data = step.data,
+        user = step.previewUser,
+        guildName = step.previewGuildName,
+        memberCount = step.previewMemberCount,
+        isJoin = step.previewType == PreviewType.JOIN,
+    )
 
     private fun createMemberEmbed(
         data: GuildSetting,
@@ -417,7 +390,7 @@ internal object WelcomeByeGuild {
         setTitle(parseTemplate(titleTemplate, user, guildName, memberCount))
         setDescription(parseTemplate(descriptionTemplate, user, guildName, memberCount))
 
-        val thumbnail = data.thumbnailUrl.ifBlank { user.effectiveAvatarUrl ?: "" }
+        val thumbnail = data.thumbnailUrl.ifBlank { user.effectiveAvatarUrl }
         if (thumbnail.isNotBlank()) {
             setThumbnail(thumbnail)
         }
@@ -431,11 +404,12 @@ internal object WelcomeByeGuild {
     }.build()
 
     private fun parseTemplate(template: String, user: User, guildName: String, memberCount: Int): String {
-        return template
-            .replace("{userMention}", user.asMention)
-            .replace("{userName}", user.name)
-            .replace("{guildName}", guildName)
-            .replace("{memberCount}", memberCount.toString())
+        return Placeholder.get(user)
+            .putAll(
+                "wbg@guild_name" to guildName,
+                "wbg@member_count" to memberCount.toString(),
+            )
+            .parse(template)
     }
 
     private fun parseColor(input: String): Int? {
@@ -443,34 +417,38 @@ internal object WelcomeByeGuild {
         return input.removePrefix("#").toInt(16)
     }
 
-    private fun truncateLine(value: String, maxLength: Int = 600): String {
-        if (value.length <= maxLength) return value
-        return value.take(maxLength - 3) + "..."
-    }
-
     private fun ensureDefaults(data: GuildSetting, locale: DiscordLocale) {
+        val defaultJoin = defaultTemplate(MessageKeys.DEFAULT_JOIN, locale)
+        val defaultLeave = defaultTemplate(MessageKeys.DEFAULT_LEAVE, locale)
+
         if (data.welcomeTitle.isBlank()) {
-            data.welcomeTitle = messageContent(MessageKeys.DEFAULT_WELCOME_TITLE, locale)
+            data.welcomeTitle = defaultJoin.title
         }
 
         if (data.welcomeDescription.isBlank()) {
-            data.welcomeDescription = messageContent(MessageKeys.DEFAULT_WELCOME_DESCRIPTION, locale)
+            data.welcomeDescription = defaultJoin.description
         }
 
         if (data.byeTitle.isBlank()) {
-            data.byeTitle = messageContent(MessageKeys.DEFAULT_LEAVE_TITLE, locale)
+            data.byeTitle = defaultLeave.title
         }
 
         if (data.byeDescription.isBlank()) {
-            data.byeDescription = messageContent(MessageKeys.DEFAULT_LEAVE_DESCRIPTION, locale)
+            data.byeDescription = defaultLeave.description
         }
     }
 
-    private fun messageContent(
-        key: String,
-        locale: DiscordLocale,
-        replaceMap: Map<String, String> = emptyMap(),
-    ): String = messageCreator.getCreateBuilder(key, locale, replaceMap).build().content
+    private fun defaultTemplate(key: String, locale: DiscordLocale): Template = messageCreator
+        .getCreateBuilder(key, locale)
+        .build()
+        .embeds
+        .first()
+        .let { embed ->
+            Template(
+                title = requireNotNull(embed.title) { "title missing in $key" },
+                description = requireNotNull(embed.description) { "description missing in $key" },
+            )
+        }
 
     private fun createMessage(
         key: String,
@@ -481,8 +459,22 @@ internal object WelcomeByeGuild {
     private data class CreateStep(
         val hook: InteractionHook,
         val guildId: Long,
+        val previewUser: User,
+        val previewGuildName: String,
+        val previewMemberCount: Int,
+        var previewType: PreviewType = PreviewType.JOIN,
         val data: GuildSetting,
     )
+
+    private data class Template(
+        val title: String,
+        val description: String,
+    )
+
+    private enum class PreviewType {
+        JOIN,
+        LEAVE,
+    }
 }
 
 internal data class GuildSetting(

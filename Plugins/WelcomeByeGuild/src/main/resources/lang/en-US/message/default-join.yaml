@@ -1,0 +1,4 @@
+embeds:
+  - title:
+      text: "🎉 Welcome %user_mention%"
+    description: "Welcome to **%wbg@guild_name%**! You are member **#%wbg@member_count%**."

@@ -1,3 +1,3 @@
 content: "WelcomeByeGuild 設定已儲存，已開始監聽成員加入/離開事件。"
 embeds:
-  - model_key: "wbg@setup-embed"
+  - model_key: "wbg@preview-embed"
