@@ -1,39 +1,30 @@
+# Placeholder examples (you can reuse these in any section)
+# - %wbg@user_mention% -> <@123456789012345678>
+# - %wbg@member_roles_mentions% -> <@&111111111111111111> <@&222222222222222222> (join event only)
+# - %wbg@guild_rules_channel_mention% -> <#123456789012345678>
+# - <t:%wbg@event_timestamp_unix%:F> -> Discord full timestamp format
 embeds:
   - author:
-      name: "WelcomeByeGuild"
+      name: "%wbg@guild_name%"
       icon_url: "%wbg@guild_icon_url%"
     title:
-      text: "🎉 Welcome %wbg@member_display_name% to %wbg@guild_name%"
+      text: "🎉 Welcome %wbg@user_effective_name%"
     description: |
-      Hi %wbg@user_mention%, welcome to **%wbg@guild_name%**!
-      You are member **#%wbg@guild_member_count%** in this guild.
-      Welcome messages are sent in: %wbg@welcome_channel_mention%
-    thumbnail_url: "%wbg@member_avatar_url%"
-    image_url: "%wbg@welcome_photo_url%"
-    color_code: "%wbg@welcome_color%"
+      Welcome %wbg@user_mention% to **%wbg@guild_name%**!
+      You are member **#%wbg@guild_member_count%** in this server.
+      Please check the rules channel: %wbg@guild_rules_channel_mention%
+    thumbnail_url: "%wbg@user_avatar_url%"
+    image_url: "%wbg@guild_banner_url%"
+    color_code: "#57F287"
     footer:
-      text: "User ID: %wbg@user_id% | Event: %wbg@event_type%"
-      icon_url: "%wbg@guild_icon_url%"
+      text: "Joined at: <t:%wbg@event_timestamp_unix%:F>"
     fields:
-      - name: "`Nickname / Display`"
-        value: "%wbg@member_nickname_or_name%"
+      - name: "`Welcome Channel`"
+        value: "%wbg@welcome_channel_mention%"
         inline: true
       - name: "`Account Created`"
-        value: "<t:%wbg@user_created_unix%:F>"
-        inline: true
-      - name: "`Joined At`"
-        value: "<t:%wbg@member_joined_unix%:F>"
+        value: "<t:%wbg@user_created_unix%:R>"
         inline: true
       - name: "`Role Count`"
         value: "%wbg@member_roles_count%"
         inline: true
-      - name: "`Server Boost Count`"
-        value: "%wbg@guild_booster_count%"
-        inline: true
-      - name: "`Rules Channel`"
-        value: "%wbg@guild_rules_channel_mention%"
-        inline: true
-      - name: "`Roles`"
-        value: "%wbg@member_roles_mentions%"
-      - name: "`Event Timestamp`"
-        value: "<t:%wbg@event_timestamp_unix%:F>"

@@ -1,37 +1,29 @@
+# Placeholder 範例（可擴充到任意段落）
+# - %wbg@user_name% -> xinshou
+# - %wbg@guild_owner_mention% -> <@123456789012345678>
+# - %wbg@bye_channel_mention% -> <#123456789012345678>
+# - <t:%wbg@event_timestamp_unix%:R> -> Discord 相對時間顯示
 embeds:
   - author:
-      name: "WelcomeByeGuild"
+      name: "%wbg@guild_name%"
       icon_url: "%wbg@guild_icon_url%"
     title:
-      text: "😢 %wbg@user_effective_name% 離開了 %wbg@guild_name%"
+      text: "😢 %wbg@user_effective_name% 已離開伺服器"
     description: |
-      %wbg@user_mention% 已離開伺服器。
-      當前成員數：**%wbg@guild_member_count%**
-      離開訊息會發送到：%wbg@bye_channel_mention%
-    thumbnail_url: "%wbg@member_avatar_url%"
-    image_url: "%wbg@bye_photo_url%"
-    color_code: "%wbg@bye_color%"
+      %wbg@user_mention% 離開了 **%wbg@guild_name%**。
+      目前成員數：**%wbg@guild_member_count%**
+    thumbnail_url: "%wbg@user_avatar_url%"
+    image_url: "%wbg@guild_banner_url%"
+    color_code: "#ED4245"
     footer:
-      text: "User ID: %wbg@user_id% | Event: %wbg@event_type%"
-      icon_url: "%wbg@guild_icon_url%"
+      text: "事件時間：<t:%wbg@event_timestamp_unix%:F>"
     fields:
-      - name: "`使用者名稱`"
-        value: "%wbg@user_name%"
+      - name: "`離開訊息頻道`"
+        value: "%wbg@bye_channel_mention%"
         inline: true
-      - name: "`全域名稱`"
-        value: "%wbg@user_global_name%"
-        inline: true
-      - name: "`帳號建立時間`"
-        value: "<t:%wbg@user_created_unix%:F>"
-        inline: true
-      - name: "`離開時已綁定頻道`"
-        value: "Welcome: %wbg@welcome_channel_mention%\nBye: %wbg@bye_channel_mention%"
+      - name: "`帳號建立`"
+        value: "<t:%wbg@user_created_unix%:R>"
         inline: true
       - name: "`伺服器擁有者`"
         value: "%wbg@guild_owner_mention%"
         inline: true
-      - name: "`事件時間戳`"
-        value: "<t:%wbg@event_timestamp_unix%:F>"
-        inline: true
-      - name: "`提示`"
-        value: "若是誤退，歡迎再次加入。"

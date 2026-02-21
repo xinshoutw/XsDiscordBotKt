@@ -177,7 +177,6 @@ object Placeholder {
     fun putUser(
         substitutor: Substitutor,
         user: User,
-        member: Member? = null,
         prefix: String = "",
         noneValue: String = "-",
     ): Substitutor = substitutor.apply {
@@ -188,7 +187,7 @@ object Placeholder {
                 key(prefix, "user_name_upper") to { user.name.uppercase() },
                 key(prefix, "user_name_lower") to { user.name.lowercase() },
                 key(prefix, "user_global_name") to { normalize(user.globalName, noneValue) },
-                key(prefix, "user_effective_name") to { member?.effectiveName ?: user.name },
+                key(prefix, "user_effective_name") to { user.effectiveName },
                 key(prefix, "user_mention") to { user.asMention },
                 key(prefix, "user_avatar_url") to { normalize(user.effectiveAvatarUrl, noneValue) },
                 key(prefix, "user_default_avatar_url") to { normalize(user.defaultAvatarUrl, noneValue) },
@@ -201,27 +200,26 @@ object Placeholder {
 
     fun putMember(
         substitutor: Substitutor,
-        user: User,
-        member: Member?,
+        member: Member,
         prefix: String = "",
         noneValue: String = "-",
     ): Substitutor = substitutor.apply {
         putAllLazy(
             mapOf(
-                key(prefix, "member_id") to { member?.id ?: user.id },
-                key(prefix, "member_display_name") to { member?.effectiveName ?: user.name },
-                key(prefix, "member_nickname") to { normalize(member?.nickname, noneValue) },
-                key(prefix, "member_nickname_or_name") to { member?.nickname ?: member?.effectiveName ?: user.name },
-                key(prefix, "member_avatar_url") to { normalize(member?.effectiveAvatarUrl ?: user.effectiveAvatarUrl, noneValue) },
-                key(prefix, "member_roles_count") to { (member?.roles?.size ?: 0).toString() },
+                key(prefix, "member_id") to { member.id },
+                key(prefix, "member_display_name") to { member.effectiveName },
+                key(prefix, "member_nickname") to { normalize(member.nickname, noneValue) },
+                key(prefix, "member_nickname_or_name") to { member.nickname ?: member.effectiveName },
+                key(prefix, "member_avatar_url") to { normalize(member.effectiveAvatarUrl, noneValue) },
+                key(prefix, "member_roles_count") to { member.roles.size.toString() },
                 key(prefix, "member_roles_mentions") to {
-                    member?.roles?.joinToString(separator = " ") { it.asMention }?.ifBlank { noneValue } ?: noneValue
+                    member.roles.joinToString(separator = " ") { it.asMention }.ifBlank { noneValue }
                 },
                 key(prefix, "member_roles_names") to {
-                    member?.roles?.joinToString(separator = ", ") { it.name }?.ifBlank { noneValue } ?: noneValue
+                    member.roles.joinToString(separator = ", ") { it.name }.ifBlank { noneValue }
                 },
-                key(prefix, "member_joined_unix") to { member?.timeJoined?.toEpochSecond()?.toString() ?: "0" },
-                key(prefix, "member_joined_iso") to { member?.timeJoined?.toString() ?: noneValue },
+                key(prefix, "member_joined_unix") to { member.timeJoined.toEpochSecond().toString() },
+                key(prefix, "member_joined_iso") to { member.timeJoined.toString() },
             )
         )
     }

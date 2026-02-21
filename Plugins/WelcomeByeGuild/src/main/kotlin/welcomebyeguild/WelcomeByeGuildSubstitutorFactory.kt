@@ -12,15 +12,6 @@ import java.time.Instant
 internal object WelcomeByeGuildSubstitutorFactory {
     private const val NONE = "-"
 
-    private const val WELCOME_COLOR = "#57F287"
-    private const val BYE_COLOR = "#ED4245"
-
-    private const val WELCOME_PHOTO_URL =
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80"
-
-    private const val BYE_PHOTO_URL =
-        "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80"
-
     fun forCommand(
         event: SlashCommandInteractionEvent,
         guild: Guild,
@@ -30,10 +21,10 @@ internal object WelcomeByeGuildSubstitutorFactory {
     ): Substitutor {
         val substitutor = Placeholder.get(event)
 
-        Placeholder.putGuild(substitutor, guild, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putUser(substitutor, event.user, event.member, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putMember(substitutor, event.user, event.member, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putEvent(substitutor, eventType = "command", prefix = "wbg@", instant = Instant.now())
+        Placeholder.putGuild(substitutor, guild, prefix = "wbg@")
+        Placeholder.putUser(substitutor, event.user, prefix = "wbg@")
+        event.member?.let { Placeholder.putMember(substitutor, it, prefix = "wbg@") }
+        Placeholder.putEvent(substitutor, eventType = "command", prefix = "wbg@")
         Placeholder.putTextChannel(
             substitutor,
             channel = selectedChannel,
@@ -50,7 +41,6 @@ internal object WelcomeByeGuildSubstitutorFactory {
 
         applyBoundChannels(substitutor, guild, setting)
         applyOldChannel(substitutor, guild, oldChannelId)
-        applyVisuals(substitutor)
         return substitutor
     }
 
@@ -63,13 +53,12 @@ internal object WelcomeByeGuildSubstitutorFactory {
     ): Substitutor {
         val substitutor = member?.let { Placeholder.get(it) } ?: Placeholder.get(user)
 
-        Placeholder.putGuild(substitutor, guild, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putUser(substitutor, user, member, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putMember(substitutor, user, member, prefix = "wbg@", noneValue = NONE)
-        Placeholder.putEvent(substitutor, eventType = eventType, prefix = "wbg@", instant = Instant.now())
+        Placeholder.putGuild(substitutor, guild, prefix = "wbg@")
+        Placeholder.putUser(substitutor, user, prefix = "wbg@")
+        member?.let { Placeholder.putMember(substitutor, it, prefix = "wbg@") }
+        Placeholder.putEvent(substitutor, eventType = eventType, prefix = "wbg@")
 
         applyBoundChannels(substitutor, guild, setting)
-        applyVisuals(substitutor)
         return substitutor
     }
 
@@ -117,15 +106,6 @@ internal object WelcomeByeGuildSubstitutorFactory {
         substitutor.putAll(
             "wbg@old_channel_id" to oldChannelId.toString(),
             "wbg@old_channel_mention" to mentionOrNone(oldChannelId),
-        )
-    }
-
-    private fun applyVisuals(substitutor: Substitutor) {
-        substitutor.putAll(
-            "wbg@welcome_color" to WELCOME_COLOR,
-            "wbg@bye_color" to BYE_COLOR,
-            "wbg@welcome_photo_url" to WELCOME_PHOTO_URL,
-            "wbg@bye_photo_url" to BYE_PHOTO_URL,
         )
     }
 

@@ -20,9 +20,14 @@ import tw.xinshou.discord.core.json.JsonGuildFileManager
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
 import java.io.File
 
+
+internal data class GuildSetting(
+    var welcomeChannelId: Long = 0L,
+    var byeChannelId: Long = 0L,
+)
+
 internal object WelcomeByeGuild {
     private val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
-
     private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
     private val jsonGuildManager = JsonGuildFileManager(
         dataDirectory = File(pluginDirectory, "data"),
@@ -53,11 +58,8 @@ internal object WelcomeByeGuild {
             return
         }
 
-        val setting = jsonGuildManager[guild.idLong].data
-        val commandSubstitutor = WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
-
         if (!hasAdminPermission(event)) {
-            reply(event, WelcomeByeGuildMessageKeys.NO_PERMISSION, commandSubstitutor)
+            reply(event, WelcomeByeGuildMessageKeys.NO_PERMISSION, Placeholder.get(event))
             return
         }
 
@@ -334,7 +336,8 @@ internal object WelcomeByeGuild {
         messageKey: String,
         substitutor: Substitutor = Placeholder.globalSubstitutor,
     ) {
-        val editData: MessageEditData = messageCreator.getEditBuilder(messageKey, event.userLocale, substitutor).build()
+        val locale = event.guild?.locale ?: event.userLocale
+        val editData: MessageEditData = messageCreator.getEditBuilder(messageKey, locale, substitutor).build()
 
         if (event.isAcknowledged) {
             event.hook.editOriginal(editData).queue()
