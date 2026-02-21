@@ -1,0 +1,48 @@
+embeds:
+  - model_key: "wbg@setup-embed"
+
+components:
+  - !EntitySelectMenu
+    uid:
+      action: "select-channel"
+    placeholder: "Select output channel"
+    min: 1
+    max: 1
+    select_target_type: "CHANNEL"
+    channel_types:
+      - "TEXT"
+      - "NEWS"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "modal-welcome-text"
+        style: 1
+        label: "Welcome text"
+      - uid:
+          action: "modal-bye-text"
+        style: 1
+        label: "Leave text"
+      - uid:
+          action: "modal-images"
+        style: 2
+        label: "Images"
+      - uid:
+          action: "modal-colors"
+        style: 2
+        label: "Colors"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "preview-join"
+        style: 2
+        label: "Preview join"
+      - uid:
+          action: "preview-leave"
+        style: 2
+        label: "Preview leave"
+      - uid:
+          action: "confirm-create"
+        style: 3
+        label: "Save"

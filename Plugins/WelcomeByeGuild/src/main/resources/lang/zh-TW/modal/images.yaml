@@ -1,0 +1,18 @@
+uid:
+  action: "modal-images"
+title: "設定圖片"
+text_inputs:
+  - uid: "thumbnail"
+    label: "縮圖 URL"
+    style: "SHORT"
+    value: "%wbg@thumbnail%"
+    placeholder: "留空 = 使用使用者頭像"
+    max_length: 1000
+    required: false
+  - uid: "image"
+    label: "主圖 URL"
+    style: "SHORT"
+    value: "%wbg@image%"
+    placeholder: "留空 = 不使用主圖"
+    max_length: 1000
+    required: false

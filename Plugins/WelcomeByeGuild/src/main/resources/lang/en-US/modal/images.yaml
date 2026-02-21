@@ -1,0 +1,18 @@
+uid:
+  action: "modal-images"
+title: "Set images"
+text_inputs:
+  - uid: "thumbnail"
+    label: "Thumbnail URL"
+    style: "SHORT"
+    value: "%wbg@thumbnail%"
+    placeholder: "Empty = use user avatar"
+    max_length: 1000
+    required: false
+  - uid: "image"
+    label: "Image URL"
+    style: "SHORT"
+    value: "%wbg@image%"
+    placeholder: "Empty = no image"
+    max_length: 1000
+    required: false

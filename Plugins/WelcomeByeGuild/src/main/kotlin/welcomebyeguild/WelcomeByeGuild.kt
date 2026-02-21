@@ -1,16 +1,9 @@
 package tw.xinshou.discord.plugin.welcomebyeguild
 
 import com.squareup.moshi.JsonAdapter
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.components.actionrow.ActionRow
-import net.dv8tion.jda.api.components.buttons.Button
-import net.dv8tion.jda.api.components.label.Label
-import net.dv8tion.jda.api.components.selections.EntitySelectMenu
-import net.dv8tion.jda.api.components.textinput.TextInput
-import net.dv8tion.jda.api.components.textinput.TextInputStyle
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
@@ -21,19 +14,17 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.modals.Modal
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
-import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
+import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
+import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.json.JsonFileManager
 import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.discord.core.json.JsonGuildFileManager
-import tw.xinshou.discord.core.localizations.StringLocalizer
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.componentPrefix
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
-import tw.xinshou.discord.plugin.welcomebyeguild.message.MsgFileSerializer
-import java.awt.Color
 import java.io.File
 import java.time.Instant
 
@@ -58,53 +49,38 @@ internal object WelcomeByeGuild {
         const val BYE_COLOR = "bye-color"
     }
 
-    private object TextKeys {
-        const val RESPONSE_GUILD_ONLY = "response.guildOnly"
-        const val RESPONSE_SAVE_DONE = "response.saveDone"
-        const val RESPONSE_INVALID_COLOR = "response.invalidColor"
+    private object MessageKeys {
+        const val GUILD_ONLY = "guild-only"
+        const val INVALID_COLOR = "invalid-color"
+        const val CHANNEL_NOT_SET = "channel-not-set"
 
-        const val SETUP_TITLE = "setup.title"
-        const val SETUP_DESCRIPTION = "setup.description"
-        const val SETUP_SELECT_CHANNEL_PLACEHOLDER = "setup.selectChannelPlaceholder"
-        const val SETUP_BTN_WELCOME_TEXT = "setup.buttons.welcomeText"
-        const val SETUP_BTN_LEAVE_TEXT = "setup.buttons.leaveText"
-        const val SETUP_BTN_IMAGES = "setup.buttons.images"
-        const val SETUP_BTN_COLORS = "setup.buttons.colors"
-        const val SETUP_BTN_PREVIEW_JOIN = "setup.buttons.previewJoin"
-        const val SETUP_BTN_PREVIEW_LEAVE = "setup.buttons.previewLeave"
-        const val SETUP_BTN_SAVE = "setup.buttons.save"
+        const val SETUP_PANEL = "setup-panel"
+        const val SETUP_SAVED = "setup-saved"
+        const val SETUP_EMBED = "setup-embed"
 
-        const val SETUP_FIELD_OUTPUT_CHANNEL = "setup.fields.outputChannel"
-        const val SETUP_FIELD_WELCOME_MESSAGE = "setup.fields.welcomeMessage"
-        const val SETUP_FIELD_LEAVE_MESSAGE = "setup.fields.leaveMessage"
-        const val SETUP_FIELD_THUMBNAIL = "setup.fields.thumbnail"
-        const val SETUP_FIELD_IMAGE = "setup.fields.image"
-        const val SETUP_FIELD_WELCOME_COLOR = "setup.fields.welcomeColor"
-        const val SETUP_FIELD_LEAVE_COLOR = "setup.fields.leaveColor"
-        const val SETUP_OUTPUT_CHANNEL_NOT_SET = "setup.outputChannelNotSet"
-        const val SETUP_THUMBNAIL_NOT_SET = "setup.thumbnailNotSet"
-        const val SETUP_IMAGE_NOT_SET = "setup.imageNotSet"
+        const val SETUP_CHANNEL_NOT_SET = "setup-channel-not-set"
+        const val SETUP_THUMBNAIL_NOT_SET = "setup-thumbnail-not-set"
+        const val SETUP_IMAGE_NOT_SET = "setup-image-not-set"
 
-        const val MODAL_WELCOME_TITLE = "modal.welcomeTitle"
-        const val MODAL_LEAVE_TITLE = "modal.leaveTitle"
-        const val MODAL_IMAGES_TITLE = "modal.imagesTitle"
-        const val MODAL_COLORS_TITLE = "modal.colorsTitle"
-        const val MODAL_LABEL_TITLE = "modal.labels.title"
-        const val MODAL_LABEL_DESCRIPTION = "modal.labels.description"
-        const val MODAL_LABEL_THUMBNAIL_URL = "modal.labels.thumbnailUrl"
-        const val MODAL_LABEL_IMAGE_URL = "modal.labels.imageUrl"
-        const val MODAL_LABEL_WELCOME_COLOR = "modal.labels.welcomeColor"
-        const val MODAL_LABEL_LEAVE_COLOR = "modal.labels.leaveColor"
-        const val MODAL_PLACEHOLDER_THUMBNAIL_URL = "modal.placeholders.thumbnailUrl"
-        const val MODAL_PLACEHOLDER_IMAGE_URL = "modal.placeholders.imageUrl"
+        const val DEFAULT_WELCOME_TITLE = "default-welcome-title"
+        const val DEFAULT_WELCOME_DESCRIPTION = "default-welcome-description"
+        const val DEFAULT_LEAVE_TITLE = "default-leave-title"
+        const val DEFAULT_LEAVE_DESCRIPTION = "default-leave-description"
+    }
 
-        const val DEFAULT_WELCOME_TITLE = "defaults.welcomeTitle"
-        const val DEFAULT_WELCOME_DESCRIPTION = "defaults.welcomeDescription"
-        const val DEFAULT_LEAVE_TITLE = "defaults.leaveTitle"
-        const val DEFAULT_LEAVE_DESCRIPTION = "defaults.leaveDescription"
+    private object ModalKeys {
+        const val WELCOME_TEXT = "welcome-text"
+        const val LEAVE_TEXT = "leave-text"
+        const val IMAGES = "images"
+        const val COLORS = "colors"
+    }
+
+    private object Models {
+        const val SETUP_EMBED = "wbg@setup-embed"
     }
 
     private val colorRegex = Regex("^#?[0-9a-fA-F]{6}$")
+    private val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
 
     private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
     private val jsonGuildManager = JsonGuildFileManager(
@@ -120,16 +96,22 @@ internal object WelcomeByeGuild {
         )
     )
 
-    private lateinit var textLocalizer: StringLocalizer<MsgFileSerializer>
+    private lateinit var messageCreator: MessageCreator
+    private lateinit var modalCreator: ModalCreator
 
     private val steps: MutableMap<Long, CreateStep> = hashMapOf()
 
     internal fun load() {
-        textLocalizer = StringLocalizer(
+        messageCreator = MessageCreator(
             pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = MsgFileSerializer::class,
-            fileName = "message/text.yaml"
+            defaultLocale = defaultLocale,
+            componentIdManager = componentIdManager,
+        )
+
+        modalCreator = ModalCreator(
+            langDirFile = File(pluginDirectory, "lang"),
+            componentIdManager = componentIdManager,
+            defaultLocale = defaultLocale
         )
     }
 
@@ -144,7 +126,7 @@ internal object WelcomeByeGuild {
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val guild = event.guild ?: run {
-            event.reply(text(event.userLocale, TextKeys.RESPONSE_GUILD_ONLY)).setEphemeral(true).queue()
+            event.reply(createMessage(MessageKeys.GUILD_ONLY, event.userLocale)).setEphemeral(true).queue()
             return
         }
 
@@ -172,35 +154,63 @@ internal object WelcomeByeGuild {
         val action = componentIdManager.parse(event.componentId)["action"] as String
         when (action) {
             Actions.MODAL_WELCOME_TEXT -> {
+                val substitutor = Placeholder.get(event).putAll(
+                    "wbg@title" to step.data.welcomeTitle,
+                    "wbg@description" to step.data.welcomeDescription,
+                )
+
                 event.replyModal(
-                    buildTextModal(
-                        modalAction = Actions.MODAL_WELCOME_TEXT,
-                        title = text(event.userLocale, TextKeys.MODAL_WELCOME_TITLE),
-                        defaultTitle = step.data.welcomeTitle,
-                        defaultDescription = step.data.welcomeDescription,
-                        locale = event.userLocale,
-                    )
+                    modalCreator.getModalBuilder(
+                        ModalKeys.WELCOME_TEXT,
+                        event.userLocale,
+                        substitutor = substitutor,
+                    ).build()
                 ).queue()
             }
 
             Actions.MODAL_BYE_TEXT -> {
+                val substitutor = Placeholder.get(event).putAll(
+                    "wbg@title" to step.data.byeTitle,
+                    "wbg@description" to step.data.byeDescription,
+                )
+
                 event.replyModal(
-                    buildTextModal(
-                        modalAction = Actions.MODAL_BYE_TEXT,
-                        title = text(event.userLocale, TextKeys.MODAL_LEAVE_TITLE),
-                        defaultTitle = step.data.byeTitle,
-                        defaultDescription = step.data.byeDescription,
-                        locale = event.userLocale,
-                    )
+                    modalCreator.getModalBuilder(
+                        ModalKeys.LEAVE_TEXT,
+                        event.userLocale,
+                        substitutor = substitutor,
+                    ).build()
                 ).queue()
             }
 
             Actions.MODAL_IMAGES -> {
-                event.replyModal(buildImageModal(step, event.userLocale)).queue()
+                val substitutor = Placeholder.get(event).putAll(
+                    "wbg@thumbnail" to step.data.thumbnailUrl,
+                    "wbg@image" to step.data.imageUrl,
+                )
+
+                event.replyModal(
+                    modalCreator.getModalBuilder(
+                        ModalKeys.IMAGES,
+                        event.userLocale,
+                        substitutor = substitutor,
+                    ).build()
+                ).queue()
             }
 
             Actions.MODAL_COLORS -> {
-                event.replyModal(buildColorModal(step, event.userLocale)).queue()
+                val substitutor = Placeholder.get(event).putAll(
+                    "wbg@welcome-color" to String.format("#%06X", step.data.welcomeColor and 0xFFFFFF),
+                    "wbg@bye-color" to String.format("#%06X", step.data.byeColor and 0xFFFFFF),
+                )
+
+                event.replyModal(
+                    modalCreator.getModalBuilder(
+                        ModalKeys.COLORS,
+                        event.userLocale,
+                        substitutor = substitutor,
+                    ).build()
+                ).queue()
             }
 
             Actions.PREVIEW_JOIN -> {
@@ -218,18 +228,26 @@ internal object WelcomeByeGuild {
             }
 
             Actions.CONFIRM_CREATE -> {
+                if (step.data.channelId == 0L) {
+                    event.reply(createMessage(MessageKeys.CHANNEL_NOT_SET, event.userLocale)).setEphemeral(true).queue()
+                    return
+                }
+
                 val manager = jsonGuildManager[step.guildId]
                 manager.data = step.data.copy()
                 manager.save()
                 steps.remove(event.user.idLong)
 
+                val setupEmbed = buildSetupEmbed(step.data, event.userLocale)
                 event.deferEdit().flatMap {
                     step.hook.editOriginal(
-                        MessageEditBuilder()
-                            .setContent(text(event.userLocale, TextKeys.RESPONSE_SAVE_DONE))
-                            .setEmbeds(buildSetupEmbed(step.data, event.userLocale))
-                            .setComponents(emptyList())
-                            .build()
+                        messageCreator.getEditBuilder(
+                            MessageKeys.SETUP_SAVED,
+                            event.userLocale,
+                            modelMapper = mapOf(
+                                Models.SETUP_EMBED to setupEmbed,
+                            )
+                        ).build()
                     )
                 }.queue()
             }
@@ -261,19 +279,19 @@ internal object WelcomeByeGuild {
         when (action) {
             Actions.MODAL_WELCOME_TEXT -> {
                 step.data.welcomeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    text(event.userLocale, TextKeys.DEFAULT_WELCOME_TITLE)
+                    messageContent(MessageKeys.DEFAULT_WELCOME_TITLE, event.userLocale)
                 }
                 step.data.welcomeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    text(event.userLocale, TextKeys.DEFAULT_WELCOME_DESCRIPTION)
+                    messageContent(MessageKeys.DEFAULT_WELCOME_DESCRIPTION, event.userLocale)
                 }
             }
 
             Actions.MODAL_BYE_TEXT -> {
                 step.data.byeTitle = event.getValue(Inputs.TITLE)?.asString.orEmpty().ifBlank {
-                    text(event.userLocale, TextKeys.DEFAULT_LEAVE_TITLE)
+                    messageContent(MessageKeys.DEFAULT_LEAVE_TITLE, event.userLocale)
                 }
                 step.data.byeDescription = event.getValue(Inputs.DESCRIPTION)?.asString.orEmpty().ifBlank {
-                    text(event.userLocale, TextKeys.DEFAULT_LEAVE_DESCRIPTION)
+                    messageContent(MessageKeys.DEFAULT_LEAVE_DESCRIPTION, event.userLocale)
                 }
             }
 
@@ -290,7 +308,7 @@ internal object WelcomeByeGuild {
                 val byeColor = parseColor(byeColorRaw)
 
                 if (welcomeColor == null || byeColor == null) {
-                    event.reply(text(event.userLocale, TextKeys.RESPONSE_INVALID_COLOR)).setEphemeral(true).queue()
+                    event.reply(createMessage(MessageKeys.INVALID_COLOR, event.userLocale)).setEphemeral(true).queue()
                     return
                 }
 
@@ -307,7 +325,7 @@ internal object WelcomeByeGuild {
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
         val guild = event.guild
         val data = jsonGuildManager.mapper[guild.idLong]?.data ?: return
-        ensureDefaults(data, DiscordLocale.CHINESE_TAIWAN)
+        ensureDefaults(data, defaultLocale)
 
         val channel: TextChannel = guild.getTextChannelById(data.channelId) ?: return
 
@@ -325,7 +343,7 @@ internal object WelcomeByeGuild {
     fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
         val guild = event.guild
         val data = jsonGuildManager.mapper[guild.idLong]?.data ?: return
-        ensureDefaults(data, DiscordLocale.CHINESE_TAIWAN)
+        ensureDefaults(data, defaultLocale)
 
         val channel: TextChannel = guild.getTextChannelById(data.channelId) ?: return
 
@@ -341,185 +359,49 @@ internal object WelcomeByeGuild {
     }
 
     private fun renderSetup(step: CreateStep, locale: DiscordLocale): WebhookMessageEditAction<Message?> {
-        val channelSelector = EntitySelectMenu.create(
-            componentIdManager.build(mapOf("action" to Actions.SELECT_CHANNEL)),
-            EntitySelectMenu.SelectTarget.CHANNEL
-        )
-            .setChannelTypes(ChannelType.TEXT, ChannelType.NEWS)
-            .setRequiredRange(1, 1)
-            .setPlaceholder(text(locale, TextKeys.SETUP_SELECT_CHANNEL_PLACEHOLDER))
-            .build()
-
-        val row2 = ActionRow.of(
-            Button.primary(
-                componentIdManager.build(mapOf("action" to Actions.MODAL_WELCOME_TEXT)),
-                text(locale, TextKeys.SETUP_BTN_WELCOME_TEXT)
-            ),
-            Button.primary(
-                componentIdManager.build(mapOf("action" to Actions.MODAL_BYE_TEXT)),
-                text(locale, TextKeys.SETUP_BTN_LEAVE_TEXT)
-            ),
-            Button.secondary(
-                componentIdManager.build(mapOf("action" to Actions.MODAL_IMAGES)),
-                text(locale, TextKeys.SETUP_BTN_IMAGES)
-            ),
-            Button.secondary(
-                componentIdManager.build(mapOf("action" to Actions.MODAL_COLORS)),
-                text(locale, TextKeys.SETUP_BTN_COLORS)
-            )
-        )
-
-        val row3 = ActionRow.of(
-            Button.secondary(
-                componentIdManager.build(mapOf("action" to Actions.PREVIEW_JOIN)),
-                text(locale, TextKeys.SETUP_BTN_PREVIEW_JOIN)
-            ),
-            Button.secondary(
-                componentIdManager.build(mapOf("action" to Actions.PREVIEW_LEAVE)),
-                text(locale, TextKeys.SETUP_BTN_PREVIEW_LEAVE)
-            ),
-            Button.success(
-                componentIdManager.build(mapOf("action" to Actions.CONFIRM_CREATE)),
-                text(locale, TextKeys.SETUP_BTN_SAVE)
-            ).withDisabled(step.data.channelId == 0L)
-        )
+        val setupEmbed = buildSetupEmbed(step.data, locale)
 
         return step.hook.editOriginal(
-            MessageEditBuilder()
-                .setContent(null)
-                .setEmbeds(buildSetupEmbed(step.data, locale))
-                .setComponents(ActionRow.of(channelSelector), row2, row3)
-                .build()
+            messageCreator.getEditBuilder(
+                MessageKeys.SETUP_PANEL,
+                locale,
+                modelMapper = mapOf(
+                    Models.SETUP_EMBED to setupEmbed,
+                )
+            ).build()
         )
     }
 
-    private fun buildSetupEmbed(data: GuildSetting, locale: DiscordLocale) = EmbedBuilder().apply {
-        setTitle(text(locale, TextKeys.SETUP_TITLE))
-        setDescription(text(locale, TextKeys.SETUP_DESCRIPTION))
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_OUTPUT_CHANNEL),
-            if (data.channelId == 0L) text(locale, TextKeys.SETUP_OUTPUT_CHANNEL_NOT_SET) else "<#${data.channelId}>",
-            false
+    private fun buildSetupEmbed(data: GuildSetting, locale: DiscordLocale): MessageEmbed {
+        val replaceMap = mapOf(
+            "wbg@channel" to (
+                if (data.channelId == 0L) {
+                    messageContent(MessageKeys.SETUP_CHANNEL_NOT_SET, locale)
+                } else {
+                    "<#${data.channelId}>"
+                }
+                ),
+            "wbg@welcome-message" to truncateLine("${data.welcomeTitle}\n${data.welcomeDescription}"),
+            "wbg@leave-message" to truncateLine("${data.byeTitle}\n${data.byeDescription}"),
+            "wbg@thumbnail" to if (data.thumbnailUrl.isBlank()) {
+                messageContent(MessageKeys.SETUP_THUMBNAIL_NOT_SET, locale)
+            } else {
+                data.thumbnailUrl
+            },
+            "wbg@image" to if (data.imageUrl.isBlank()) {
+                messageContent(MessageKeys.SETUP_IMAGE_NOT_SET, locale)
+            } else {
+                data.imageUrl
+            },
+            "wbg@welcome-color" to String.format("#%06X", data.welcomeColor and 0xFFFFFF),
+            "wbg@leave-color" to String.format("#%06X", data.byeColor and 0xFFFFFF),
         )
 
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_WELCOME_MESSAGE),
-            truncateLine("${data.welcomeTitle}\n${data.welcomeDescription}"),
-            false
-        )
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_LEAVE_MESSAGE),
-            truncateLine("${data.byeTitle}\n${data.byeDescription}"),
-            false
-        )
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_THUMBNAIL),
-            if (data.thumbnailUrl.isBlank()) text(locale, TextKeys.SETUP_THUMBNAIL_NOT_SET) else data.thumbnailUrl,
-            false
-        )
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_IMAGE),
-            if (data.imageUrl.isBlank()) text(locale, TextKeys.SETUP_IMAGE_NOT_SET) else data.imageUrl,
-            false
-        )
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_WELCOME_COLOR),
-            String.format("#%06X", data.welcomeColor and 0xFFFFFF),
-            true
-        )
-
-        addField(
-            text(locale, TextKeys.SETUP_FIELD_LEAVE_COLOR),
-            String.format("#%06X", data.byeColor and 0xFFFFFF),
-            true
-        )
-
-        setColor(Color(0x5865F2))
-        setTimestamp(Instant.now())
-    }.build()
-
-    private fun buildTextModal(
-        modalAction: String,
-        title: String,
-        defaultTitle: String,
-        defaultDescription: String,
-        locale: DiscordLocale,
-    ): Modal {
-        val titleInput = TextInput.create(Inputs.TITLE, TextInputStyle.SHORT)
-            .setRequired(true)
-            .setMaxLength(256)
-            .setValue(defaultTitle)
+        return messageCreator
+            .getCreateBuilder(MessageKeys.SETUP_EMBED, locale, replaceMap)
             .build()
-
-        val descriptionInput = TextInput.create(Inputs.DESCRIPTION, TextInputStyle.PARAGRAPH)
-            .setRequired(true)
-            .setMaxLength(1500)
-            .setValue(defaultDescription)
-            .build()
-
-        return Modal.create(componentIdManager.build(mapOf("action" to modalAction)), title)
-            .addComponents(
-                Label.of(text(locale, TextKeys.MODAL_LABEL_TITLE), titleInput),
-                Label.of(text(locale, TextKeys.MODAL_LABEL_DESCRIPTION), descriptionInput),
-            )
-            .build()
-    }
-
-    private fun buildImageModal(step: CreateStep, locale: DiscordLocale): Modal {
-        val thumbnailInput = TextInput.create(Inputs.THUMBNAIL, TextInputStyle.SHORT)
-            .setRequired(false)
-            .setMaxLength(1000)
-            .setPlaceholder(text(locale, TextKeys.MODAL_PLACEHOLDER_THUMBNAIL_URL))
-            .setValue(step.data.thumbnailUrl.ifBlank { null })
-            .build()
-
-        val imageInput = TextInput.create(Inputs.IMAGE, TextInputStyle.SHORT)
-            .setRequired(false)
-            .setMaxLength(1000)
-            .setPlaceholder(text(locale, TextKeys.MODAL_PLACEHOLDER_IMAGE_URL))
-            .setValue(step.data.imageUrl.ifBlank { null })
-            .build()
-
-        return Modal.create(
-            componentIdManager.build(mapOf("action" to Actions.MODAL_IMAGES)),
-            text(locale, TextKeys.MODAL_IMAGES_TITLE)
-        )
-            .addComponents(
-                Label.of(text(locale, TextKeys.MODAL_LABEL_THUMBNAIL_URL), thumbnailInput),
-                Label.of(text(locale, TextKeys.MODAL_LABEL_IMAGE_URL), imageInput),
-            )
-            .build()
-    }
-
-    private fun buildColorModal(step: CreateStep, locale: DiscordLocale): Modal {
-        val welcomeColor = TextInput.create(Inputs.WELCOME_COLOR, TextInputStyle.SHORT)
-            .setRequired(true)
-            .setMinLength(7)
-            .setMaxLength(7)
-            .setValue(String.format("#%06X", step.data.welcomeColor and 0xFFFFFF))
-            .build()
-
-        val byeColor = TextInput.create(Inputs.BYE_COLOR, TextInputStyle.SHORT)
-            .setRequired(true)
-            .setMinLength(7)
-            .setMaxLength(7)
-            .setValue(String.format("#%06X", step.data.byeColor and 0xFFFFFF))
-            .build()
-
-        return Modal.create(
-            componentIdManager.build(mapOf("action" to Actions.MODAL_COLORS)),
-            text(locale, TextKeys.MODAL_COLORS_TITLE)
-        )
-            .addComponents(
-                Label.of(text(locale, TextKeys.MODAL_LABEL_WELCOME_COLOR), welcomeColor),
-                Label.of(text(locale, TextKeys.MODAL_LABEL_LEAVE_COLOR), byeColor),
-            )
-            .build()
+            .embeds
+            .first()
     }
 
     private fun createMemberEmbed(
@@ -528,7 +410,7 @@ internal object WelcomeByeGuild {
         guildName: String,
         memberCount: Int,
         isJoin: Boolean,
-    ) = EmbedBuilder().apply {
+    ) = net.dv8tion.jda.api.EmbedBuilder().apply {
         val titleTemplate = if (isJoin) data.welcomeTitle else data.byeTitle
         val descriptionTemplate = if (isJoin) data.welcomeDescription else data.byeDescription
 
@@ -544,7 +426,7 @@ internal object WelcomeByeGuild {
             setImage(data.imageUrl)
         }
 
-        setColor(Color(if (isJoin) data.welcomeColor else data.byeColor))
+        setColor(java.awt.Color(if (isJoin) data.welcomeColor else data.byeColor))
         setTimestamp(Instant.now())
     }.build()
 
@@ -568,23 +450,33 @@ internal object WelcomeByeGuild {
 
     private fun ensureDefaults(data: GuildSetting, locale: DiscordLocale) {
         if (data.welcomeTitle.isBlank()) {
-            data.welcomeTitle = text(locale, TextKeys.DEFAULT_WELCOME_TITLE)
+            data.welcomeTitle = messageContent(MessageKeys.DEFAULT_WELCOME_TITLE, locale)
         }
 
         if (data.welcomeDescription.isBlank()) {
-            data.welcomeDescription = text(locale, TextKeys.DEFAULT_WELCOME_DESCRIPTION)
+            data.welcomeDescription = messageContent(MessageKeys.DEFAULT_WELCOME_DESCRIPTION, locale)
         }
 
         if (data.byeTitle.isBlank()) {
-            data.byeTitle = text(locale, TextKeys.DEFAULT_LEAVE_TITLE)
+            data.byeTitle = messageContent(MessageKeys.DEFAULT_LEAVE_TITLE, locale)
         }
 
         if (data.byeDescription.isBlank()) {
-            data.byeDescription = text(locale, TextKeys.DEFAULT_LEAVE_DESCRIPTION)
+            data.byeDescription = messageContent(MessageKeys.DEFAULT_LEAVE_DESCRIPTION, locale)
         }
     }
 
-    private fun text(locale: DiscordLocale, key: String): String = textLocalizer.get(key, locale)
+    private fun messageContent(
+        key: String,
+        locale: DiscordLocale,
+        replaceMap: Map<String, String> = emptyMap(),
+    ): String = messageCreator.getCreateBuilder(key, locale, replaceMap).build().content
+
+    private fun createMessage(
+        key: String,
+        locale: DiscordLocale,
+        replaceMap: Map<String, String> = emptyMap(),
+    ) = messageCreator.getCreateBuilder(key, locale, replaceMap).build()
 
     private data class CreateStep(
         val hook: InteractionHook,

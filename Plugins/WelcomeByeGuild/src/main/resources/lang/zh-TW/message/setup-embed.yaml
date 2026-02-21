@@ -1,0 +1,23 @@
+embeds:
+  - title:
+      text: "WelcomeByeGuild 建立精靈"
+    description: "請設定加入/離開通知內容，完成後按下 `儲存設定`。"
+    color_code: "#5865F2"
+    timestamp: "%now%"
+    fields:
+      - name: "輸出頻道"
+        value: "%wbg@channel%"
+      - name: "歡迎訊息"
+        value: "%wbg@welcome-message%"
+      - name: "離開訊息"
+        value: "%wbg@leave-message%"
+      - name: "縮圖 (thumbnail)"
+        value: "%wbg@thumbnail%"
+      - name: "主圖 (photo/image)"
+        value: "%wbg@image%"
+      - name: "歡迎顏色"
+        value: "%wbg@welcome-color%"
+        inline: true
+      - name: "離開顏色"
+        value: "%wbg@leave-color%"
+        inline: true

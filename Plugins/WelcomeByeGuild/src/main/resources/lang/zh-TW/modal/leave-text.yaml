@@ -1,0 +1,16 @@
+uid:
+  action: "modal-bye-text"
+title: "設定離開訊息"
+text_inputs:
+  - uid: "title"
+    label: "標題"
+    style: "SHORT"
+    value: "%wbg@title%"
+    max_length: 256
+    required: true
+  - uid: "description"
+    label: "描述"
+    style: "PARAGRAPH"
+    value: "%wbg@description%"
+    max_length: 1500
+    required: true

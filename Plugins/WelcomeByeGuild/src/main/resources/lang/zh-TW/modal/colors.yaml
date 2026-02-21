@@ -1,0 +1,18 @@
+uid:
+  action: "modal-colors"
+title: "設定顏色"
+text_inputs:
+  - uid: "welcome-color"
+    label: "歡迎顏色 (#RRGGBB)"
+    style: "SHORT"
+    value: "%wbg@welcome-color%"
+    min_length: 7
+    max_length: 7
+    required: true
+  - uid: "bye-color"
+    label: "離開顏色 (#RRGGBB)"
+    style: "SHORT"
+    value: "%wbg@bye-color%"
+    min_length: 7
+    max_length: 7
+    required: true
