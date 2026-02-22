@@ -1,7 +1,7 @@
 package tw.xinshou.discord.core.builtin.messagecreator.modal.builder
 
-import net.dv8tion.jda.api.components.textinput.TextInput
 import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
 import net.dv8tion.jda.api.modals.Modal
 import tw.xinshou.discord.core.builtin.messagecreator.modal.serializer.ModalDataSerializer
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
@@ -67,8 +67,14 @@ class ModalBuilder(
             textInput.style
         )
 
-        textInput.value?.let { textInputBuilder.setValue(parsePlaceholder(it)) }
-        textInput.placeholder?.let { textInputBuilder.setPlaceholder(parsePlaceholder(it)) }
+        textInput.value?.let {
+            val parsed = parsePlaceholder(it)
+            if (parsed.isNotBlank()) textInputBuilder.setValue(parsed)
+        }
+        textInput.placeholder?.let {
+            val parsed = parsePlaceholder(it)
+            if (parsed.isNotBlank()) textInputBuilder.setPlaceholder(parsed)
+        }
         if (textInput.minLength >= 0) textInputBuilder.setMinLength(textInput.minLength)
         if (textInput.maxLength >= 0) textInputBuilder.setMaxLength(textInput.maxLength)
         textInputBuilder.setRequired(textInput.required)
