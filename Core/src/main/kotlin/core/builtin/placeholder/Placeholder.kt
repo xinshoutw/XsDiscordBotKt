@@ -150,26 +150,37 @@ object Placeholder {
     ): Substitutor = substitutor.apply {
         putAllLazy(
             mapOf(
-                key(prefix, "guild_id") to { guild.id },
-                key(prefix, "guild_name") to { guild.name },
-                key(prefix, "guild_name_upper") to { guild.name.uppercase() },
-                key(prefix, "guild_name_lower") to { guild.name.lowercase() },
-                key(prefix, "guild_locale") to { guild.locale.name },
-                key(prefix, "guild_member_count") to { guild.memberCount.toString() },
-                key(prefix, "guild_boost_count") to { guild.boostCount.toString() },
-                key(prefix, "guild_booster_count") to { guild.boostCount.toString() }, // compatibility alias
-                key(prefix, "guild_icon_url") to { normalize(guild.iconUrl, noneValue) },
-                key(prefix, "guild_banner_url") to { normalize(guild.bannerUrl, noneValue) },
-                key(prefix, "guild_description") to { normalize(guild.description, noneValue) },
-                key(prefix, "guild_owner_id") to { guild.owner?.id ?: "0" },
-                key(prefix, "guild_owner_name") to { guild.owner?.effectiveName ?: noneValue },
-                key(prefix, "guild_owner_mention") to { guild.owner?.asMention ?: noneValue },
-                key(prefix, "guild_system_channel_id") to { guild.systemChannel?.id ?: "0" },
-                key(prefix, "guild_system_channel_name") to { guild.systemChannel?.name ?: noneValue },
-                key(prefix, "guild_system_channel_mention") to { guild.systemChannel?.asMention ?: noneValue },
-                key(prefix, "guild_rules_channel_id") to { guild.rulesChannel?.id ?: "0" },
-                key(prefix, "guild_rules_channel_name") to { guild.rulesChannel?.name ?: noneValue },
-                key(prefix, "guild_rules_channel_mention") to { guild.rulesChannel?.asMention ?: noneValue },
+                key(prefix, "guild_id") to safeLazy("0") { guild.id },
+                key(prefix, "guild_name") to safeLazy(noneValue) { guild.name },
+                key(prefix, "guild_name_upper") to safeLazy(noneValue) { guild.name.uppercase() },
+                key(prefix, "guild_name_lower") to safeLazy(noneValue) { guild.name.lowercase() },
+                key(prefix, "guild_locale") to safeLazy(noneValue) { guild.locale.name },
+                key(prefix, "guild_member_count") to safeLazy("0") { guild.memberCount.toString() },
+                key(prefix, "guild_boost_count") to safeLazy("0") { guild.boostCount.toString() },
+                key(
+                    prefix,
+                    "guild_booster_count"
+                ) to safeLazy("0") { guild.boostCount.toString() }, // compatibility alias
+                key(prefix, "guild_icon_url") to safeLazy(noneValue) { normalize(guild.iconUrl, noneValue) },
+                key(prefix, "guild_banner_url") to safeLazy(noneValue) { normalize(guild.bannerUrl, noneValue) },
+                key(prefix, "guild_description") to safeLazy(noneValue) { normalize(guild.description, noneValue) },
+                key(prefix, "guild_owner_id") to safeLazy("0") { guild.owner?.id ?: "0" },
+                key(prefix, "guild_owner_name") to safeLazy(noneValue) { guild.owner?.effectiveName ?: noneValue },
+                key(prefix, "guild_owner_mention") to safeLazy(noneValue) { guild.owner?.asMention ?: noneValue },
+                key(prefix, "guild_system_channel_id") to safeLazy("0") { guild.systemChannel?.id ?: "0" },
+                key(prefix, "guild_system_channel_name") to safeLazy(noneValue) {
+                    guild.systemChannel?.name ?: noneValue
+                },
+                key(prefix, "guild_system_channel_mention") to safeLazy(noneValue) {
+                    guild.systemChannel?.asMention ?: noneValue
+                },
+                key(prefix, "guild_rules_channel_id") to safeLazy("0") { guild.rulesChannel?.id ?: "0" },
+                key(prefix, "guild_rules_channel_name") to safeLazy(noneValue) {
+                    guild.rulesChannel?.name ?: noneValue
+                },
+                key(prefix, "guild_rules_channel_mention") to safeLazy(noneValue) {
+                    guild.rulesChannel?.asMention ?: noneValue
+                },
             )
         )
     }
@@ -182,18 +193,23 @@ object Placeholder {
     ): Substitutor = substitutor.apply {
         putAllLazy(
             mapOf(
-                key(prefix, "user_id") to { user.id },
-                key(prefix, "user_name") to { user.name },
-                key(prefix, "user_name_upper") to { user.name.uppercase() },
-                key(prefix, "user_name_lower") to { user.name.lowercase() },
-                key(prefix, "user_global_name") to { normalize(user.globalName, noneValue) },
-                key(prefix, "user_effective_name") to { user.effectiveName },
-                key(prefix, "user_mention") to { user.asMention },
-                key(prefix, "user_avatar_url") to { normalize(user.effectiveAvatarUrl, noneValue) },
-                key(prefix, "user_default_avatar_url") to { normalize(user.defaultAvatarUrl, noneValue) },
-                key(prefix, "user_is_bot") to { user.isBot.toString() },
-                key(prefix, "user_created_unix") to { user.timeCreated.toEpochSecond().toString() },
-                key(prefix, "user_created_iso") to { user.timeCreated.toString() },
+                key(prefix, "user_id") to safeLazy("0") { user.id },
+                key(prefix, "user_name") to safeLazy(noneValue) { user.name },
+                key(prefix, "user_name_upper") to safeLazy(noneValue) { user.name.uppercase() },
+                key(prefix, "user_name_lower") to safeLazy(noneValue) { user.name.lowercase() },
+                key(prefix, "user_global_name") to safeLazy(noneValue) { normalize(user.globalName, noneValue) },
+                key(prefix, "user_effective_name") to safeLazy(noneValue) { user.effectiveName },
+                key(prefix, "user_mention") to safeLazy(noneValue) { user.asMention },
+                key(prefix, "user_avatar_url") to safeLazy(noneValue) { normalize(user.effectiveAvatarUrl, noneValue) },
+                key(prefix, "user_default_avatar_url") to safeLazy(noneValue) {
+                    normalize(
+                        user.defaultAvatarUrl,
+                        noneValue
+                    )
+                },
+                key(prefix, "user_is_bot") to safeLazy("false") { user.isBot.toString() },
+                key(prefix, "user_created_unix") to safeLazy("0") { user.timeCreated.toEpochSecond().toString() },
+                key(prefix, "user_created_iso") to safeLazy(noneValue) { user.timeCreated.toString() },
             )
         )
     }
@@ -206,20 +222,27 @@ object Placeholder {
     ): Substitutor = substitutor.apply {
         putAllLazy(
             mapOf(
-                key(prefix, "member_id") to { member.id },
-                key(prefix, "member_display_name") to { member.effectiveName },
-                key(prefix, "member_nickname") to { normalize(member.nickname, noneValue) },
-                key(prefix, "member_nickname_or_name") to { member.nickname ?: member.effectiveName },
-                key(prefix, "member_avatar_url") to { normalize(member.effectiveAvatarUrl, noneValue) },
-                key(prefix, "member_roles_count") to { member.roles.size.toString() },
-                key(prefix, "member_roles_mentions") to {
+                key(prefix, "member_id") to safeLazy("0") { member.id },
+                key(prefix, "member_display_name") to safeLazy(noneValue) { member.effectiveName },
+                key(prefix, "member_nickname") to safeLazy(noneValue) { normalize(member.nickname, noneValue) },
+                key(prefix, "member_nickname_or_name") to safeLazy(noneValue) {
+                    member.nickname ?: member.effectiveName
+                },
+                key(prefix, "member_avatar_url") to safeLazy(noneValue) {
+                    normalize(
+                        member.effectiveAvatarUrl,
+                        noneValue
+                    )
+                },
+                key(prefix, "member_roles_count") to safeLazy("0") { member.roles.size.toString() },
+                key(prefix, "member_roles_mentions") to safeLazy(noneValue) {
                     member.roles.joinToString(separator = " ") { it.asMention }.ifBlank { noneValue }
                 },
-                key(prefix, "member_roles_names") to {
+                key(prefix, "member_roles_names") to safeLazy(noneValue) {
                     member.roles.joinToString(separator = ", ") { it.name }.ifBlank { noneValue }
                 },
-                key(prefix, "member_joined_unix") to { member.timeJoined.toEpochSecond().toString() },
-                key(prefix, "member_joined_iso") to { member.timeJoined.toString() },
+                key(prefix, "member_joined_unix") to safeLazy("0") { member.timeJoined.toEpochSecond().toString() },
+                key(prefix, "member_joined_iso") to safeLazy(noneValue) { member.timeJoined.toString() },
             )
         )
     }
@@ -247,10 +270,10 @@ object Placeholder {
     ): Substitutor = substitutor.apply {
         putAllLazy(
             mapOf(
-                key(prefix, "${baseKey}_id") to { channel?.id ?: "0" },
-                key(prefix, "${baseKey}_name") to { channel?.name ?: noneValue },
-                key(prefix, "${baseKey}_mention") to { channel?.asMention ?: noneValue },
-                key(prefix, "${baseKey}_type") to { channel?.type?.name ?: noneValue },
+                key(prefix, "${baseKey}_id") to safeLazy("0") { channel?.id ?: "0" },
+                key(prefix, "${baseKey}_name") to safeLazy(noneValue) { channel?.name ?: noneValue },
+                key(prefix, "${baseKey}_mention") to safeLazy(noneValue) { channel?.asMention ?: noneValue },
+                key(prefix, "${baseKey}_type") to safeLazy(noneValue) { channel?.type?.name ?: noneValue },
             )
         )
     }
@@ -258,4 +281,8 @@ object Placeholder {
     private fun key(prefix: String, key: String): String = if (prefix.isEmpty()) key else "${prefix}${key}"
 
     private fun normalize(value: String?, noneValue: String): String = value?.ifBlank { noneValue } ?: noneValue
+
+    private fun safeLazy(defaultValue: String, supplier: () -> String): () -> String = {
+        runCatching { supplier() }.getOrElse { defaultValue }
+    }
 }
