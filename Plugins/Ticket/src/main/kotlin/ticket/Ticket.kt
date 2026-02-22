@@ -27,6 +27,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
+import net.dv8tion.jda.api.requests.restaction.pagination.MessagePaginationAction
+import net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction.PaginationOrder.FORWARD
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
@@ -48,6 +50,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletionException
 
 internal object Ticket {
+    private const val archivePageSize = 100
     private const val threadNameMaxLength = 100
     private val threadTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")
 
@@ -358,33 +361,63 @@ internal object Ticket {
         ).queue({ thread ->
             targetChannel.createWebhook("ticket-save-content")
                 .queue({ webhook ->
-                    sourceChannel.iterableHistory
+                    val paginator = sourceChannel.iterableHistory
+                        .order(FORWARD)
+                        .limit(archivePageSize)
                         .cache(false)
-                        .takeAsync(Int.MAX_VALUE)
-                        .whenComplete { messages, throwable ->
-                            if (throwable != null) {
-                                safeDeleteWebhook(webhook)
-                                onError(unwrapThrowable(throwable))
-                                return@whenComplete
-                            }
 
-                            val archivedMessages = (messages ?: emptyList()).asReversed()
-                            forwardMessagesWithWebhook(
-                                webhook = webhook,
-                                thread = thread,
-                                messages = archivedMessages,
-                                onComplete = {
-                                    safeDeleteWebhook(webhook)
-                                    onSuccess(thread)
-                                },
-                                onError = { forwardError ->
-                                    safeDeleteWebhook(webhook)
-                                    onError(forwardError)
-                                }
-                            )
+                    archiveTicketContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        thread = thread,
+                        onComplete = {
+                            safeDeleteWebhook(webhook)
+                            onSuccess(thread)
+                        },
+                        onError = { forwardError ->
+                            safeDeleteWebhook(webhook)
+                            onError(forwardError)
                         }
+                    )
                 }, onError)
         }, onError)
+    }
+
+    private fun archiveTicketContentByPages(
+        paginator: MessagePaginationAction,
+        webhook: Webhook,
+        thread: ThreadChannel,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        paginator.takeAsync(archivePageSize).whenComplete { messages, throwable ->
+            if (throwable != null) {
+                onError(unwrapThrowable(throwable))
+                return@whenComplete
+            }
+
+            val pageMessages = messages ?: emptyList()
+            if (pageMessages.isEmpty()) {
+                onComplete()
+                return@whenComplete
+            }
+
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = thread,
+                messages = pageMessages,
+                onComplete = {
+                    archiveTicketContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        thread = thread,
+                        onComplete = onComplete,
+                        onError = onError,
+                    )
+                },
+                onError = onError
+            )
+        }
     }
 
     private fun forwardMessagesWithWebhook(
@@ -395,23 +428,17 @@ internal object Ticket {
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
     ) {
-        if (index >= messages.size) {
+        var nextIndex = index
+        while (nextIndex < messages.size && !shouldForwardMessage(messages[nextIndex])) {
+            nextIndex++
+        }
+
+        if (nextIndex >= messages.size) {
             onComplete()
             return
         }
 
-        val message = messages[index]
-        if (!shouldForwardMessage(message)) {
-            forwardMessagesWithWebhook(
-                webhook = webhook,
-                thread = thread,
-                messages = messages,
-                index = index + 1,
-                onComplete = onComplete,
-                onError = onError
-            )
-            return
-        }
+        val message = messages[nextIndex]
 
         webhook.sendMessage(buildForwardMessageData(message))
             .setThread(thread)
@@ -423,7 +450,7 @@ internal object Ticket {
                         webhook = webhook,
                         thread = thread,
                         messages = messages,
-                        index = index + 1,
+                        index = nextIndex + 1,
                         onComplete = onComplete,
                         onError = onError
                     )
