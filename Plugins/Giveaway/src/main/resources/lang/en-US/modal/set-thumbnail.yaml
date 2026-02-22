@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-thumbnail"
+title: "Set Thumbnail URL"
+text_inputs:
+  - uid: "thumbnail"
+    label: "Thumbnail URL"
+    style: "SHORT"
+    value: "%ga@thumbnail%"
+    placeholder: "https://..."
+    max_length: 1000
+    required: false

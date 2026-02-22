@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ConfigSerializer(
     val enabled: Boolean = false,
+    val autoDrawIntervalSeconds: Long = 15,
 )

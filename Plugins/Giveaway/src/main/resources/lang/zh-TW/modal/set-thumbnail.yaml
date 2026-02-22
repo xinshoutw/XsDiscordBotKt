@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-thumbnail"
+title: "設定縮圖網址"
+text_inputs:
+  - uid: "thumbnail"
+    label: "縮圖網址"
+    style: "SHORT"
+    value: "%ga@thumbnail%"
+    placeholder: "https://..."
+    max_length: 1000
+    required: false

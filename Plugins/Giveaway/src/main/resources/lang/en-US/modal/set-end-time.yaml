@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "set-end-time"
+title: "Set End Time"
+text_inputs:
+  - uid: "end-time"
+    label: "End Time"
+    style: "SHORT"
+    value: "%ga@end-time%"
+    placeholder: "yyyy-MM-dd HH:mm"
+    max_length: 16

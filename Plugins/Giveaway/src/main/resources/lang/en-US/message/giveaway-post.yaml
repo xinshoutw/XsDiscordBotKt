@@ -1,0 +1,9 @@
+embeds:
+  - model_key: "ga@giveaway-embed"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - model_key: "ga@join-button"
+      - model_key: "ga@draw-button"
+      - model_key: "ga@reroll-button"

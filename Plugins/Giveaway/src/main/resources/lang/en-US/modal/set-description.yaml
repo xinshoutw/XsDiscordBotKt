@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-description"
+title: "Set Giveaway Description"
+text_inputs:
+  - uid: "description"
+    label: "Description"
+    style: "PARAGRAPH"
+    value: "%ga@description%"
+    placeholder: "Optional description"
+    max_length: 4000
+    required: false

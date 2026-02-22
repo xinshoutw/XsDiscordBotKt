@@ -1,0 +1,18 @@
+uid:
+  action: "create"
+  sub_action: "add-prize"
+title: "新增獎品"
+text_inputs:
+  - uid: "prize-name"
+    label: "獎品名稱"
+    style: "SHORT"
+    value: "%ga@prize-name%"
+    placeholder: "獎品名稱"
+    max_length: 100
+
+  - uid: "winner-count"
+    label: "中獎人數"
+    style: "SHORT"
+    value: "1"
+    placeholder: "1-50"
+    max_length: 2

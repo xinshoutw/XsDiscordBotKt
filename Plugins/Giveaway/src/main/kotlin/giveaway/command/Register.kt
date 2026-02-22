@@ -1,18 +1,24 @@
 package tw.xinshou.discord.plugin.giveaway.command
 
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import tw.xinshou.discord.core.localizations.StringLocalizer
 
-/**
- * Retrieves and constructs an array of guild-specific command configurations for giveaway functionality.
- *
- * @return Array<CommandData> Collection of guild commands for giveaway management.
- */
-internal val guildCommands: Array<CommandData>
-    get() = arrayOf(
-        // Command to create a new giveaway with configuration interface
-        Commands.slash("create-giveaway", "Create a new giveaway with interactive configuration")
-        // TODO: Add localization support
-        // .setNameLocalizations(CmdLocalizations.createGiveaway.name)
-        // .setDescriptionLocalizations(CmdLocalizations.createGiveaway.description)
-    )
+internal val commandNameSet: Set<String> = setOf(
+    "create-giveaway",
+)
+
+private object Keys {
+    const val CREATE_GIVEAWAY = "createGiveaway"
+    const val CREATE_GIVEAWAY_NAME = "$CREATE_GIVEAWAY.name"
+    const val CREATE_GIVEAWAY_DESCRIPTION = "$CREATE_GIVEAWAY.description"
+}
+
+internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
+    Commands.slash("create-giveaway", "Create a giveaway with step-by-step setup")
+        .setNameLocalizations(localizer.getLocaleData(Keys.CREATE_GIVEAWAY_NAME))
+        .setDescriptionLocalizations(localizer.getLocaleData(Keys.CREATE_GIVEAWAY_DESCRIPTION))
+        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)),
+)

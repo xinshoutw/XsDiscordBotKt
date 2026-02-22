@@ -1,0 +1,71 @@
+embeds:
+  - model_key: "ga@preview-embed"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "set-title"
+        style: 1
+        label: "Set Title"
+
+      - uid:
+          action: "create"
+          sub_action: "set-description"
+        style: 1
+        label: "Set Description"
+
+      - uid:
+          action: "create"
+          sub_action: "set-end-time"
+        style: 1
+        label: "Set End Time"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "add-prize"
+        style: 3
+        label: "Add Prize"
+
+      - uid:
+          action: "create"
+          sub_action: "remove-prize"
+        style: 2
+        label: "Remove Last Prize"
+
+      - uid:
+          action: "create"
+          sub_action: "toggle-duplicate-policy"
+        style: 2
+        label: "Toggle Winner Policy"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "set-sponsor"
+        style: 2
+        label: "Set Sponsor"
+
+      - uid:
+          action: "create"
+          sub_action: "set-thumbnail"
+        style: 2
+        label: "Set Thumbnail"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "confirm-create"
+        style: 3
+        label: "Confirm Create"
+
+      - uid:
+          action: "create"
+          sub_action: "cancel"
+        style: 4
+        label: "Cancel"

@@ -1,64 +1,73 @@
 package tw.xinshou.discord.plugin.giveaway
 
+import com.squareup.moshi.JsonAdapter
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
-import net.dv8tion.jda.api.components.actionrow.ActionRow
-import net.dv8tion.jda.api.components.buttons.Button
-import net.dv8tion.jda.api.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.components.label.Label
-import net.dv8tion.jda.api.components.selections.EntitySelectMenu
-import net.dv8tion.jda.api.components.selections.SelectOption
-import net.dv8tion.jda.api.components.selections.StringSelectMenu
-import net.dv8tion.jda.api.components.textinput.TextInput
-import net.dv8tion.jda.api.components.textinput.TextInputStyle
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.modals.Modal
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
-import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
+import net.dv8tion.jda.api.requests.RestAction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tw.xinshou.discord.core.base.BotLoader.jdaBot
+import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
 import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
+import tw.xinshou.discord.core.json.JsonFileManager
+import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.discord.core.json.JsonGuildFileManager
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.giveaway.Event.componentPrefix
 import tw.xinshou.discord.plugin.giveaway.Event.pluginDirectory
-import tw.xinshou.discord.plugin.giveaway.data.GiveawayConfig
-import tw.xinshou.discord.plugin.giveaway.data.GiveawayInstance
-import tw.xinshou.discord.plugin.giveaway.data.RolePermissionType
+import tw.xinshou.discord.plugin.giveaway.create.StepManager
+import tw.xinshou.discord.plugin.giveaway.data.*
+import java.io.File
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.ConcurrentHashMap
+import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 internal object Giveaway {
-    // https://message.style/app/editor/share/X850kw8C
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private var autoDrawScheduler: ScheduledExecutorService? = null
 
-    // Component ID manager for handling button and select menu interactions
-    private val componentIdManager = ComponentIdManager(
+    val jsonAdapter: JsonAdapter<GiveawayGuildData> = JsonFileManager.moshi.adapterReified<GiveawayGuildData>()
+    val jsonGuildManager = JsonGuildFileManager<GiveawayGuildData>(
+        dataDirectory = File(pluginDirectory, "data"),
+        adapter = jsonAdapter,
+        defaultInstance = mutableMapOf()
+    )
+
+    val componentIdManager = ComponentIdManager(
         prefix = componentPrefix,
         idKeys = mapOf(
             "action" to FieldType.STRING,
+            "sub_action" to FieldType.STRING,
             "giveaway_id" to FieldType.STRING,
-            "user_id" to FieldType.STRING,
-            "config_type" to FieldType.STRING
         )
     )
 
-    // Message creator for internationalized messages
-    private var messageCreator = MessageCreator(
+    var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         componentIdManager = componentIdManager,
     )
 
-    // Storage for active giveaways and temporary configurations
-    private val activeGiveaways = ConcurrentHashMap<String, GiveawayInstance>()
-    private val tempConfigs = ConcurrentHashMap<String, GiveawayConfig>()
+    var modalCreator = ModalCreator(
+        langDirFile = File(pluginDirectory, "lang"),
+        componentIdManager = componentIdManager,
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+    )
 
     internal fun reload() {
         messageCreator = MessageCreator(
@@ -66,1117 +75,507 @@ internal object Giveaway {
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             componentIdManager = componentIdManager,
         )
+
+        modalCreator = ModalCreator(
+            langDirFile = File(pluginDirectory, "lang"),
+            componentIdManager = componentIdManager,
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        )
     }
 
-    /**
-     * Handle the /create-giveaway slash command
-     */
-    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!event.isFromGuild) {
-            event.reply("This command can only be used in a server!").setEphemeral(true).queue()
-            return
+    fun startAutoDrawScheduler(intervalSeconds: Long) {
+        stopAutoDrawScheduler()
+        val normalizedInterval = intervalSeconds.coerceIn(5, 3600)
+        autoDrawScheduler = Executors.newSingleThreadScheduledExecutor { runnable ->
+            Thread(runnable, "giveaway-auto-draw").apply { isDaemon = true }
+        }.also { scheduler ->
+            scheduler.scheduleAtFixedRate(
+                {
+                    runCatching {
+                        processAutoDraw()
+                    }.onFailure { throwable ->
+                        logger.error("Auto draw loop failed: {}", throwable.message, throwable)
+                    }
+                },
+                normalizedInterval,
+                normalizedInterval,
+                TimeUnit.SECONDS
+            )
         }
-
-        val userId = event.user.id
-        val tempConfigId = "temp_${userId}_${System.currentTimeMillis()}"
-
-        // Initialize temporary configuration
-        tempConfigs[tempConfigId] = GiveawayConfig()
-
-        // Create the initial configuration interface
-        val message = createConfigurationMessage(tempConfigId, GiveawayConfig())
-
-        event.hook.editOriginal(MessageEditBuilder.fromCreateData(message.build()).build()).queue()
+        logger.info("Giveaway auto draw scheduler started with {}s interval.", normalizedInterval)
     }
 
-    /**
-     * Handle button interactions for giveaway configuration and participation
-     */
+    fun stopAutoDrawScheduler() {
+        autoDrawScheduler?.shutdownNow()
+        autoDrawScheduler = null
+        logger.info("Giveaway auto draw scheduler stopped.")
+    }
+
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        StepManager.onSlashCommandInteraction(event)
+    }
+
     fun onButtonInteraction(event: ButtonInteractionEvent) {
         val idMap = componentIdManager.parse(event.componentId)
-        when (idMap["action"]) {
-            // Configuration buttons
-            "set_giveaway_name" -> handleSetGiveawayNameButton(event, idMap)
-            "set_prize_name" -> handleSetPrizeNameButton(event, idMap)
-            "set_time" -> handleSetTimeButton(event, idMap)
-            "set_winner_count" -> handleSetWinnerCountButton(event, idMap)
-            "set_sponsor" -> handleSetSponsorButton(event, idMap)
-            "set_thumbnail" -> handleSetThumbnailButton(event, idMap)
-            "toggle_role_permission" -> handleToggleRolePermissionButton(event, idMap)
-            "toggle_weight_additive" -> handleToggleWeightAdditiveButton(event, idMap)
-            "toggle_dm_winners" -> handleToggleDmWinnersButton(event, idMap)
-            "set_join_time" -> handleSetJoinTimeButton(event, idMap)
-            "select_roles" -> handleSelectRolesButton(event, idMap)
-            "set_role_weights" -> handleSetRoleWeightsButton(event, idMap)
 
-            // Action buttons
-            "preview" -> handlePreviewButton(event, idMap)
-            "create" -> handleCreateButton(event, idMap)
-            "participate" -> handleParticipateButton(event, idMap)
-            "reroll" -> handleRerollButton(event, idMap)
+        when (idMap["action"]) {
+            "create" -> StepManager.onButtonInteraction(event, idMap)
+            "participate" -> participate(event, idMap)
+            "draw" -> draw(event, idMap, reroll = false)
+            "reroll" -> draw(event, idMap, reroll = true)
         }
     }
 
-    /**
-     * Handle select menu interactions for role configuration
-     */
     fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        val idMap = componentIdManager.parse(event.componentId)
-        when (idMap["action"]) {
-            "select_join_time" -> handleJoinTimeSelect(event, idMap)
-            "role_permission" -> handleRolePermissionSelect(event, idMap)
-            "role_weights" -> handleRoleWeightsSelect(event, idMap)
-        }
+        logger.debug("Unexpected StringSelect interaction for giveaway: {}", event.componentId)
     }
 
-    /**
-     * Handle entity select menu interactions for role selection
-     */
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        val idMap = componentIdManager.parse(event.componentId)
-        when (idMap["action"]) {
-            "entity_select_roles" -> handleEntitySelectRoles(event, idMap)
-            "entity_select_role_weights" -> handleEntitySelectRoleWeights(event, idMap)
-        }
+        logger.debug("Unexpected EntitySelect interaction for giveaway: {}", event.componentId)
     }
 
-    /**
-     * Handle modal interactions for configuration
-     */
     fun onModalInteraction(event: ModalInteractionEvent) {
         val idMap = componentIdManager.parse(event.modalId)
-        when (idMap["action"]) {
-            "modal_giveaway_name" -> handleGiveawayNameModal(event, idMap)
-            "modal_prize_name" -> handlePrizeNameModal(event, idMap)
-            "modal_time" -> handleTimeModal(event, idMap)
-            "modal_winner_count" -> handleWinnerCountModal(event, idMap)
-            "modal_sponsor" -> handleSponsorModal(event, idMap)
-            "modal_thumbnail" -> handleThumbnailModal(event, idMap)
-            "modal_role_weight" -> handleRoleWeightModal(event, idMap)
+        if (idMap["action"] == "create") {
+            StepManager.onModalInteraction(event, idMap)
         }
     }
 
-    /**
-     * Create the initial configuration message with individual configuration buttons
-     */
-    private fun createConfigurationMessage(tempConfigId: String, config: GiveawayConfig): MessageCreateBuilder {
-        val builder = MessageCreateBuilder()
-
-        // Create preview embed
-        val previewEmbed = createPreviewEmbed(config)
-        builder.setEmbeds(previewEmbed)
-
-        // Create individual configuration buttons
-        val giveawayNameButton = Button.of(
-            getButtonStyle(config.giveawayName.isNotEmpty(), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_giveaway_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🎯 設定抽獎名稱"
-        )
-
-        val prizeNameButton = Button.of(
-            getButtonStyle(config.prizeName.isNotEmpty(), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_prize_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🏆 獎品名稱"
-        )
-
-        val timeButton = Button.of(
-            getButtonStyle(hasTimeConfiguration(config), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_time",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "⏰ 抽獎時間"
-        )
-
-        val winnerCountButton = Button.of(
-            getButtonStyle(config.winnerCount != 1, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_winner_count",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "👥 中獎人數"
-        )
-
-        val rolePermissionButton = Button.of(
-            getButtonStyle(config.rolePermissionType != RolePermissionType.ALL_ALLOWED, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_role_permission",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🔒 ${getRolePermissionText(config.rolePermissionType)}"
-        )
-
-        val weightAdditiveButton = Button.of(
-            getButtonStyle(config.isWeightAdditive, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_weight_additive",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "⚖️ 權重疊加"
-        )
-
-        // Row 1: Required fields
-        val row1 = ActionRow.of(giveawayNameButton, prizeNameButton, timeButton)
-
-        // Row 2: Optional configuration
-        val row2 = ActionRow.of(winnerCountButton, rolePermissionButton, weightAdditiveButton)
-
-        // Row 3: Additional settings
-        val sponsorButton = Button.of(
-            getButtonStyle(config.sponsor.isNotEmpty(), false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_sponsor",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "💼 贊助商/主辦方"
-        )
-
-        val joinTimeButton = Button.of(
-            getButtonStyle(config.serverJoinTimeRequirement != null, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_join_time",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "📅 加入時間要求"
-        )
-
-        val dmWinnersButton = Button.of(
-            getButtonStyle(config.shouldDmWinners, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_dm_winners",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "📨 私訊中獎者"
-        )
-
-        val thumbnailButton = Button.of(
-            getButtonStyle(config.thumbnailUrl.isNotEmpty(), false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_thumbnail",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🖼️ 縮圖URL"
-        )
-
-        val row3 = ActionRow.of(sponsorButton, joinTimeButton, dmWinnersButton)
-        val row4 = ActionRow.of(thumbnailButton)
-
-        // Row 5: Role configuration (only show if not ALL_ALLOWED)
-        val components = mutableListOf(row1, row2, row3, row4)
-
-        if (config.rolePermissionType != RolePermissionType.ALL_ALLOWED) {
-            val roleSelectButton = Button.of(
-                getButtonStyle(config.allowedRoles.isNotEmpty() || config.deniedRoles.isNotEmpty(), false),
-                componentIdManager.build(
-                    mapOf(
-                        "action" to "select_roles",
-                        "giveaway_id" to tempConfigId
-                    )
-                ),
-                "👤 選擇身份組"
-            )
-
-            val roleWeightButton = Button.of(
-                getButtonStyle(config.roleWeights.isNotEmpty(), false),
-                componentIdManager.build(
-                    mapOf(
-                        "action" to "set_role_weights",
-                        "giveaway_id" to tempConfigId
-                    )
-                ),
-                "⚖️ 身份組權重"
-            )
-
-            components.add(ActionRow.of(roleSelectButton, roleWeightButton))
-        }
-
-        // Row 5: Action buttons
-        val previewButton = Button.primary(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "preview",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "👁️ 預覽"
-        )
-
-        val createButton = Button.success(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "create",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🎉 建立抽獎"
-        ).withDisabled(!isConfigurationValid(config))
-
-        components.add(ActionRow.of(previewButton, createButton))
-
-        builder.setComponents(components)
-
-        return builder
+    fun onGuildLeave(event: GuildLeaveEvent) {
+        StepManager.onGuildLeave(event)
+        jsonGuildManager.removeAndSave(event.guild.idLong)
     }
 
-    /**
-     * Create the configuration message for editing (returns MessageEditBuilder)
-     */
-    private fun createConfigurationEditMessage(tempConfigId: String, config: GiveawayConfig): MessageEditBuilder {
-        val builder = MessageEditBuilder()
+    private fun processAutoDraw() {
+        val now = Instant.now().epochSecond
+        if (jsonGuildManager.mapper.isEmpty()) return
 
-        // Create preview embed
-        val previewEmbed = createPreviewEmbed(config)
-        builder.setEmbeds(previewEmbed)
+        jsonGuildManager.mapper.values.forEach { manager ->
+            var changed = false
 
-        // Create individual configuration buttons (same logic as createConfigurationMessage)
-        val giveawayNameButton = Button.of(
-            getButtonStyle(config.giveawayName.isNotEmpty(), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_giveaway_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🎯 設定抽獎名稱"
-        )
+            manager.data.values.toList().forEach { giveaway ->
+                if (giveaway.ended) return@forEach
+                if (giveaway.config.endAtEpochSecond > now) return@forEach
 
-        val prizeNameButton = Button.of(
-            getButtonStyle(config.prizeName.isNotEmpty(), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_prize_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🏆 獎品名稱"
-        )
+                giveaway.winnerResults.clear()
+                giveaway.winnerResults += drawPrizeWinners(giveaway.config, giveaway.participantIds)
+                giveaway.ended = true
+                giveaway.endedAtEpochSecond = now
+                changed = true
 
-        val timeButton = Button.of(
-            getButtonStyle(hasTimeConfiguration(config), true),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_time",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "⏰ 抽獎時間"
-        )
-
-        val winnerCountButton = Button.of(
-            getButtonStyle(config.winnerCount != 1, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_winner_count",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "👥 中獎人數"
-        )
-
-        val rolePermissionButton = Button.of(
-            getButtonStyle(config.rolePermissionType != RolePermissionType.ALL_ALLOWED, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_role_permission",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🔒 ${getRolePermissionText(config.rolePermissionType)}"
-        )
-
-        val weightAdditiveButton = Button.of(
-            getButtonStyle(config.isWeightAdditive, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_weight_additive",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "⚖️ 權重疊加"
-        )
-
-        // Row 1: Required fields
-        val row1 = ActionRow.of(giveawayNameButton, prizeNameButton, timeButton)
-
-        // Row 2: Optional configuration
-        val row2 = ActionRow.of(winnerCountButton, rolePermissionButton, weightAdditiveButton)
-
-        // Row 3: Additional settings
-        val sponsorButton = Button.of(
-            getButtonStyle(config.sponsor.isNotEmpty(), false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_sponsor",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "💼 贊助商/主辦方"
-        )
-
-        val joinTimeButton = Button.of(
-            getButtonStyle(config.serverJoinTimeRequirement != null, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_join_time",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "📅 加入時間要求"
-        )
-
-        val dmWinnersButton = Button.of(
-            getButtonStyle(config.shouldDmWinners, false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "toggle_dm_winners",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "📨 私訊中獎者"
-        )
-
-        val thumbnailButton = Button.of(
-            getButtonStyle(config.thumbnailUrl.isNotEmpty(), false),
-            componentIdManager.build(
-                mapOf(
-                    "action" to "set_thumbnail",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🖼️ 縮圖URL"
-        )
-
-        val row3 = ActionRow.of(sponsorButton, joinTimeButton, dmWinnersButton)
-        val row4 = ActionRow.of(thumbnailButton)
-
-        // Row 5: Role configuration (only show if not ALL_ALLOWED)
-        val components = mutableListOf(row1, row2, row3, row4)
-
-        if (config.rolePermissionType != RolePermissionType.ALL_ALLOWED) {
-            val roleSelectButton = Button.of(
-                getButtonStyle(config.allowedRoles.isNotEmpty() || config.deniedRoles.isNotEmpty(), false),
-                componentIdManager.build(
-                    mapOf(
-                        "action" to "select_roles",
-                        "giveaway_id" to tempConfigId
-                    )
-                ),
-                "👤 選擇身份組"
-            )
-
-            val roleWeightButton = Button.of(
-                getButtonStyle(config.roleWeights.isNotEmpty(), false),
-                componentIdManager.build(
-                    mapOf(
-                        "action" to "set_role_weights",
-                        "giveaway_id" to tempConfigId
-                    )
-                ),
-                "⚖️ 身份組權重"
-            )
-
-            components.add(ActionRow.of(roleSelectButton, roleWeightButton))
-        }
-
-        // Row 5: Action buttons
-        val previewButton = Button.primary(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "preview",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "👁️ 預覽"
-        )
-
-        val createButton = Button.success(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "create",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "🎉 建立抽獎"
-        ).withDisabled(!isConfigurationValid(config))
-
-        components.add(ActionRow.of(previewButton, createButton))
-
-        builder.setComponents(components)
-
-        return builder
-    }
-
-    /**
-     * Get button style based on configuration status
-     */
-    private fun getButtonStyle(isConfigured: Boolean, isRequired: Boolean): ButtonStyle {
-        return when {
-            isConfigured -> ButtonStyle.SUCCESS // Green when configured
-            isRequired -> ButtonStyle.DANGER    // Red for required unfilled
-            else -> ButtonStyle.SECONDARY       // Gray for optional unfilled
-        }
-    }
-
-    private fun buildModalTextInput(
-        inputId: String,
-        label: String,
-        placeholder: String? = null,
-        value: String? = null,
-        required: Boolean,
-        maxLength: Int? = null,
-        style: TextInputStyle = TextInputStyle.SHORT,
-    ): Label {
-        val inputBuilder = TextInput.create(inputId, style)
-        placeholder?.let(inputBuilder::setPlaceholder)
-        value?.let(inputBuilder::setValue)
-        inputBuilder.setRequired(required)
-        maxLength?.let(inputBuilder::setMaxLength)
-        return Label.of(label, inputBuilder.build())
-    }
-
-    /**
-     * Check if time configuration is set
-     */
-    private fun hasTimeConfiguration(config: GiveawayConfig): Boolean {
-        return config.endTime != null || config.startTime != null || config.duration != null
-    }
-
-    /**
-     * Get role permission type display text
-     */
-    private fun getRolePermissionText(type: RolePermissionType): String {
-        return when (type) {
-            RolePermissionType.ALL_ALLOWED -> "全部允許"
-            RolePermissionType.PARTIAL_ALLOWED -> "部分允許"
-            RolePermissionType.PARTIAL_DENIED -> "部分拒絕"
-        }
-    }
-
-    /**
-     * Check if configuration is valid for creating giveaway
-     */
-    private fun isConfigurationValid(config: GiveawayConfig): Boolean {
-        return config.giveawayName.isNotEmpty() && config.prizeName.isNotEmpty() && hasTimeConfiguration(config)
-    }
-
-    /**
-     * Create preview embed for the giveaway configuration
-     */
-    private fun createPreviewEmbed(config: GiveawayConfig): net.dv8tion.jda.api.entities.MessageEmbed {
-        return net.dv8tion.jda.api.EmbedBuilder()
-            .setTitle(if (config.giveawayName.isNotEmpty()) "🎉 ${config.giveawayName}" else "🎉 抽獎預覽")
-            .setColor(0x00FF00)
-            .addField("獎品", config.prizeName.ifEmpty { "未設定" }, true)
-            .addField("中獎人數", config.winnerCount.toString(), true)
-            .addField("結束時間", "<t:${config.getCalculatedEndTime().epochSecond}:R>", true)
-            .addField(
-                "參與權限", when (config.rolePermissionType) {
-                    RolePermissionType.ALL_ALLOWED -> "所有人"
-                    RolePermissionType.PARTIAL_ALLOWED -> "部分允許"
-                    RolePermissionType.PARTIAL_DENIED -> "部分拒絕"
-                }, true
-            )
-            .addField("權重疊加", if (config.isWeightAdditive) "啟用" else "停用", true)
-            .addField("私訊中獎者", if (config.shouldDmWinners) "是" else "否", true)
-            .apply {
-                if (config.sponsor.isNotEmpty()) {
-                    addField("贊助商", config.sponsor, true)
-                }
+                refreshMessage(giveaway)
+                announceAutoDrawResult(giveaway)
             }
-            .setFooter("使用設定按鈕來修改配置")
-            .build()
-    }
 
-    // Modal handlers for text input configurations
-    private fun handleSetGiveawayNameButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_giveaway_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定抽獎名稱"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "giveaway_name",
-                label = "抽獎名稱",
-                placeholder = "請輸入抽獎名稱...",
-                value = config.giveawayName,
-                required = true,
-                maxLength = 100
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    private fun handleSetPrizeNameButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_prize_name",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定獎品名稱"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "prize_name",
-                label = "獎品名稱",
-                placeholder = "請輸入獎品名稱...",
-                value = config.prizeName,
-                required = true,
-                maxLength = 100
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    private fun handleSetTimeButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_time",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定抽獎時間"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "end_time",
-                label = "結束時間 (優先級最高)",
-                placeholder = "格式: 2024-12-31 23:59 或留空",
-                value = config.endTime?.toString(),
-                required = false
-            ),
-            buildModalTextInput(
-                inputId = "start_time",
-                label = "開始時間",
-                placeholder = "格式: 2024-12-31 12:00 或留空",
-                value = config.startTime?.toString(),
-                required = false
-            ),
-            buildModalTextInput(
-                inputId = "duration",
-                label = "持續時間 (秒)",
-                placeholder = "例如: 3600 (1小時) 或留空",
-                value = config.duration?.toString(),
-                required = false
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    private fun handleSetWinnerCountButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_winner_count",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定中獎人數"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "winner_count",
-                label = "中獎人數",
-                placeholder = "請輸入中獎人數 (預設: 1)",
-                value = config.winnerCount.toString(),
-                required = true,
-                maxLength = 3
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    private fun handleSetSponsorButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-        val serverName = event.guild?.name ?: ""
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_sponsor",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定贊助商"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "sponsor",
-                label = "贊助商",
-                placeholder = "贊助商名稱 (預設: $serverName)",
-                value = config.sponsor.ifEmpty { serverName },
-                required = false,
-                maxLength = 100
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    private fun handleSetThumbnailButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val modal = Modal.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "modal_thumbnail",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            "設定縮圖URL"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "thumbnail_url",
-                label = "縮圖URL",
-                placeholder = "請輸入圖片URL (可選)",
-                value = config.thumbnailUrl,
-                required = false,
-                maxLength = 500
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
-    }
-
-    // Toggle button handlers
-    private fun handleToggleRolePermissionButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val newType = when (config.rolePermissionType) {
-            RolePermissionType.ALL_ALLOWED -> RolePermissionType.PARTIAL_ALLOWED
-            RolePermissionType.PARTIAL_ALLOWED -> RolePermissionType.PARTIAL_DENIED
-            RolePermissionType.PARTIAL_DENIED -> RolePermissionType.ALL_ALLOWED
+            if (changed) manager.save()
         }
-
-        tempConfigs[tempConfigId] = config.copy(rolePermissionType = newType)
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
     }
 
-    private fun handleToggleWeightAdditiveButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
+    fun createGiveaway(
+        guildId: Long,
+        channel: MessageChannelUnion,
+        creatorId: Long,
+        config: GiveawayConfig,
+        locale: DiscordLocale,
+    ): RestAction<Message> {
+        val giveawayId = UUID.randomUUID().toString().replace("-", "").take(16)
+        val giveaway = GiveawayInstance(
+            id = giveawayId,
+            guildId = guildId,
+            channelId = channel.idLong,
+            messageId = 0,
+            creatorId = creatorId,
+            localeTag = locale.locale,
+            config = config.deepCopy(),
+        )
 
-        tempConfigs[tempConfigId] = config.copy(isWeightAdditive = !config.isWeightAdditive)
+        val createData = messageCreator.getCreateBuilder(
+            key = "giveaway-post",
+            locale = locale,
+            modelMapper = giveawayMessageModels(giveaway)
+        ).build()
 
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
+        return channel.sendMessage(createData).map { message ->
+            val finalizedGiveaway = giveaway.copy(messageId = message.idLong)
+            val manager = jsonGuildManager[guildId]
+            manager.data[giveawayId] = finalizedGiveaway
+            manager.save()
+            message
+        }
     }
 
-    private fun handleToggleDmWinnersButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
+    private fun participate(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
+        val giveaway = resolveGiveaway(event, idMap) ?: return
 
-        tempConfigs[tempConfigId] = config.copy(shouldDmWinners = !config.shouldDmWinners)
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    // Select menu handlers
-    private fun handleSetJoinTimeButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-
-        val selectMenu = StringSelectMenu.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "select_join_time",
-                    "giveaway_id" to tempConfigId
-                )
-            )
-        ).setPlaceholder("選擇加入伺服器時間要求")
-            .addOptions(
-                SelectOption.of("5分鐘", "300"),
-                SelectOption.of("10分鐘", "600"),
-                SelectOption.of("30分鐘", "1800"),
-                SelectOption.of("1小時", "3600"),
-                SelectOption.of("3小時", "10800"),
-                SelectOption.of("6小時", "21600"),
-                SelectOption.of("12小時", "43200"),
-                SelectOption.of("1天", "86400"),
-                SelectOption.of("3天", "259200"),
-                SelectOption.of("7天", "604800"),
-                SelectOption.of("14天", "1209600"),
-                SelectOption.of("30天", "2592000"),
-                SelectOption.of("90天", "7776000"),
-                SelectOption.of("180天", "15552000"),
-                SelectOption.of("365天", "31536000")
-            ).build()
-
-        event.reply("請選擇加入伺服器時間要求:")
-            .addComponents(ActionRow.of(selectMenu))
-            .setEphemeral(true)
-            .queue()
-    }
-
-    private fun handleSelectRolesButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-
-        val entitySelectMenu = EntitySelectMenu.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "entity_select_roles",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            EntitySelectMenu.SelectTarget.ROLE
-        ).setPlaceholder("選擇身份組")
-            .setRequiredRange(1, 25)
-            .build()
-
-        event.reply("請選擇要配置的身份組:")
-            .addComponents(ActionRow.of(entitySelectMenu))
-            .setEphemeral(true)
-            .queue()
-    }
-
-    private fun handleSetRoleWeightsButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-
-        val entitySelectMenu = EntitySelectMenu.create(
-            componentIdManager.build(
-                mapOf(
-                    "action" to "entity_select_role_weights",
-                    "giveaway_id" to tempConfigId
-                )
-            ),
-            EntitySelectMenu.SelectTarget.ROLE
-        ).setPlaceholder("選擇要設定權重的身份組")
-            .setRequiredRange(1, 1)
-            .build()
-
-        event.reply("請選擇要設定權重的身份組:")
-            .addComponents(ActionRow.of(entitySelectMenu))
-            .setEphemeral(true)
-            .queue()
-    }
-
-    // Modal submission handlers
-    private fun handleGiveawayNameModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val giveawayName = event.getValue("giveaway_name")?.asString?.trim() ?: ""
-
-        if (giveawayName.isEmpty()) {
-            event.reply("抽獎名稱不能為空！").setEphemeral(true).queue()
+        if (event.messageIdLong != giveaway.messageId) {
+            event.deferEdit().queue()
             return
         }
 
-        tempConfigs[tempConfigId] = config.copy(giveawayName = giveawayName)
+        val locale = localeOf(giveaway)
+        val isZh = isZh(locale)
 
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    private fun handlePrizeNameModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val prizeName = event.getValue("prize_name")?.asString?.trim() ?: ""
-
-        if (prizeName.isEmpty()) {
-            event.reply("獎品名稱不能為空！").setEphemeral(true).queue()
+        if (giveaway.ended || Instant.now().epochSecond >= giveaway.config.endAtEpochSecond) {
+            event.reply(
+                if (isZh) "抽獎已截止，無法再參加。" else "This giveaway is closed."
+            ).setEphemeral(true).queue()
             return
         }
 
-        tempConfigs[tempConfigId] = config.copy(prizeName = prizeName)
+        val joined = giveaway.participantIds.add(event.user.idLong)
+        if (!joined) {
+            giveaway.participantIds.remove(event.user.idLong)
+        }
 
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
+        saveGiveaway(giveaway)
+        refreshMessage(event, giveaway)
+
+        event.reply(
+            if (joined) {
+                if (isZh) "你已成功參加抽獎。" else "You joined the giveaway."
+            } else {
+                if (isZh) "你已取消參加抽獎。" else "You left the giveaway."
+            }
+        ).setEphemeral(true).queue()
     }
 
-    private fun handleTimeModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
+    private fun draw(event: ButtonInteractionEvent, idMap: Map<String, Any>, reroll: Boolean) {
+        val giveaway = resolveGiveaway(event, idMap) ?: return
+        val locale = localeOf(giveaway)
+        val isZh = isZh(locale)
 
-        val endTimeStr = event.getValue("end_time")?.asString?.trim()
-        val startTimeStr = event.getValue("start_time")?.asString?.trim()
-        val durationStr = event.getValue("duration")?.asString?.trim()
+        val member = event.member
+        if (member == null || (member.idLong != giveaway.creatorId && !member.hasPermission(Permission.ADMINISTRATOR))) {
+            event.reply(
+                if (isZh) "只有建立者或管理員可執行此操作。" else "Only creator/admin can do this."
+            ).setEphemeral(true).queue()
+            return
+        }
 
-        var endTime: Instant? = null
-        var startTime: Instant? = null
-        var duration: Long? = null
-
-        try {
-            // Parse end time (highest priority)
-            if (!endTimeStr.isNullOrEmpty()) {
-                endTime = parseDateTime(endTimeStr)
-            }
-
-            // Parse start time
-            if (!startTimeStr.isNullOrEmpty()) {
-                startTime = parseDateTime(startTimeStr)
-            }
-
-            // Parse duration
-            if (!durationStr.isNullOrEmpty()) {
-                duration = durationStr.toLongOrNull()
-                if (duration != null && duration <= 0) {
-                    event.reply("持續時間必須大於0秒！").setEphemeral(true).queue()
-                    return
-                }
-            }
-
-            // Validate that at least one time setting is provided
-            if (endTime == null && startTime == null && duration == null) {
-                event.reply("請至少設定一個時間選項！").setEphemeral(true).queue()
+        val now = Instant.now().epochSecond
+        if (!reroll) {
+            if (giveaway.ended) {
+                event.reply(if (isZh) "此抽獎已開獎，可使用重抽。" else "Already drawn. Use reroll.")
+                    .setEphemeral(true)
+                    .queue()
                 return
             }
 
-            tempConfigs[tempConfigId] = config.copy(
-                endTime = endTime,
-                startTime = startTime,
-                duration = duration
-            )
-
-            val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-            event.deferEdit().flatMap { _ ->
-                event.hook.editOriginal(updatedMessage.build())
-            }.queue()
-
-        } catch (e: Exception) {
-            event.reply("時間格式錯誤！請使用格式: YYYY-MM-DD HH:MM").setEphemeral(true).queue()
-        }
-    }
-
-    private fun handleWinnerCountModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val winnerCountStr = event.getValue("winner_count")?.asString?.trim() ?: "1"
-        val winnerCount = winnerCountStr.toIntOrNull()
-
-        if (winnerCount == null || winnerCount <= 0) {
-            event.reply("中獎人數必須是大於0的整數！").setEphemeral(true).queue()
+            if (now < giveaway.config.endAtEpochSecond) {
+                event.reply(
+                    if (isZh) {
+                        "尚未到開獎時間（<t:${giveaway.config.endAtEpochSecond}:R>）。"
+                    } else {
+                        "Too early to draw winners (<t:${giveaway.config.endAtEpochSecond}:R>)."
+                    }
+                ).setEphemeral(true).queue()
+                return
+            }
+        } else if (!giveaway.ended) {
+            event.reply(if (isZh) "抽獎尚未開獎，不能重抽。" else "Giveaway not drawn yet.")
+                .setEphemeral(true)
+                .queue()
             return
         }
 
-        tempConfigs[tempConfigId] = config.copy(winnerCount = winnerCount)
+        giveaway.winnerResults.clear()
+        giveaway.winnerResults += drawPrizeWinners(giveaway.config, giveaway.participantIds)
+        giveaway.ended = true
+        giveaway.endedAtEpochSecond = now
 
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
+        saveGiveaway(giveaway)
+        refreshMessage(event, giveaway)
+
+        val (header, body) = buildDrawResultContent(giveaway, locale, reroll)
+        event.reply(
+            messageCreator.getCreateBuilder(
+                key = "draw-result",
+                locale = locale,
+                replaceMap = mapOf(
+                    "ga@header" to header,
+                    "ga@body" to body,
+                    "ga@title" to giveaway.config.title,
+                )
+            ).build()
+        ).setEphemeral(true).queue()
     }
 
-    private fun handleSponsorModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
+    private fun buildDrawResultContent(
+        giveaway: GiveawayInstance,
+        locale: DiscordLocale,
+        reroll: Boolean
+    ): Pair<String, String> {
+        val isZh = isZh(locale)
 
-        val sponsor = event.getValue("sponsor")?.asString?.trim() ?: ""
-
-        tempConfigs[tempConfigId] = config.copy(
-            sponsor = sponsor
-        )
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    private fun handleThumbnailModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val thumbnailUrl = event.getValue("thumbnail_url")?.asString?.trim() ?: ""
-
-        tempConfigs[tempConfigId] = config.copy(thumbnailUrl = thumbnailUrl)
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    private fun handleRoleWeightModal(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val roleId = idMap["role_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val weightStr = event.getValue("weight")?.asString?.trim() ?: "1"
-        val weight = weightStr.toIntOrNull()
-
-        if (weight == null || weight < 1) {
-            event.reply("權重必須是大於等於1的整數！填入1代表取消該身份組的權重設定。").setEphemeral(true).queue()
-            return
-        }
-
-        val newWeights = config.roleWeights.toMutableMap()
-        if (weight == 1) {
-            newWeights.remove(roleId.toLong())
+        val header = if (isZh) {
+            if (reroll) "重抽完成" else "開獎完成"
         } else {
-            newWeights[roleId.toLong()] = weight
+            if (reroll) "Reroll finished" else "Draw finished"
         }
 
-        tempConfigs[tempConfigId] = config.copy(roleWeights = newWeights)
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    /**
-     * Parse date time string to Instant
-     */
-    private fun parseDateTime(dateTimeStr: String): Instant {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        val localDateTime = LocalDateTime.parse(dateTimeStr, formatter)
-        return localDateTime.atZone(ZoneId.systemDefault()).toInstant()
-    }
-
-    // Select menu submission handlers
-    private fun handleJoinTimeSelect(event: StringSelectInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val selectedValue = event.values.firstOrNull()?.toLongOrNull()
-
-        tempConfigs[tempConfigId] = config.copy(serverJoinTimeRequirement = selectedValue)
-
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
-    }
-
-    private fun handleEntitySelectRoles(event: EntitySelectInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
-
-        val selectedRoles = event.values.map { it.idLong }.toSet()
-
-        val updatedConfig = when (config.rolePermissionType) {
-            RolePermissionType.PARTIAL_ALLOWED -> config.copy(allowedRoles = selectedRoles)
-            RolePermissionType.PARTIAL_DENIED -> config.copy(deniedRoles = selectedRoles)
-            else -> config // Should not happen for ALL_ALLOWED
+        if (giveaway.participantIds.isEmpty()) {
+            val body = if (isZh) {
+                "目前沒有任何參與者。"
+            } else {
+                "There are no participants."
+            }
+            return header to body
         }
 
-        tempConfigs[tempConfigId] = updatedConfig
+        val lines = giveaway.winnerResults.map { result ->
+            val winners = if (result.winnerIds.isEmpty()) {
+                if (isZh) "（名額不足）" else "(not enough participants)"
+            } else {
+                result.winnerIds.joinToString(" ") { "<@${it}>" }
+            }
+            "${result.prizeName}: $winners"
+        }
 
-        val updatedMessage = createConfigurationEditMessage(tempConfigId, tempConfigs[tempConfigId]!!)
-        event.deferEdit().flatMap { _ ->
-            event.hook.editOriginal(updatedMessage.build())
-        }.queue()
+        return header to clipFieldText(lines.joinToString("\n"), 1800)
     }
 
-    private fun handleEntitySelectRoleWeights(event: EntitySelectInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val selectedRole = event.values.firstOrNull() ?: return
+    private fun resolveGiveaway(event: ButtonInteractionEvent, idMap: Map<String, Any>): GiveawayInstance? {
+        val guild = event.guild ?: run {
+            event.reply("Guild not found.").setEphemeral(true).queue()
+            return null
+        }
 
-        val modal = Modal.create(
+        val giveawayId = idMap["giveaway_id"] as? String ?: run {
+            event.reply("Invalid giveaway id.").setEphemeral(true).queue()
+            return null
+        }
+
+        val giveaway = jsonGuildManager[guild.idLong].data[giveawayId]
+        if (giveaway == null) {
+            val isZh = event.userLocale.locale.startsWith("zh")
+            event.reply(
+                if (isZh) "找不到該抽獎，可能已被刪除。" else "Giveaway not found."
+            ).setEphemeral(true).queue()
+            return null
+        }
+
+        return giveaway
+    }
+
+    private fun saveGiveaway(giveaway: GiveawayInstance) {
+        val manager = jsonGuildManager[giveaway.guildId]
+        manager.data[giveaway.id] = giveaway
+        manager.save()
+    }
+
+    private fun refreshMessage(event: ButtonInteractionEvent, giveaway: GiveawayInstance) {
+        val locale = localeOf(giveaway)
+        event.message.editMessage(
+            messageCreator.getEditBuilder(
+                key = "giveaway-post",
+                locale = locale,
+                modelMapper = giveawayMessageModels(giveaway)
+            ).build()
+        ).queue({}, {
+            logger.warn("Failed to refresh giveaway message: {}", it.message)
+        })
+    }
+
+    private fun refreshMessage(giveaway: GiveawayInstance) {
+        val guild = jdaBot.getGuildById(giveaway.guildId) ?: return
+        val channel = guild.getTextChannelById(giveaway.channelId) ?: return
+        val locale = localeOf(giveaway)
+
+        channel.retrieveMessageById(giveaway.messageId).queue({ message ->
+            message.editMessage(
+                messageCreator.getEditBuilder(
+                    key = "giveaway-post",
+                    locale = locale,
+                    modelMapper = giveawayMessageModels(giveaway)
+                ).build()
+            ).queue({}, {
+                logger.warn("Failed to edit giveaway message {}: {}", giveaway.messageId, it.message)
+            })
+        }, {
+            logger.warn("Failed to retrieve giveaway message {}: {}", giveaway.messageId, it.message)
+        })
+    }
+
+    private fun announceAutoDrawResult(giveaway: GiveawayInstance) {
+        val guild = jdaBot.getGuildById(giveaway.guildId) ?: return
+        val channel = guild.getTextChannelById(giveaway.channelId) ?: return
+        val locale = localeOf(giveaway)
+        val (header, body) = buildDrawResultContent(giveaway, locale, reroll = false)
+
+        channel.sendMessage(
+            messageCreator.getCreateBuilder(
+                key = "auto-draw-result",
+                locale = locale,
+                replaceMap = mapOf(
+                    "ga@header" to header,
+                    "ga@body" to body,
+                    "ga@title" to giveaway.config.title,
+                )
+            ).build()
+        ).queue({}, {
+            logger.warn("Failed to announce auto draw for {}: {}", giveaway.id, it.message)
+        })
+    }
+
+    private fun giveawayMessageModels(giveaway: GiveawayInstance): Map<String, Any> {
+        val locale = localeOf(giveaway)
+        return mapOf(
+            "ga@giveaway-embed" to giveawayEmbed(giveaway, locale),
+            "ga@join-button" to joinButton(giveaway, locale),
+            "ga@draw-button" to drawButton(giveaway, locale),
+            "ga@reroll-button" to rerollButton(giveaway, locale),
+        )
+    }
+
+    private fun giveawayEmbed(giveaway: GiveawayInstance, locale: DiscordLocale): MessageEmbed {
+        val isZh = isZh(locale)
+        val now = Instant.now().epochSecond
+
+        val status = when {
+            giveaway.ended -> if (isZh) "已開獎" else "Drawn"
+            now >= giveaway.config.endAtEpochSecond -> if (isZh) "可開獎" else "Ready to draw"
+            else -> if (isZh) "進行中" else "Running"
+        }
+
+        val prizeLines = giveaway.config.prizes.mapIndexed { index, prize ->
+            val suffix = if (isZh) "位" else "winner(s)"
+            "${index + 1}. ${prize.name} (${prize.winnerCount} $suffix)"
+        }.joinToString("\n")
+
+        val winnerPolicy = when (giveaway.config.winnerDuplicatePolicy) {
+            WinnerDuplicatePolicy.ALLOW_DUPLICATE -> {
+                if (isZh) "每個獎品可重複中獎" else "Duplicates allowed across prizes"
+            }
+
+            WinnerDuplicatePolicy.UNIQUE_ACROSS_PRIZES -> {
+                if (isZh) "跨獎品不得重複中獎" else "Unique winners across prizes"
+            }
+        }
+
+        val winnerLines = if (!giveaway.ended) {
+            if (isZh) "尚未開獎" else "Not drawn yet"
+        } else {
+            giveaway.winnerResults.joinToString("\n") { result ->
+                val mentions = if (result.winnerIds.isEmpty()) {
+                    if (isZh) "（名額不足）" else "(not enough participants)"
+                } else {
+                    result.winnerIds.joinToString(" ") { "<@${it}>" }
+                }
+                "${result.prizeName}: $mentions"
+            }
+        }
+
+        return EmbedBuilder()
+            .setTitle("🎉 ${giveaway.config.title}")
+            .setDescription(
+                giveaway.config.description.ifBlank {
+                    if (isZh) "按下下方按鈕參加抽獎。" else "Press the button below to join."
+                }
+            )
+            .setColor(if (giveaway.ended) 0x95A5A6 else 0xF1C40F)
+            .addField(
+                if (isZh) "狀態" else "Status",
+                "$status\n<t:${giveaway.config.endAtEpochSecond}:R>",
+                true
+            )
+            .addField(
+                if (isZh) "參與人數" else "Participants",
+                giveaway.participantIds.size.toString(),
+                true,
+            )
+            .addField(
+                if (isZh) "中獎限制" else "Winner Policy",
+                winnerPolicy,
+                false,
+            )
+            .addField(
+                if (isZh) "獎品" else "Prizes",
+                clipFieldText(prizeLines),
+                false,
+            )
+            .addField(
+                if (isZh) "中獎結果" else "Winner Results",
+                clipFieldText(winnerLines),
+                false,
+            )
+            .apply {
+                if (giveaway.config.sponsor.isNotBlank()) {
+                    addField(
+                        if (isZh) "主辦 / 贊助" else "Sponsor",
+                        giveaway.config.sponsor,
+                        true,
+                    )
+                }
+
+                if (giveaway.config.thumbnailUrl.startsWith("http://") || giveaway.config.thumbnailUrl.startsWith("https://")) {
+                    setThumbnail(giveaway.config.thumbnailUrl)
+                }
+            }
+            .setFooter(
+                if (isZh) {
+                    "Giveaway ID: ${giveaway.id}"
+                } else {
+                    "Giveaway ID: ${giveaway.id}"
+                }
+            )
+            .build()
+    }
+
+    private fun joinButton(giveaway: GiveawayInstance, locale: DiscordLocale): Button {
+        val isZh = isZh(locale)
+        val closed = giveaway.ended || Instant.now().epochSecond >= giveaway.config.endAtEpochSecond
+
+        return Button.of(
+            ButtonStyle.SUCCESS,
             componentIdManager.build(
                 mapOf(
-                    "action" to "modal_role_weight",
-                    "giveaway_id" to tempConfigId,
-                    "role_id" to selectedRole.id
+                    "action" to "participate",
+                    "giveaway_id" to giveaway.id,
                 )
             ),
-            "設定身份組權重"
-        ).addComponents(
-            buildModalTextInput(
-                inputId = "weight",
-                label = "權重值",
-                placeholder = "請輸入權重值 (填入1代表取消設定)",
-                value = "1",
-                required = true,
-                maxLength = 3
-            )
-        ).build()
-
-        event.replyModal(modal).queue()
+            if (isZh) "參加 / 退出" else "Join / Leave"
+        ).withDisabled(closed)
     }
 
-    private fun handlePreviewButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val tempConfigId = idMap["giveaway_id"] as String
-        val config = tempConfigs[tempConfigId] ?: return
+    private fun drawButton(giveaway: GiveawayInstance, locale: DiscordLocale): Button {
+        val isZh = isZh(locale)
 
-        val previewEmbed = createPreviewEmbed(config)
-        event.replyEmbeds(previewEmbed).setEphemeral(true).queue()
+        return Button.of(
+            ButtonStyle.PRIMARY,
+            componentIdManager.build(
+                mapOf(
+                    "action" to "draw",
+                    "giveaway_id" to giveaway.id,
+                )
+            ),
+            if (isZh) "手動開獎" else "Draw Winners"
+        ).withDisabled(giveaway.ended)
     }
 
-    private fun handleCreateButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        // TODO: Implement giveaway creation
-        event.reply("建立功能開發中...").setEphemeral(true).queue()
+    private fun rerollButton(giveaway: GiveawayInstance, locale: DiscordLocale): Button {
+        val isZh = isZh(locale)
+
+        return Button.of(
+            ButtonStyle.SECONDARY,
+            componentIdManager.build(
+                mapOf(
+                    "action" to "reroll",
+                    "giveaway_id" to giveaway.id,
+                )
+            ),
+            if (isZh) "重抽" else "Reroll"
+        ).withDisabled(!giveaway.ended)
     }
 
-    private fun handleParticipateButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        // TODO: Implement participation logic
-        event.reply("參與功能開發中...").setEphemeral(true).queue()
+    private fun localeOf(giveaway: GiveawayInstance): DiscordLocale {
+        return runCatching { DiscordLocale.from(giveaway.localeTag) }
+            .getOrDefault(DiscordLocale.CHINESE_TAIWAN)
     }
 
-    private fun handleRerollButton(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        // TODO: Implement reroll logic
-        event.reply("重新抽取功能開發中...").setEphemeral(true).queue()
-    }
+    private fun isZh(locale: DiscordLocale): Boolean = locale.locale.startsWith("zh")
 
-    private fun handleRolePermissionSelect(event: StringSelectInteractionEvent, idMap: Map<String, Any>) {
-        // TODO: Implement role permission configuration
-        event.reply("身份組權限配置開發中...").setEphemeral(true).queue()
-    }
-
-    private fun handleRoleWeightsSelect(event: StringSelectInteractionEvent, idMap: Map<String, Any>) {
-        // TODO: Implement role weight configuration
-        event.reply("身份組權重配置開發中...").setEphemeral(true).queue()
+    private fun clipFieldText(value: String, max: Int = 1024): String {
+        if (value.length <= max) return value
+        return value.take(max - 3) + "..."
     }
 }

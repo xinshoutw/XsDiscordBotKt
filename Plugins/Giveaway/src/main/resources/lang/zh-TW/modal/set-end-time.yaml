@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "set-end-time"
+title: "設定結束時間"
+text_inputs:
+  - uid: "end-time"
+    label: "結束時間"
+    style: "SHORT"
+    value: "%ga@end-time%"
+    placeholder: "yyyy-MM-dd HH:mm"
+    max_length: 16
