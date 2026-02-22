@@ -42,6 +42,7 @@ import tw.xinshou.discord.core.util.GlobalUtil
 import tw.xinshou.discord.plugin.ticket.Event.componentPrefix
 import tw.xinshou.discord.plugin.ticket.Event.pluginDirectory
 import tw.xinshou.discord.plugin.ticket.create.StepManager
+import tw.xinshou.discord.plugin.ticket.json.serializer.DataContainer
 import tw.xinshou.discord.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 import java.time.LocalDateTime
@@ -116,13 +117,12 @@ internal object Ticket {
 
             // Run ticket action
             "press" -> {
-                val reason = jsonGuildManager
-                    .get(guild.idLong)
-                    .data
-                    .get(event.messageId)
-                    ?.get((idMap["btn_index"] as String).toInt())
-                    ?.reasonTitle
-                    ?: { throw IllegalStateException("Cannot find data.") }()
+                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
+                val reason = ticketData.reasonTitle
 
                 event.replyModal(
                     modalCreator.getModalBuilder(
@@ -174,7 +174,13 @@ internal object Ticket {
 
             "delete" -> {
                 val member = event.member ?: return event.deferEdit().queue()
-                if (hasTicketAdminPermission(member, idMap)) {
+                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
+
+                if (hasTicketAdminPermission(member, ticketData)) {
                     event.deferEdit().flatMap {
                         event.guildChannel.asTextChannel().delete()
                     }.queue()
@@ -185,7 +191,13 @@ internal object Ticket {
 
             "save" -> {
                 val member = event.member ?: return event.deferEdit().queue()
-                if (!hasTicketAdminPermission(member, idMap)) {
+                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
+
+                if (!hasTicketAdminPermission(member, ticketData)) {
                     event.reply("僅管理員可使用此功能").setEphemeral(true).queue()
                     return
                 }
@@ -301,7 +313,12 @@ internal object Ticket {
             event.reply("錯誤 (無法取得成員資訊)").setEphemeral(true).queue()
             return
         }
-        if (!hasTicketAdminPermission(member, idMap)) {
+        val ticketData = getTicketDataOrNull(member.guild.idLong, idMap)
+        if (ticketData == null) {
+            event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+            return
+        }
+        if (!hasTicketAdminPermission(member, ticketData)) {
             event.reply("僅管理員可使用此功能").setEphemeral(true).queue()
             return
         }
@@ -513,8 +530,8 @@ internal object Ticket {
         if (!flattenThreadContent) return null
 
         val startedThread = message.startedThread ?: return null
-        if (!processedThreadIds.add(startedThread.idLong)) return null
-        return startedThread
+        val isNewThread = processedThreadIds.add(startedThread.idLong)
+        return if (isNewThread) startedThread else null
     }
 
     private fun flattenStartedThreadWithWebhook(
@@ -548,33 +565,26 @@ internal object Ticket {
                         )
                     },
                     onError = { throwable ->
-                        webhook.sendMessage(buildThreadErrorMarkerMessage(sourceThread, throwable))
-                            .setThread(archiveThread)
-                            .queue(
-                                {
-                                    sendThreadEndMarker(
-                                        webhook = webhook,
-                                        archiveThread = archiveThread,
-                                        sourceThread = sourceThread,
-                                        lastMessageTime = null,
-                                        onComplete = onComplete,
-                                        onError = onError
-                                    )
-                                },
-                                {
-                                    sendThreadEndMarker(
-                                        webhook = webhook,
-                                        archiveThread = archiveThread,
-                                        sourceThread = sourceThread,
-                                        lastMessageTime = null,
-                                        onComplete = onComplete,
-                                        onError = onError
-                                    )
-                                }
-                            )
+                        handleThreadFlattenFailure(
+                            webhook = webhook,
+                            archiveThread = archiveThread,
+                            sourceThread = sourceThread,
+                            throwable = throwable,
+                            onComplete = onComplete,
+                            onError = onError
+                        )
                     }
                 )
-            }, onError)
+            }, { throwable ->
+                handleThreadFlattenFailure(
+                    webhook = webhook,
+                    archiveThread = archiveThread,
+                    sourceThread = sourceThread,
+                    throwable = throwable,
+                    onComplete = onComplete,
+                    onError = onError
+                )
+            })
     }
 
     private fun flattenThreadContentByPages(
@@ -630,6 +640,47 @@ internal object Ticket {
         webhook.sendMessage(buildThreadEndMarkerMessage(sourceThread, lastMessageTime))
             .setThread(archiveThread)
             .queue({ onComplete() }, onError)
+    }
+
+    private fun handleThreadFlattenFailure(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        throwable: Throwable,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        val flattenedError = unwrapThrowable(throwable)
+        webhook.sendMessage(buildThreadErrorMarkerMessage(sourceThread, flattenedError))
+            .setThread(archiveThread)
+            .queue(
+                {
+                    sendThreadEndMarker(
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        sourceThread = sourceThread,
+                        lastMessageTime = null,
+                        onComplete = onComplete,
+                        onError = onError
+                    )
+                },
+                { markerError ->
+                    Event.logger.warn(
+                        "Failed to send thread flatten error marker. sourceThreadId={}, archiveThreadId={}",
+                        sourceThread.id,
+                        archiveThread.id,
+                        unwrapThrowable(markerError)
+                    )
+                    sendThreadEndMarker(
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        sourceThread = sourceThread,
+                        lastMessageTime = null,
+                        onComplete = onComplete,
+                        onError = onError
+                    )
+                }
+            )
     }
 
     private fun buildForwardMessageData(message: Message) = MessageCreateBuilder().apply {
@@ -750,28 +801,33 @@ internal object Ticket {
         )
     }
 
-    private fun hasTicketAdminPermission(member: Member, idMap: Map<String, Any>): Boolean {
-        val roleIds = getTicketData(member.guild.idLong, idMap).adminIds
+    private fun hasTicketAdminPermission(member: Member, ticketData: DataContainer): Boolean {
+        val roleIds = ticketData.adminIds
         return member.roles.any { roleIds.contains(it.idLong) } || member.hasPermission(ADMINISTRATOR)
     }
 
-    private fun getTicketData(guildId: Long, idMap: Map<String, Any>) = jsonGuildManager
+    private fun getTicketDataOrNull(guildId: Long, idMap: Map<String, Any>) = jsonGuildManager
         .get(guildId)
         .data
         .get(idMap["msg_id"] as String)
         ?.get((idMap["btn_index"] as String).toInt())
-        ?: throw IllegalStateException("Cannot find data.")
+
+    private val ticketDataNotFoundMessage = "錯誤 (找不到 Ticket 設定資料，可能已被刪除)"
 
     private fun safeDeleteWebhook(webhook: Webhook) {
         webhook.delete().queue({}, {})
     }
 
     private fun unwrapThrowable(throwable: Throwable): Throwable {
-        if (throwable is CompletionException && throwable.cause != null) {
-            return throwable.cause!!
+        var currentThrowable = throwable
+        while (currentThrowable is CompletionException
+            && currentThrowable.cause != null
+            && currentThrowable.cause !== currentThrowable
+        ) {
+            currentThrowable = currentThrowable.cause!!
         }
 
-        return throwable
+        return currentThrowable
     }
 
     private fun toReadableError(throwable: Throwable): String {
