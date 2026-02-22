@@ -13,40 +13,37 @@ import tw.xinshou.discord.plugin.welcomebyeguild.command.CmdFileSerializer
 import tw.xinshou.discord.plugin.welcomebyeguild.command.commandNameSet
 import tw.xinshou.discord.plugin.welcomebyeguild.command.guildCommands
 import tw.xinshou.discord.plugin.welcomebyeguild.config.ConfigSerializer
+import java.util.concurrent.atomic.AtomicReference
 
 object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+    private fun createLocalizer(): StringLocalizer<CmdFileSerializer> = StringLocalizer(
+        pluginDirFile = pluginDirectory,
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        clazzSerializer = CmdFileSerializer::class,
+    )
+
+    private val localizerRef = AtomicReference(createLocalizer())
 
     override fun load() {
         super.load()
+        localizerRef.set(createLocalizer())
 
         if (!config.enabled) {
             logger.warn("WelcomeByeGuild is disabled.")
             return
         }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
 
         WelcomeByeGuild.load()
     }
 
     override fun reload() {
         super.reload()
+        localizerRef.set(createLocalizer())
 
         if (!config.enabled) {
             logger.warn("WelcomeByeGuild is disabled.")
             return
         }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
 
         WelcomeByeGuild.reload()
     }
@@ -55,7 +52,7 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         return if (!config.enabled) {
             emptyArray()
         } else {
-            guildCommands(localizer)
+            guildCommands(localizerRef.get())
         }
     }
 
