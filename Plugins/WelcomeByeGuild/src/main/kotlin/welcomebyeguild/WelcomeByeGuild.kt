@@ -183,21 +183,6 @@ internal object WelcomeByeGuild {
             return
         }
 
-        if (oldChannelId != channel.idLong) {
-            reply(
-                event,
-                WelcomeByeGuildMessageKeys.WELCOME_UNBIND_NOT_BOUND,
-                WelcomeByeGuildSubstitutorFactory.forCommand(
-                    event = event,
-                    guild = guild,
-                    setting = setting,
-                    selectedChannel = channel,
-                    oldChannelId = oldChannelId,
-                )
-            )
-            return
-        }
-
         setting.welcomeChannelId = 0L
         dataManager.save()
 
