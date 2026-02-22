@@ -378,11 +378,10 @@ internal object Ticket {
         targetChannel.createThreadChannel(
             buildArchiveThreadName(sourceChannel.name)
         ).queue({ thread ->
-            targetChannel.createWebhook("ticket-save-content")
+            targetChannel.createWebhook(buildArchiveWebhookName())
                 .queue({ webhook ->
                     val paginator = sourceChannel.iterableHistory
                         .order(FORWARD)
-                        .limit(archivePageSize)
                         .cache(false)
                     val processedThreadIds = mutableSetOf<Long>()
 
@@ -412,6 +411,7 @@ internal object Ticket {
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
     ) {
+        // `takeAsync(archivePageSize)` controls how many messages are handled per batch.
         paginator.takeAsync(archivePageSize).whenComplete { messages, throwable ->
             if (throwable != null) {
                 onError(unwrapThrowable(throwable))
@@ -546,7 +546,6 @@ internal object Ticket {
             .queue({
                 val paginator = sourceThread.iterableHistory
                     .order(FORWARD)
-                    .limit(archivePageSize)
                     .cache(false)
 
                 flattenThreadContentByPages(
@@ -699,6 +698,16 @@ internal object Ticket {
 
     private fun shouldForwardMessage(message: Message): Boolean {
         return message.contentRaw.isNotEmpty() || message.attachments.isNotEmpty()
+    }
+
+    private fun buildArchiveWebhookName(): String {
+        val uniqueSuffix = buildString {
+            append(System.currentTimeMillis().toString(36))
+            append('-')
+            append((System.nanoTime() and 0xFFFFF).toString(36))
+        }
+
+        return "ticket-save-content-$uniqueSuffix"
     }
 
     private fun buildThreadStartMarkerMessage(sourceThread: ThreadChannel): String {
