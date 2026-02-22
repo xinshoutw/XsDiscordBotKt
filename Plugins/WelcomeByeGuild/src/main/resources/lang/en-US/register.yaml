@@ -1,0 +1,31 @@
+welcome_channel_bind:
+  name: "welcome-channel-bind"
+  description: "Bind the channel for welcome messages"
+  options:
+    channel:
+      name: "channel"
+      description: "Optional. Uses the current text channel if omitted"
+
+welcome_channel_unbind:
+  name: "welcome-channel-unbind"
+  description: "Unbind the channel for welcome messages"
+  options:
+    channel:
+      name: "channel"
+      description: "Optional. Uses the current text channel if omitted"
+
+bye_channel_bind:
+  name: "bye-channel-bind"
+  description: "Bind the channel for leave messages"
+  options:
+    channel:
+      name: "channel"
+      description: "Optional. Uses the current text channel if omitted"
+
+bye_channel_unbind:
+  name: "bye-channel-unbind"
+  description: "Unbind the channel for leave messages"
+  options:
+    channel:
+      name: "channel"
+      description: "Optional. Uses the current text channel if omitted"

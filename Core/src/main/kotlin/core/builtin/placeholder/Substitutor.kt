@@ -1,14 +1,16 @@
 package tw.xinshou.discord.core.builtin.placeholder
 
 import org.apache.commons.text.StringSubstitutor
+import org.apache.commons.text.lookup.StringLookup
 
 class Substitutor(
     private val mapper: MutableMap<String, String> = HashMap(),
+    private val lazyMapper: MutableMap<String, () -> String> = HashMap(),
     private val delimiterStart: String = "%",
     private val delimiterEnd: String = "%",
     private val escape: Char = '$'
 ) {
-    private var substitutor = createSubstitutor()
+    private val substitutor = createSubstitutor()
 
     // Convenience constructor to initialize with pairs
     constructor(vararg pairs: Pair<String, String>) :
@@ -24,43 +26,69 @@ class Substitutor(
     fun parse(content: String): String = substitutor.replace(content)
 
     // Retrieve the value for a key or return the key itself if not found
-    fun get(key: String): String = mapper[key] ?: key
+    fun get(key: String): String = resolveValue(key) ?: key
 
     // Add all mappings from another Substitutor
     fun addAll(substitutor: Substitutor): Substitutor = apply {
-        putAll(substitutor.mapper) // refresh
+        mapper.putAll(substitutor.mapper)
+        lazyMapper.putAll(substitutor.lazyMapper)
     }
 
     // Add a single pair to the map
     fun put(pair: Pair<String, String>): Substitutor = apply {
         mapper[pair.first] = pair.second
-        refreshSubstitutor()
+        lazyMapper.remove(pair.first)
     }
 
     // Put a single key-value pair into the map
     fun put(key: String, value: String): Substitutor = apply {
         mapper[key] = value
-        refreshSubstitutor()
+        lazyMapper.remove(key)
+    }
+
+    // Put a lazy supplier for a key. Value will only be resolved when key is used.
+    fun putLazy(key: String, supplier: () -> String): Substitutor = apply {
+        lazyMapper[key] = supplier
+        mapper.remove(key)
     }
 
     // Add multiple pairs to the map
     fun putAll(vararg pairs: Pair<String, String>): Substitutor = apply {
-        pairs.forEach { mapper[it.first] = it.second }
-        refreshSubstitutor()
+        pairs.forEach {
+            mapper[it.first] = it.second
+            lazyMapper.remove(it.first)
+        }
     }
 
     // Put all key-value pairs from a map into the map
     fun putAll(kv: Map<String, String>): Substitutor = apply {
-        mapper.putAll(kv)
-        refreshSubstitutor()
+        kv.forEach { (key, value) ->
+            mapper[key] = value
+            lazyMapper.remove(key)
+        }
     }
 
-    // Refresh the internal StringSubstitutor instance to reflect the current map state
-    private fun refreshSubstitutor() {
-        substitutor = createSubstitutor()
+    // Put all lazy key-supplier mappings
+    fun putAllLazy(kv: Map<String, () -> String>): Substitutor = apply {
+        kv.forEach { (key, supplier) ->
+            lazyMapper[key] = supplier
+            mapper.remove(key)
+        }
     }
 
     // Create a new StringSubstitutor with current settings
     private fun createSubstitutor() =
-        StringSubstitutor(mapper, delimiterStart, delimiterEnd, escape)
+        StringSubstitutor(
+            StringLookup { key -> key?.let { resolveValue(it) } },
+            delimiterStart,
+            delimiterEnd,
+            escape
+        )
+
+    private fun resolveValue(key: String): String? {
+        val lazySupplier = lazyMapper[key] ?: return mapper[key]
+
+        return runCatching { lazySupplier() }
+            .getOrElse { mapper[key] }
+    }
 }
