@@ -45,10 +45,12 @@ import tw.xinshou.discord.plugin.ticket.create.StepManager
 import tw.xinshou.discord.plugin.ticket.json.serializer.DataContainer
 import tw.xinshou.discord.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
+import java.text.BreakIterator
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.concurrent.CompletionException
 
 internal object Ticket {
@@ -751,13 +753,28 @@ internal object Ticket {
         val timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(threadTimeFormatter)
         val suffix = "-$timestamp"
         val maxTicketNameLength = threadNameMaxLength - suffix.length
-        val trimmedTicketName = if (ticketName.length > maxTicketNameLength) {
-            ticketName.substring(0, maxTicketNameLength)
-        } else {
-            ticketName
-        }
+        val trimmedTicketName = trimThreadNameByGrapheme(ticketName, maxTicketNameLength)
 
         return "$trimmedTicketName$suffix"
+    }
+
+    private fun trimThreadNameByGrapheme(value: String, maxLength: Int): String {
+        if (maxLength <= 0) return ""
+        if (value.length <= maxLength) return value
+
+        val iterator = BreakIterator.getCharacterInstance(Locale.ROOT)
+        iterator.setText(value)
+
+        var boundary = iterator.first()
+        var lastSafeBoundary = 0
+
+        while (boundary != BreakIterator.DONE) {
+            if (boundary > maxLength) break
+            lastSafeBoundary = boundary
+            boundary = iterator.next()
+        }
+
+        return value.substring(0, lastSafeBoundary)
     }
 
     private fun buildTicketActionRow(
