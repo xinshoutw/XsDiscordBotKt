@@ -3,18 +3,33 @@ package tw.xinshou.discord.plugin.ticket
 import com.squareup.moshi.JsonAdapter
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.Permission.ADMINISTRATOR
+import net.dv8tion.jda.api.Permission.CREATE_PUBLIC_THREADS
+import net.dv8tion.jda.api.Permission.MANAGE_WEBHOOKS
+import net.dv8tion.jda.api.Permission.MESSAGE_HISTORY
+import net.dv8tion.jda.api.Permission.MESSAGE_SEND
+import net.dv8tion.jda.api.Permission.MESSAGE_SEND_IN_THREADS
 import net.dv8tion.jda.api.Permission.VIEW_CHANNEL
+import net.dv8tion.jda.api.components.actionrow.ActionRow
+import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.selections.EntitySelectMenu
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.Webhook
+import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.Category
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.components.actionrow.ActionRow
-import net.dv8tion.jda.api.components.buttons.Button
-import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.DiscordLocale
+import net.dv8tion.jda.api.requests.restaction.pagination.MessagePaginationAction
+import net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction.PaginationOrder.FORWARD
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
@@ -27,10 +42,23 @@ import tw.xinshou.discord.core.util.GlobalUtil
 import tw.xinshou.discord.plugin.ticket.Event.componentPrefix
 import tw.xinshou.discord.plugin.ticket.Event.pluginDirectory
 import tw.xinshou.discord.plugin.ticket.create.StepManager
+import tw.xinshou.discord.plugin.ticket.json.serializer.DataContainer
 import tw.xinshou.discord.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
+import java.text.BreakIterator
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.concurrent.CompletionException
 
 internal object Ticket {
+    private const val archivePageSize = 100
+    private const val threadNameMaxLength = 100
+    private val threadTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")
+    private val archiveMarkerTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
     val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
         dataDirectory = File(pluginDirectory, "data"),
@@ -91,13 +119,16 @@ internal object Ticket {
 
             // Run ticket action
             "press" -> {
-                val reason = jsonGuildManager
-                    .get(guild.idLong)
-                    .data
-                    .get(event.messageId)
-                    ?.get((idMap["btn_index"] as String).toInt())
-                    ?.reasonTitle
-                    ?: { throw IllegalStateException("Cannot find data.") }()
+                val ticketData = getTicketDataOrNull(
+                    guildId = guild.idLong,
+                    idMap = idMap,
+                    fallbackMessageId = event.messageId
+                )
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
+                val reason = ticketData.reasonTitle
 
                 event.replyModal(
                     modalCreator.getModalBuilder(
@@ -120,29 +151,11 @@ internal object Ticket {
                     .flatMap { channel.upsertPermissionOverride(it).deny(VIEW_CHANNEL) }
                     .flatMap {
                         event.editComponents(
-                            ActionRow.of(
-                                Button.of(
-                                    ButtonStyle.SUCCESS,
-                                    componentIdManager.build(
-                                        mapOf(
-                                            "action" to "unlock",
-                                            "user_id" to idMap["user_id"] as Long,
-                                            "msg_id" to idMap["msg_id"] as String,
-                                            "btn_index" to idMap["btn_index"] as String,
-                                        )
-                                    ), "開啟", Emoji.fromUnicode("🔓")
-                                ),
-                                Button.of(
-                                    ButtonStyle.DANGER,
-                                    componentIdManager.build(
-                                        mapOf(
-                                            "action" to "delete",
-                                            "user_id" to idMap["user_id"] as Long,
-                                            "msg_id" to idMap["msg_id"] as String,
-                                            "btn_index" to idMap["btn_index"] as String,
-                                        )
-                                    ), "刪除", Emoji.fromUnicode("🗑")
-                                )
+                            buildTicketActionRow(
+                                isLocked = true,
+                                userId = idMap["user_id"] as Long,
+                                msgId = idMap["msg_id"] as String,
+                                btnIndex = idMap["btn_index"] as String,
                             )
                         )
                     }.queue()
@@ -155,45 +168,25 @@ internal object Ticket {
                     .flatMap { channel.upsertPermissionOverride(it).grant(VIEW_CHANNEL) }
                     .flatMap {
                         event.editComponents(
-                            ActionRow.of(
-                                Button.of(
-                                    ButtonStyle.SECONDARY,
-                                    componentIdManager.build(
-                                        mapOf(
-                                            "action" to "lock",
-                                            "user_id" to idMap["user_id"] as Long,
-                                            "msg_id" to idMap["msg_id"] as String,
-                                            "btn_index" to idMap["btn_index"] as String,
-                                        )
-                                    ), "關閉", Emoji.fromUnicode("🔒")
-                                ),
-                                Button.of(
-                                    ButtonStyle.DANGER,
-                                    componentIdManager.build(
-                                        mapOf(
-                                            "action" to "delete",
-                                            "user_id" to idMap["user_id"] as Long,
-                                            "msg_id" to idMap["msg_id"] as String,
-                                            "btn_index" to idMap["btn_index"] as String,
-                                        )
-                                    ), "刪除", Emoji.fromUnicode("🗑")
-                                )
+                            buildTicketActionRow(
+                                isLocked = false,
+                                userId = idMap["user_id"] as Long,
+                                msgId = idMap["msg_id"] as String,
+                                btnIndex = idMap["btn_index"] as String,
                             )
                         )
                     }.queue()
             }
 
             "delete" -> {
-                val member = event.member!!
-                val jsonData = jsonGuildManager
-                    .get(guild.idLong)
-                    .data
-                    .get((idMap["msg_id"] as String))!!
-                    .get((idMap["btn_index"] as String).toInt())
-                val roleIds = jsonData.adminIds
-                val isAdmin = member.roles.any { roleIds.contains(it.idLong) }
+                val member = event.member ?: return event.deferEdit().queue()
+                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
 
-                if (isAdmin || member.hasPermission(ADMINISTRATOR)) {
+                if (hasTicketAdminPermission(member, ticketData)) {
                     event.deferEdit().flatMap {
                         event.guildChannel.asTextChannel().delete()
                     }.queue()
@@ -201,11 +194,51 @@ internal object Ticket {
                     event.deferEdit().queue()
                 }
             }
+
+            "save" -> {
+                val member = event.member ?: return event.deferEdit().queue()
+                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                if (ticketData == null) {
+                    event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+                    return
+                }
+
+                if (!hasTicketAdminPermission(member, ticketData)) {
+                    event.reply("僅管理員可使用此功能").setEphemeral(true).queue()
+                    return
+                }
+
+                val selectMenu = EntitySelectMenu.create(
+                    componentIdManager.build(
+                        mapOf(
+                            "action" to "save",
+                            "sub_action" to "select-channel",
+                            "user_id" to idMap["user_id"] as Long,
+                            "msg_id" to idMap["msg_id"] as String,
+                            "btn_index" to idMap["btn_index"] as String,
+                        )
+                    ),
+                    EntitySelectMenu.SelectTarget.CHANNEL
+                )
+                    .setRequiredRange(1, 1)
+                    .setPlaceholder("請選擇要儲存對話的文字頻道")
+                    .setChannelTypes(ChannelType.TEXT)
+                    .build()
+
+                event.reply("請選擇要儲存對話的文字頻道")
+                    .setEphemeral(true)
+                    .addComponents(ActionRow.of(selectMenu))
+                    .queue()
+            }
         }
     }
 
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        StepManager.onEntitySelectInteraction(event)
+        val idMap = componentIdManager.parse(event.componentId)
+        when (idMap["action"]) {
+            "create" -> StepManager.onEntitySelectInteraction(event)
+            "save" -> onSaveContentSelect(event, idMap)
+        }
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
@@ -266,31 +299,581 @@ internal object Ticket {
             event.hook.sendMessage("請到此頻道 <#${it.id}> 並等待人員回覆繼續!").queue()
 
             it.sendMessage(builder.toString()).addComponents(
-                ActionRow.of(
-                    Button.of(
-                        ButtonStyle.SECONDARY,
-                        componentIdManager.build(
-                            mapOf(
-                                "action" to "lock",
-                                "user_id" to event.user.idLong,
-                                "msg_id" to idMap["msg_id"] as String,
-                                "btn_index" to idMap["btn_index"] as String,
-                            )
-                        ), "關閉", Emoji.fromUnicode("🔒")
-                    ),
-                    Button.of(
-                        ButtonStyle.DANGER,
-                        componentIdManager.build(
-                            mapOf(
-                                "action" to "delete",
-                                "user_id" to event.user.idLong,
-                                "msg_id" to idMap["msg_id"] as String,
-                                "btn_index" to idMap["btn_index"] as String,
-                            )
-                        ), "刪除", Emoji.fromUnicode("🗑")
-                    )
+                buildTicketActionRow(
+                    isLocked = false,
+                    userId = event.user.idLong,
+                    msgId = idMap["msg_id"] as String,
+                    btnIndex = idMap["btn_index"] as String,
                 )
             )
         }.queue()
+    }
+
+    private fun onSaveContentSelect(event: EntitySelectInteractionEvent, idMap: Map<String, Any>) {
+        if (idMap["sub_action"] != "select-channel") {
+            event.deferEdit().queue()
+            return
+        }
+
+        val member = event.member ?: run {
+            event.reply("錯誤 (無法取得成員資訊)").setEphemeral(true).queue()
+            return
+        }
+        val ticketData = getTicketDataOrNull(member.guild.idLong, idMap)
+        if (ticketData == null) {
+            event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
+            return
+        }
+        if (!hasTicketAdminPermission(member, ticketData)) {
+            event.reply("僅管理員可使用此功能").setEphemeral(true).queue()
+            return
+        }
+
+        val sourceChannel = event.guildChannel as? TextChannel ?: run {
+            event.reply("錯誤 (目前頻道不是文字頻道)").setEphemeral(true).queue()
+            return
+        }
+        val targetChannel = event.mentions.getChannels(TextChannel::class.java).firstOrNull() ?: run {
+            event.reply("請選擇一個文字頻道").setEphemeral(true).queue()
+            return
+        }
+
+        val selfMember = event.guild!!.selfMember
+        if (!selfMember.hasPermission(sourceChannel, VIEW_CHANNEL, MESSAGE_HISTORY)) {
+            event.reply("機器人缺少讀取 Ticket 訊息歷史的權限").setEphemeral(true).queue()
+            return
+        }
+
+        if (!selfMember.hasPermission(
+                targetChannel,
+                VIEW_CHANNEL,
+                MESSAGE_SEND,
+                MESSAGE_SEND_IN_THREADS,
+                CREATE_PUBLIC_THREADS,
+                MANAGE_WEBHOOKS
+            )
+        ) {
+            event.reply("機器人缺少目標頻道權限 (VIEW_CHANNEL / MESSAGE_SEND / MESSAGE_SEND_IN_THREADS / CREATE_PUBLIC_THREADS / MANAGE_WEBHOOKS)")
+                .setEphemeral(true)
+                .queue()
+            return
+        }
+
+        event.deferReply(true).queue { hook ->
+            hook.editOriginal("存檔中...").queue()
+
+            archiveTicketContent(
+                sourceChannel = sourceChannel,
+                targetChannel = targetChannel,
+                onSuccess = { thread ->
+                    hook.editOriginal("存檔完成，已建立 Thread：<#${thread.id}>").queue()
+                },
+                onError = { throwable ->
+                    hook.editOriginal("存檔失敗：${toReadableError(throwable)}").queue()
+                }
+            )
+        }
+    }
+
+    private fun archiveTicketContent(
+        sourceChannel: TextChannel,
+        targetChannel: TextChannel,
+        onSuccess: (ThreadChannel) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        targetChannel.createThreadChannel(
+            buildArchiveThreadName(sourceChannel.name)
+        ).queue({ thread ->
+            targetChannel.createWebhook(buildArchiveWebhookName())
+                .queue({ webhook ->
+                    val paginator = sourceChannel.iterableHistory
+                        .order(FORWARD)
+                        .cache(false)
+                    val processedThreadIds = mutableSetOf<Long>()
+
+                    archiveTicketContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        thread = thread,
+                        processedThreadIds = processedThreadIds,
+                        onComplete = {
+                            safeDeleteWebhook(webhook)
+                            onSuccess(thread)
+                        },
+                        onError = { forwardError ->
+                            safeDeleteWebhook(webhook)
+                            onError(forwardError)
+                        }
+                    )
+                }, onError)
+        }, onError)
+    }
+
+    private fun archiveTicketContentByPages(
+        paginator: MessagePaginationAction,
+        webhook: Webhook,
+        thread: ThreadChannel,
+        processedThreadIds: MutableSet<Long>,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        // `takeAsync(archivePageSize)` controls how many messages are handled per batch.
+        paginator.takeAsync(archivePageSize).whenComplete { messages, throwable ->
+            if (throwable != null) {
+                onError(unwrapThrowable(throwable))
+                return@whenComplete
+            }
+
+            val pageMessages = messages ?: emptyList()
+            if (pageMessages.isEmpty()) {
+                onComplete()
+                return@whenComplete
+            }
+
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = thread,
+                messages = pageMessages,
+                processedThreadIds = processedThreadIds,
+                onComplete = {
+                    archiveTicketContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        thread = thread,
+                        processedThreadIds = processedThreadIds,
+                        onComplete = onComplete,
+                        onError = onError,
+                    )
+                },
+                onError = onError
+            )
+        }
+    }
+
+    private fun forwardMessagesWithWebhook(
+        webhook: Webhook,
+        thread: ThreadChannel,
+        messages: List<Message>,
+        processedThreadIds: MutableSet<Long>,
+        flattenThreadContent: Boolean = true,
+        index: Int = 0,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        var nextIndex = index
+        while (nextIndex < messages.size && !shouldHandleArchiveMessage(messages[nextIndex], flattenThreadContent, processedThreadIds)) {
+            nextIndex++
+        }
+
+        if (nextIndex >= messages.size) {
+            onComplete()
+            return
+        }
+
+        val message = messages[nextIndex]
+        val startedThread = nextUnhandledStartedThread(message, flattenThreadContent, processedThreadIds)
+
+        val continueAction = {
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = thread,
+                messages = messages,
+                processedThreadIds = processedThreadIds,
+                flattenThreadContent = flattenThreadContent,
+                index = nextIndex + 1,
+                onComplete = onComplete,
+                onError = onError
+            )
+        }
+
+        val flattenAction = {
+            if (startedThread == null) {
+                continueAction()
+            } else {
+                flattenStartedThreadWithWebhook(
+                    webhook = webhook,
+                    archiveThread = thread,
+                    sourceThread = startedThread,
+                    onComplete = continueAction,
+                    onError = onError
+                )
+            }
+        }
+
+        if (!shouldForwardMessage(message)) {
+            flattenAction()
+            return
+        }
+
+        webhook.sendMessage(buildForwardMessageData(message))
+            .setThread(thread)
+            .setUsername(message.member?.effectiveName ?: message.author.name)
+            .setAvatarUrl(message.member?.effectiveAvatarUrl ?: message.author.effectiveAvatarUrl)
+            .queue(
+                { flattenAction() },
+                onError
+            )
+    }
+
+    private fun shouldHandleArchiveMessage(
+        message: Message,
+        flattenThreadContent: Boolean,
+        processedThreadIds: MutableSet<Long>,
+    ): Boolean {
+        if (shouldForwardMessage(message)) {
+            return true
+        }
+
+        val startedThreadId = message.startedThread?.idLong ?: return false
+        return flattenThreadContent && !processedThreadIds.contains(startedThreadId)
+    }
+
+    private fun nextUnhandledStartedThread(
+        message: Message,
+        flattenThreadContent: Boolean,
+        processedThreadIds: MutableSet<Long>,
+    ): ThreadChannel? {
+        if (!flattenThreadContent) return null
+
+        val startedThread = message.startedThread ?: return null
+        val isNewThread = processedThreadIds.add(startedThread.idLong)
+        return if (isNewThread) startedThread else null
+    }
+
+    private fun flattenStartedThreadWithWebhook(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        webhook.sendMessage(buildThreadStartMarkerMessage(sourceThread))
+            .setThread(archiveThread)
+            .queue({
+                val paginator = sourceThread.iterableHistory
+                    .order(FORWARD)
+                    .cache(false)
+
+                flattenThreadContentByPages(
+                    paginator = paginator,
+                    webhook = webhook,
+                    archiveThread = archiveThread,
+                    lastMessageTime = null,
+                    onComplete = { lastMessageTime ->
+                        sendThreadEndMarker(
+                            webhook = webhook,
+                            archiveThread = archiveThread,
+                            sourceThread = sourceThread,
+                            lastMessageTime = lastMessageTime,
+                            onComplete = onComplete,
+                            onError = onError
+                        )
+                    },
+                    onError = { throwable ->
+                        handleThreadFlattenFailure(
+                            webhook = webhook,
+                            archiveThread = archiveThread,
+                            sourceThread = sourceThread,
+                            throwable = throwable,
+                            onComplete = onComplete,
+                            onError = onError
+                        )
+                    }
+                )
+            }, { throwable ->
+                handleThreadFlattenFailure(
+                    webhook = webhook,
+                    archiveThread = archiveThread,
+                    sourceThread = sourceThread,
+                    throwable = throwable,
+                    onComplete = onComplete,
+                    onError = onError
+                )
+            })
+    }
+
+    private fun flattenThreadContentByPages(
+        paginator: MessagePaginationAction,
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        lastMessageTime: OffsetDateTime?,
+        onComplete: (OffsetDateTime?) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        paginator.takeAsync(archivePageSize).whenComplete { messages, throwable ->
+            if (throwable != null) {
+                onError(unwrapThrowable(throwable))
+                return@whenComplete
+            }
+
+            val pageMessages = messages ?: emptyList()
+            if (pageMessages.isEmpty()) {
+                onComplete(lastMessageTime)
+                return@whenComplete
+            }
+
+            val currentLastMessageTime = pageMessages.lastOrNull()?.timeCreated ?: lastMessageTime
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = archiveThread,
+                messages = pageMessages,
+                processedThreadIds = mutableSetOf(),
+                flattenThreadContent = false,
+                onComplete = {
+                    flattenThreadContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        lastMessageTime = currentLastMessageTime,
+                        onComplete = onComplete,
+                        onError = onError,
+                    )
+                },
+                onError = onError
+            )
+        }
+    }
+
+    private fun sendThreadEndMarker(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        lastMessageTime: OffsetDateTime?,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        webhook.sendMessage(buildThreadEndMarkerMessage(sourceThread, lastMessageTime))
+            .setThread(archiveThread)
+            .queue({ onComplete() }, onError)
+    }
+
+    private fun handleThreadFlattenFailure(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        throwable: Throwable,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        val flattenedError = unwrapThrowable(throwable)
+        webhook.sendMessage(buildThreadErrorMarkerMessage(sourceThread, flattenedError))
+            .setThread(archiveThread)
+            .queue(
+                {
+                    sendThreadEndMarker(
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        sourceThread = sourceThread,
+                        lastMessageTime = null,
+                        onComplete = onComplete,
+                        onError = onError
+                    )
+                },
+                { markerError ->
+                    Event.logger.warn(
+                        "Failed to send thread flatten error marker. sourceThreadId={}, archiveThreadId={}",
+                        sourceThread.id,
+                        archiveThread.id,
+                        unwrapThrowable(markerError)
+                    )
+                    sendThreadEndMarker(
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        sourceThread = sourceThread,
+                        lastMessageTime = null,
+                        onComplete = onComplete,
+                        onError = onError
+                    )
+                }
+            )
+    }
+
+    private fun buildForwardMessageData(message: Message) = MessageCreateBuilder().apply {
+        if (message.contentRaw.isNotEmpty()) {
+            setContent(message.contentRaw)
+        }
+
+        if (message.attachments.isNotEmpty()) {
+            setFiles(
+                message.attachments.map { attachment ->
+                    attachment.proxy.downloadAsFileUpload(attachment.fileName)
+                }
+            )
+        }
+    }.build()
+
+    private fun shouldForwardMessage(message: Message): Boolean {
+        return message.contentRaw.isNotEmpty() || message.attachments.isNotEmpty()
+    }
+
+    private fun buildArchiveWebhookName(): String {
+        val uniqueSuffix = buildString {
+            append(System.currentTimeMillis().toString(36))
+            append('-')
+            append((System.nanoTime() and 0xFFFFF).toString(36))
+        }
+
+        return "ticket-save-content-$uniqueSuffix"
+    }
+
+    private fun buildThreadStartMarkerMessage(sourceThread: ThreadChannel): String {
+        return buildString {
+            append("【Thread 開始】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("開始時間: ").append(formatArchiveMarkerTime(sourceThread.timeCreated))
+        }
+    }
+
+    private fun buildThreadEndMarkerMessage(sourceThread: ThreadChannel, lastMessageTime: OffsetDateTime?): String {
+        return buildString {
+            append("【Thread 結束】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("最後一則訊息時間: ").append(
+                lastMessageTime?.let { formatArchiveMarkerTime(it) } ?: "無訊息"
+            )
+        }
+    }
+
+    private fun buildThreadErrorMarkerMessage(sourceThread: ThreadChannel, throwable: Throwable): String {
+        return buildString {
+            append("【Thread 攤平失敗】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("錯誤: ").append(toReadableError(throwable))
+        }
+    }
+
+    private fun getThreadOwnerName(sourceThread: ThreadChannel): String {
+        return sourceThread.owner?.effectiveName ?: sourceThread.ownerId
+    }
+
+    private fun formatArchiveMarkerTime(time: OffsetDateTime): String {
+        return time.atZoneSameInstant(ZoneId.systemDefault()).format(archiveMarkerTimeFormatter)
+    }
+
+    private fun buildArchiveThreadName(ticketName: String): String {
+        val timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(threadTimeFormatter)
+        val suffix = "-$timestamp"
+        val maxTicketNameLength = threadNameMaxLength - suffix.length
+        val trimmedTicketName = trimThreadNameByGrapheme(ticketName, maxTicketNameLength)
+
+        return "$trimmedTicketName$suffix"
+    }
+
+    private fun trimThreadNameByGrapheme(value: String, maxLength: Int): String {
+        if (maxLength <= 0) return ""
+        if (value.length <= maxLength) return value
+
+        val iterator = BreakIterator.getCharacterInstance(Locale.ROOT)
+        iterator.setText(value)
+
+        var boundary = iterator.first()
+        var lastSafeBoundary = 0
+
+        while (boundary != BreakIterator.DONE) {
+            if (boundary > maxLength) break
+            lastSafeBoundary = boundary
+            boundary = iterator.next()
+        }
+
+        return value.substring(0, lastSafeBoundary)
+    }
+
+    private fun buildTicketActionRow(
+        isLocked: Boolean,
+        userId: Long,
+        msgId: String,
+        btnIndex: String,
+    ): ActionRow {
+        val lockButton = if (isLocked) {
+            Button.of(
+                ButtonStyle.SUCCESS,
+                buildTicketActionId("unlock", userId, msgId, btnIndex),
+                "開啟",
+                Emoji.fromUnicode("🔓")
+            )
+        } else {
+            Button.of(
+                ButtonStyle.SECONDARY,
+                buildTicketActionId("lock", userId, msgId, btnIndex),
+                "關閉",
+                Emoji.fromUnicode("🔒")
+            )
+        }
+
+        return ActionRow.of(
+            lockButton,
+            Button.of(
+                ButtonStyle.PRIMARY,
+                buildTicketActionId("save", userId, msgId, btnIndex),
+                "儲存對話",
+                Emoji.fromUnicode("💾")
+            ),
+            Button.of(
+                ButtonStyle.DANGER,
+                buildTicketActionId("delete", userId, msgId, btnIndex),
+                "刪除",
+                Emoji.fromUnicode("🗑")
+            )
+        )
+    }
+
+    private fun buildTicketActionId(action: String, userId: Long, msgId: String, btnIndex: String): String {
+        return componentIdManager.build(
+            mapOf(
+                "action" to action,
+                "user_id" to userId,
+                "msg_id" to msgId,
+                "btn_index" to btnIndex,
+            )
+        )
+    }
+
+    private fun hasTicketAdminPermission(member: Member, ticketData: DataContainer): Boolean {
+        val roleIds = ticketData.adminIds
+        return member.roles.any { roleIds.contains(it.idLong) } || member.hasPermission(ADMINISTRATOR)
+    }
+
+    private fun getTicketDataOrNull(
+        guildId: Long,
+        idMap: Map<String, Any>,
+        fallbackMessageId: String? = null,
+    ): DataContainer? {
+        val messageId = (idMap["msg_id"] as? String) ?: fallbackMessageId ?: return null
+        val buttonIndex = (idMap["btn_index"] as? String)?.toIntOrNull() ?: return null
+
+        return jsonGuildManager
+            .get(guildId)
+            .data
+            .get(messageId)
+            ?.getOrNull(buttonIndex)
+    }
+
+    private val ticketDataNotFoundMessage = "錯誤 (找不到 Ticket 設定資料，可能已被刪除)"
+
+    private fun safeDeleteWebhook(webhook: Webhook) {
+        webhook.delete().queue({}, {})
+    }
+
+    private fun unwrapThrowable(throwable: Throwable): Throwable {
+        var currentThrowable = throwable
+        while (currentThrowable is CompletionException
+            && currentThrowable.cause != null
+            && currentThrowable.cause !== currentThrowable
+        ) {
+            currentThrowable = currentThrowable.cause!!
+        }
+
+        return currentThrowable
+    }
+
+    private fun toReadableError(throwable: Throwable): String {
+        val error = unwrapThrowable(throwable)
+        return error.message
+            ?.replace('\n', ' ')
+            ?.take(200)
+            ?: error.javaClass.simpleName
     }
 }
