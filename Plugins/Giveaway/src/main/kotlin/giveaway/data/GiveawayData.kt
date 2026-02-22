@@ -87,6 +87,7 @@ internal fun drawPrizeWinners(
             continue
         }
 
+        // A single prize will never contain duplicate winners.
         val shuffled = pool.shuffled(random)
         val picked = shuffled.take(min(targetCount, shuffled.size))
 

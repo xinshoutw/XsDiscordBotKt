@@ -29,10 +29,14 @@ import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.giveaway.Event.componentPrefix
 import tw.xinshou.discord.plugin.giveaway.Event.pluginDirectory
 import tw.xinshou.discord.plugin.giveaway.create.StepManager
-import tw.xinshou.discord.plugin.giveaway.data.*
+import tw.xinshou.discord.plugin.giveaway.data.GiveawayConfig
+import tw.xinshou.discord.plugin.giveaway.data.GiveawayGuildData
+import tw.xinshou.discord.plugin.giveaway.data.GiveawayInstance
+import tw.xinshou.discord.plugin.giveaway.data.WinnerDuplicatePolicy
+import tw.xinshou.discord.plugin.giveaway.data.drawPrizeWinners
 import java.io.File
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -40,6 +44,7 @@ import java.util.concurrent.TimeUnit
 internal object Giveaway {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private var autoDrawScheduler: ScheduledExecutorService? = null
+    private var defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
 
     val jsonAdapter: JsonAdapter<GiveawayGuildData> = JsonFileManager.moshi.adapterReified<GiveawayGuildData>()
     val jsonGuildManager = JsonGuildFileManager<GiveawayGuildData>(
@@ -59,27 +64,29 @@ internal object Giveaway {
 
     var messageCreator = MessageCreator(
         pluginDirFile = pluginDirectory,
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        defaultLocale = defaultLocale,
         componentIdManager = componentIdManager,
     )
 
     var modalCreator = ModalCreator(
         langDirFile = File(pluginDirectory, "lang"),
         componentIdManager = componentIdManager,
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        defaultLocale = defaultLocale,
     )
 
-    internal fun reload() {
+    internal fun reload(defaultLocale: DiscordLocale = this.defaultLocale) {
+        this.defaultLocale = defaultLocale
+
         messageCreator = MessageCreator(
             pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            defaultLocale = this.defaultLocale,
             componentIdManager = componentIdManager,
         )
 
         modalCreator = ModalCreator(
             langDirFile = File(pluginDirectory, "lang"),
             componentIdManager = componentIdManager,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            defaultLocale = this.defaultLocale,
         )
     }
 
@@ -97,7 +104,7 @@ internal object Giveaway {
                         logger.error("Auto draw loop failed: {}", throwable.message, throwable)
                     }
                 },
-                normalizedInterval,
+                5,
                 normalizedInterval,
                 TimeUnit.SECONDS
             )
@@ -163,8 +170,14 @@ internal object Giveaway {
                 giveaway.endedAtEpochSecond = now
                 changed = true
 
-                refreshMessage(giveaway)
-                announceAutoDrawResult(giveaway)
+                runCatching { refreshMessage(giveaway) }
+                    .onFailure { throwable ->
+                        logger.warn("Failed to refresh auto-drawn giveaway {}: {}", giveaway.id, throwable.message)
+                    }
+                runCatching { announceAutoDrawResult(giveaway) }
+                    .onFailure { throwable ->
+                        logger.warn("Failed to announce auto-drawn giveaway {}: {}", giveaway.id, throwable.message)
+                    }
             }
 
             if (changed) manager.save()
@@ -178,7 +191,12 @@ internal object Giveaway {
         config: GiveawayConfig,
         locale: DiscordLocale,
     ): RestAction<Message> {
-        val giveawayId = UUID.randomUUID().toString().replace("-", "").take(16)
+        val manager = jsonGuildManager[guildId]
+        var giveawayId = ""
+        do {
+            giveawayId = UUID.randomUUID().toString().replace("-", "").take(16)
+        } while (manager.data.containsKey(giveawayId))
+
         val giveaway = GiveawayInstance(
             id = giveawayId,
             guildId = guildId,
@@ -197,9 +215,30 @@ internal object Giveaway {
 
         return channel.sendMessage(createData).map { message ->
             val finalizedGiveaway = giveaway.copy(messageId = message.idLong)
-            val manager = jsonGuildManager[guildId]
-            manager.data[giveawayId] = finalizedGiveaway
-            manager.save()
+
+            try {
+                manager.data[giveawayId] = finalizedGiveaway
+                manager.save()
+            } catch (throwable: Exception) {
+                logger.error(
+                    "Failed to persist giveaway {} for message {} in guild {}.",
+                    giveawayId,
+                    message.idLong,
+                    guildId,
+                    throwable
+                )
+
+                message.delete().queue({}, { deleteError ->
+                    logger.error(
+                        "Failed to delete orphaned giveaway message {} in guild {}.",
+                        message.idLong,
+                        guildId,
+                        deleteError
+                    )
+                })
+
+                throw throwable
+            }
             message
         }
     }
@@ -222,8 +261,8 @@ internal object Giveaway {
             return
         }
 
-        val joined = giveaway.participantIds.add(event.user.idLong)
-        if (!joined) {
+        val wasAdded = giveaway.participantIds.add(event.user.idLong)
+        if (!wasAdded) {
             giveaway.participantIds.remove(event.user.idLong)
         }
 
@@ -231,7 +270,7 @@ internal object Giveaway {
         refreshMessage(event, giveaway)
 
         event.reply(
-            if (joined) {
+            if (wasAdded) {
                 if (isZh) "你已成功參加抽獎。" else "You joined the giveaway."
             } else {
                 if (isZh) "你已取消參加抽獎。" else "You left the giveaway."
@@ -245,7 +284,19 @@ internal object Giveaway {
         val isZh = isZh(locale)
 
         val member = event.member
-        if (member == null || (member.idLong != giveaway.creatorId && !member.hasPermission(Permission.ADMINISTRATOR))) {
+        if (member == null) {
+            event.reply(
+                if (isZh) "只有建立者或管理員可執行此操作。" else "Only creator/admin can do this."
+            ).setEphemeral(true).queue()
+            return
+        }
+
+        val isAdmin = member.hasPermission(Permission.ADMINISTRATOR)
+        val isCreator = member.idLong == giveaway.creatorId
+        val canDraw = !reroll && (isCreator || isAdmin)
+        val canReroll = reroll && isAdmin
+
+        if (!canDraw && !canReroll) {
             event.reply(
                 if (isZh) "只有建立者或管理員可執行此操作。" else "Only creator/admin can do this."
             ).setEphemeral(true).queue()
@@ -347,7 +398,7 @@ internal object Giveaway {
 
         val giveaway = jsonGuildManager[guild.idLong].data[giveawayId]
         if (giveaway == null) {
-            val isZh = event.userLocale.locale.startsWith("zh")
+            val isZh = isZh(event.userLocale)
             event.reply(
                 if (isZh) "找不到該抽獎，可能已被刪除。" else "Giveaway not found."
             ).setEphemeral(true).queue()
@@ -569,10 +620,11 @@ internal object Giveaway {
 
     private fun localeOf(giveaway: GiveawayInstance): DiscordLocale {
         return runCatching { DiscordLocale.from(giveaway.localeTag) }
-            .getOrDefault(DiscordLocale.CHINESE_TAIWAN)
+            .getOrDefault(defaultLocale)
     }
 
-    private fun isZh(locale: DiscordLocale): Boolean = locale.locale.startsWith("zh")
+    private fun isZh(locale: DiscordLocale): Boolean =
+        locale.locale.substringBefore('-').equals("zh", ignoreCase = true)
 
     private fun clipFieldText(value: String, max: Int = 1024): String {
         if (value.length <= max) return value
