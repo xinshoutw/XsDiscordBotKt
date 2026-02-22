@@ -10,7 +10,7 @@ class Substitutor(
     private val delimiterEnd: String = "%",
     private val escape: Char = '$'
 ) {
-    private var substitutor = createSubstitutor()
+    private val substitutor = createSubstitutor()
 
     // Convenience constructor to initialize with pairs
     constructor(vararg pairs: Pair<String, String>) :
@@ -32,28 +32,24 @@ class Substitutor(
     fun addAll(substitutor: Substitutor): Substitutor = apply {
         mapper.putAll(substitutor.mapper)
         lazyMapper.putAll(substitutor.lazyMapper)
-        refreshSubstitutor()
     }
 
     // Add a single pair to the map
     fun put(pair: Pair<String, String>): Substitutor = apply {
         mapper[pair.first] = pair.second
         lazyMapper.remove(pair.first)
-        refreshSubstitutor()
     }
 
     // Put a single key-value pair into the map
     fun put(key: String, value: String): Substitutor = apply {
         mapper[key] = value
         lazyMapper.remove(key)
-        refreshSubstitutor()
     }
 
     // Put a lazy supplier for a key. Value will only be resolved when key is used.
     fun putLazy(key: String, supplier: () -> String): Substitutor = apply {
         lazyMapper[key] = supplier
         mapper.remove(key)
-        refreshSubstitutor()
     }
 
     // Add multiple pairs to the map
@@ -62,7 +58,6 @@ class Substitutor(
             mapper[it.first] = it.second
             lazyMapper.remove(it.first)
         }
-        refreshSubstitutor()
     }
 
     // Put all key-value pairs from a map into the map
@@ -71,7 +66,6 @@ class Substitutor(
             mapper[key] = value
             lazyMapper.remove(key)
         }
-        refreshSubstitutor()
     }
 
     // Put all lazy key-supplier mappings
@@ -80,12 +74,6 @@ class Substitutor(
             lazyMapper[key] = supplier
             mapper.remove(key)
         }
-        refreshSubstitutor()
-    }
-
-    // Refresh the internal StringSubstitutor instance to reflect the current map state
-    private fun refreshSubstitutor() {
-        substitutor = createSubstitutor()
     }
 
     // Create a new StringSubstitutor with current settings
@@ -97,5 +85,10 @@ class Substitutor(
             escape
         )
 
-    private fun resolveValue(key: String): String? = lazyMapper[key]?.invoke() ?: mapper[key]
+    private fun resolveValue(key: String): String? {
+        val lazySupplier = lazyMapper[key] ?: return mapper[key]
+
+        return runCatching { lazySupplier() }
+            .getOrElse { mapper[key] }
+    }
 }
