@@ -19,6 +19,11 @@ import tw.xinshou.discord.plugin.giveaway.config.ConfigSerializer
 object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
     private lateinit var localizer: StringLocalizer<CmdFileSerializer>
 
+    private fun resolveLocale(localeTag: String): DiscordLocale {
+        return runCatching { DiscordLocale.from(localeTag) }
+            .getOrDefault(DiscordLocale.CHINESE_TAIWAN)
+    }
+
     override fun load() {
         super.load()
         Giveaway.stopAutoDrawScheduler()
@@ -28,13 +33,15 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             return
         }
 
+        val defaultLocale = resolveLocale(config.defaultLocale)
+
         localizer = StringLocalizer(
             pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            defaultLocale = defaultLocale,
             clazzSerializer = CmdFileSerializer::class,
         )
 
-        Giveaway.reload()
+        Giveaway.reload(defaultLocale)
         Giveaway.startAutoDrawScheduler(config.autoDrawIntervalSeconds)
     }
 
@@ -47,18 +54,22 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             return
         }
 
+        val defaultLocale = resolveLocale(config.defaultLocale)
+
         localizer = StringLocalizer(
             pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+            defaultLocale = defaultLocale,
             clazzSerializer = CmdFileSerializer::class,
         )
 
-        Giveaway.reload()
+        Giveaway.reload(defaultLocale)
         Giveaway.startAutoDrawScheduler(config.autoDrawIntervalSeconds)
     }
 
     override fun guildCommands(): Array<CommandData> {
         return if (!config.enabled) {
+            emptyArray()
+        } else if (!::localizer.isInitialized) {
             emptyArray()
         } else {
             guildCommands(localizer)
