@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "set-title"
+title: "Set Giveaway Title"
+text_inputs:
+  - uid: "title"
+    label: "Giveaway Title"
+    style: "SHORT"
+    value: "%ga@title%"
+    placeholder: "Type giveaway title"
+    max_length: 100

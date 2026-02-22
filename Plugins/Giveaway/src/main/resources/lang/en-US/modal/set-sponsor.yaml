@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-sponsor"
+title: "Set Sponsor"
+text_inputs:
+  - uid: "sponsor"
+    label: "Sponsor / Host"
+    style: "SHORT"
+    value: "%ga@sponsor%"
+    placeholder: "Optional"
+    max_length: 100
+    required: false

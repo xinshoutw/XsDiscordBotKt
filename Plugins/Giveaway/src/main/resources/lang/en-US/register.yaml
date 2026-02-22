@@ -1,0 +1,3 @@
+create_giveaway:
+  name: "create-giveaway"
+  description: "Create giveaway with step-by-step builder"

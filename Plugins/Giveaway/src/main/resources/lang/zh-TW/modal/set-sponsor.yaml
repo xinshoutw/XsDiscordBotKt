@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-sponsor"
+title: "設定主辦/贊助"
+text_inputs:
+  - uid: "sponsor"
+    label: "主辦 / 贊助"
+    style: "SHORT"
+    value: "%ga@sponsor%"
+    placeholder: "可選"
+    max_length: 100
+    required: false

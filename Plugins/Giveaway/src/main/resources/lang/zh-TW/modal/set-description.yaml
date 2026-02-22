@@ -1,0 +1,12 @@
+uid:
+  action: "create"
+  sub_action: "set-description"
+title: "設定抽獎說明"
+text_inputs:
+  - uid: "description"
+    label: "抽獎說明"
+    style: "PARAGRAPH"
+    value: "%ga@description%"
+    placeholder: "可選，填寫抽獎說明"
+    max_length: 4000
+    required: false

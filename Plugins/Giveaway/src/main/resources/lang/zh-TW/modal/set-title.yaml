@@ -1,0 +1,11 @@
+uid:
+  action: "create"
+  sub_action: "set-title"
+title: "設定抽獎標題"
+text_inputs:
+  - uid: "title"
+    label: "抽獎標題"
+    style: "SHORT"
+    value: "%ga@title%"
+    placeholder: "輸入抽獎標題"
+    max_length: 100

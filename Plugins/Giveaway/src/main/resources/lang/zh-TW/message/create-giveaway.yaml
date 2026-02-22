@@ -1,0 +1,71 @@
+embeds:
+  - model_key: "ga@preview-embed"
+
+components:
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "set-title"
+        style: 1
+        label: "設定標題"
+
+      - uid:
+          action: "create"
+          sub_action: "set-description"
+        style: 1
+        label: "設定說明"
+
+      - uid:
+          action: "create"
+          sub_action: "set-end-time"
+        style: 1
+        label: "設定結束時間"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "add-prize"
+        style: 3
+        label: "新增獎品"
+
+      - uid:
+          action: "create"
+          sub_action: "remove-prize"
+        style: 2
+        label: "刪除最後獎品"
+
+      - uid:
+          action: "create"
+          sub_action: "toggle-duplicate-policy"
+        style: 2
+        label: "切換中獎限制"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "set-sponsor"
+        style: 2
+        label: "設定主辦/贊助"
+
+      - uid:
+          action: "create"
+          sub_action: "set-thumbnail"
+        style: 2
+        label: "設定縮圖"
+
+  - !ButtonsComponent
+    buttons:
+      - uid:
+          action: "create"
+          sub_action: "confirm-create"
+        style: 3
+        label: "確認建立"
+
+      - uid:
+          action: "create"
+          sub_action: "cancel"
+        style: 4
+        label: "取消"

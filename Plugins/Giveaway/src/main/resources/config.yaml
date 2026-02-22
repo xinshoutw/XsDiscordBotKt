@@ -1,1 +1,7 @@
 enabled: false
+# default locale fallback for message/modal resources
+defaultLocale: "zh-TW"
+
+# Interval (in seconds) for auto-draw polling.
+# Lower values increase server load when there are many guilds/giveaways.
+autoDrawIntervalSeconds: 60
