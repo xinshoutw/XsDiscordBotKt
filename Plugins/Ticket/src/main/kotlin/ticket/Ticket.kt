@@ -45,6 +45,7 @@ import tw.xinshou.discord.plugin.ticket.create.StepManager
 import tw.xinshou.discord.plugin.ticket.json.serializer.JsonDataClass
 import java.io.File
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletionException
@@ -53,6 +54,7 @@ internal object Ticket {
     private const val archivePageSize = 100
     private const val threadNameMaxLength = 100
     private val threadTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")
+    private val archiveMarkerTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
     val jsonGuildManager = JsonGuildFileManager<JsonDataClass>(
@@ -365,11 +367,13 @@ internal object Ticket {
                         .order(FORWARD)
                         .limit(archivePageSize)
                         .cache(false)
+                    val processedThreadIds = mutableSetOf<Long>()
 
                     archiveTicketContentByPages(
                         paginator = paginator,
                         webhook = webhook,
                         thread = thread,
+                        processedThreadIds = processedThreadIds,
                         onComplete = {
                             safeDeleteWebhook(webhook)
                             onSuccess(thread)
@@ -387,6 +391,7 @@ internal object Ticket {
         paginator: MessagePaginationAction,
         webhook: Webhook,
         thread: ThreadChannel,
+        processedThreadIds: MutableSet<Long>,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
     ) {
@@ -406,11 +411,13 @@ internal object Ticket {
                 webhook = webhook,
                 thread = thread,
                 messages = pageMessages,
+                processedThreadIds = processedThreadIds,
                 onComplete = {
                     archiveTicketContentByPages(
                         paginator = paginator,
                         webhook = webhook,
                         thread = thread,
+                        processedThreadIds = processedThreadIds,
                         onComplete = onComplete,
                         onError = onError,
                     )
@@ -424,12 +431,14 @@ internal object Ticket {
         webhook: Webhook,
         thread: ThreadChannel,
         messages: List<Message>,
+        processedThreadIds: MutableSet<Long>,
+        flattenThreadContent: Boolean = true,
         index: Int = 0,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
     ) {
         var nextIndex = index
-        while (nextIndex < messages.size && !shouldForwardMessage(messages[nextIndex])) {
+        while (nextIndex < messages.size && !shouldHandleArchiveMessage(messages[nextIndex], flattenThreadContent, processedThreadIds)) {
             nextIndex++
         }
 
@@ -439,24 +448,188 @@ internal object Ticket {
         }
 
         val message = messages[nextIndex]
+        val startedThread = nextUnhandledStartedThread(message, flattenThreadContent, processedThreadIds)
+
+        val continueAction = {
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = thread,
+                messages = messages,
+                processedThreadIds = processedThreadIds,
+                flattenThreadContent = flattenThreadContent,
+                index = nextIndex + 1,
+                onComplete = onComplete,
+                onError = onError
+            )
+        }
+
+        val flattenAction = {
+            if (startedThread == null) {
+                continueAction()
+            } else {
+                flattenStartedThreadWithWebhook(
+                    webhook = webhook,
+                    archiveThread = thread,
+                    sourceThread = startedThread,
+                    onComplete = continueAction,
+                    onError = onError
+                )
+            }
+        }
+
+        if (!shouldForwardMessage(message)) {
+            flattenAction()
+            return
+        }
 
         webhook.sendMessage(buildForwardMessageData(message))
             .setThread(thread)
             .setUsername(message.member?.effectiveName ?: message.author.name)
             .setAvatarUrl(message.member?.effectiveAvatarUrl ?: message.author.effectiveAvatarUrl)
             .queue(
-                {
-                    forwardMessagesWithWebhook(
-                        webhook = webhook,
-                        thread = thread,
-                        messages = messages,
-                        index = nextIndex + 1,
-                        onComplete = onComplete,
-                        onError = onError
-                    )
-                },
+                { flattenAction() },
                 onError
             )
+    }
+
+    private fun shouldHandleArchiveMessage(
+        message: Message,
+        flattenThreadContent: Boolean,
+        processedThreadIds: MutableSet<Long>,
+    ): Boolean {
+        if (shouldForwardMessage(message)) {
+            return true
+        }
+
+        val startedThreadId = message.startedThread?.idLong ?: return false
+        return flattenThreadContent && !processedThreadIds.contains(startedThreadId)
+    }
+
+    private fun nextUnhandledStartedThread(
+        message: Message,
+        flattenThreadContent: Boolean,
+        processedThreadIds: MutableSet<Long>,
+    ): ThreadChannel? {
+        if (!flattenThreadContent) return null
+
+        val startedThread = message.startedThread ?: return null
+        if (!processedThreadIds.add(startedThread.idLong)) return null
+        return startedThread
+    }
+
+    private fun flattenStartedThreadWithWebhook(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        webhook.sendMessage(buildThreadStartMarkerMessage(sourceThread))
+            .setThread(archiveThread)
+            .queue({
+                val paginator = sourceThread.iterableHistory
+                    .order(FORWARD)
+                    .limit(archivePageSize)
+                    .cache(false)
+
+                flattenThreadContentByPages(
+                    paginator = paginator,
+                    webhook = webhook,
+                    archiveThread = archiveThread,
+                    lastMessageTime = null,
+                    onComplete = { lastMessageTime ->
+                        sendThreadEndMarker(
+                            webhook = webhook,
+                            archiveThread = archiveThread,
+                            sourceThread = sourceThread,
+                            lastMessageTime = lastMessageTime,
+                            onComplete = onComplete,
+                            onError = onError
+                        )
+                    },
+                    onError = { throwable ->
+                        webhook.sendMessage(buildThreadErrorMarkerMessage(sourceThread, throwable))
+                            .setThread(archiveThread)
+                            .queue(
+                                {
+                                    sendThreadEndMarker(
+                                        webhook = webhook,
+                                        archiveThread = archiveThread,
+                                        sourceThread = sourceThread,
+                                        lastMessageTime = null,
+                                        onComplete = onComplete,
+                                        onError = onError
+                                    )
+                                },
+                                {
+                                    sendThreadEndMarker(
+                                        webhook = webhook,
+                                        archiveThread = archiveThread,
+                                        sourceThread = sourceThread,
+                                        lastMessageTime = null,
+                                        onComplete = onComplete,
+                                        onError = onError
+                                    )
+                                }
+                            )
+                    }
+                )
+            }, onError)
+    }
+
+    private fun flattenThreadContentByPages(
+        paginator: MessagePaginationAction,
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        lastMessageTime: OffsetDateTime?,
+        onComplete: (OffsetDateTime?) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        paginator.takeAsync(archivePageSize).whenComplete { messages, throwable ->
+            if (throwable != null) {
+                onError(unwrapThrowable(throwable))
+                return@whenComplete
+            }
+
+            val pageMessages = messages ?: emptyList()
+            if (pageMessages.isEmpty()) {
+                onComplete(lastMessageTime)
+                return@whenComplete
+            }
+
+            val currentLastMessageTime = pageMessages.lastOrNull()?.timeCreated ?: lastMessageTime
+            forwardMessagesWithWebhook(
+                webhook = webhook,
+                thread = archiveThread,
+                messages = pageMessages,
+                processedThreadIds = mutableSetOf(),
+                flattenThreadContent = false,
+                onComplete = {
+                    flattenThreadContentByPages(
+                        paginator = paginator,
+                        webhook = webhook,
+                        archiveThread = archiveThread,
+                        lastMessageTime = currentLastMessageTime,
+                        onComplete = onComplete,
+                        onError = onError,
+                    )
+                },
+                onError = onError
+            )
+        }
+    }
+
+    private fun sendThreadEndMarker(
+        webhook: Webhook,
+        archiveThread: ThreadChannel,
+        sourceThread: ThreadChannel,
+        lastMessageTime: OffsetDateTime?,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        webhook.sendMessage(buildThreadEndMarkerMessage(sourceThread, lastMessageTime))
+            .setThread(archiveThread)
+            .queue({ onComplete() }, onError)
     }
 
     private fun buildForwardMessageData(message: Message) = MessageCreateBuilder().apply {
@@ -475,6 +648,43 @@ internal object Ticket {
 
     private fun shouldForwardMessage(message: Message): Boolean {
         return message.contentRaw.isNotEmpty() || message.attachments.isNotEmpty()
+    }
+
+    private fun buildThreadStartMarkerMessage(sourceThread: ThreadChannel): String {
+        return buildString {
+            append("【Thread 開始】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("開始時間: ").append(formatArchiveMarkerTime(sourceThread.timeCreated))
+        }
+    }
+
+    private fun buildThreadEndMarkerMessage(sourceThread: ThreadChannel, lastMessageTime: OffsetDateTime?): String {
+        return buildString {
+            append("【Thread 結束】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("最後一則訊息時間: ").append(
+                lastMessageTime?.let { formatArchiveMarkerTime(it) } ?: "無訊息"
+            )
+        }
+    }
+
+    private fun buildThreadErrorMarkerMessage(sourceThread: ThreadChannel, throwable: Throwable): String {
+        return buildString {
+            append("【Thread 攤平失敗】\n")
+            append("作者: ").append(getThreadOwnerName(sourceThread)).append('\n')
+            append("名稱: ").append(sourceThread.name).append('\n')
+            append("錯誤: ").append(toReadableError(throwable))
+        }
+    }
+
+    private fun getThreadOwnerName(sourceThread: ThreadChannel): String {
+        return sourceThread.owner?.effectiveName ?: sourceThread.ownerId
+    }
+
+    private fun formatArchiveMarkerTime(time: OffsetDateTime): String {
+        return time.atZoneSameInstant(ZoneId.systemDefault()).format(archiveMarkerTimeFormatter)
     }
 
     private fun buildArchiveThreadName(ticketName: String): String {
