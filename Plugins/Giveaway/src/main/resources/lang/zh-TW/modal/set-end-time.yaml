@@ -8,4 +8,4 @@ text_inputs:
     style: "SHORT"
     value: "%ga@end-time%"
     placeholder: "yyyy-MM-dd HH:mm"
-    max_length: 16
+    max_length: 20

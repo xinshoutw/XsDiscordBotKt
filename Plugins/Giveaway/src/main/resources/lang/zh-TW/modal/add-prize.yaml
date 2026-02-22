@@ -14,5 +14,5 @@ text_inputs:
     label: "中獎人數"
     style: "SHORT"
     value: "1"
-    placeholder: "1-50"
+    placeholder: "請輸入 1 到 50"
     max_length: 2

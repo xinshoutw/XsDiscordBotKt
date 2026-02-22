@@ -1,5 +1,6 @@
 package tw.xinshou.discord.plugin.giveaway.create
 
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -9,9 +10,18 @@ import tw.xinshou.discord.plugin.giveaway.Giveaway
 import tw.xinshou.discord.plugin.giveaway.Giveaway.messageCreator
 import tw.xinshou.discord.plugin.giveaway.Giveaway.modalCreator
 import tw.xinshou.discord.plugin.giveaway.data.GiveawayPrize
+import java.net.URI
+import java.time.Instant
 
 internal object StepManager {
-    private val steps: HashMap<Long, Step> = hashMapOf()
+    private data class SessionKey(
+        val userId: Long,
+        val guildId: Long,
+    )
+
+    private val steps: HashMap<SessionKey, Step> = hashMapOf()
+
+    private fun key(userId: Long, guildId: Long): SessionKey = SessionKey(userId, guildId)
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (event.name != "create-giveaway") return
@@ -27,12 +37,18 @@ internal object StepManager {
             guildId = guild.idLong,
         )
 
-        steps[event.user.idLong] = step
+        steps[key(event.user.idLong, guild.idLong)] = step
         step.renderEmbedAction(event.userLocale).queue()
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        val step = steps[event.user.idLong] ?: run {
+        val guild = event.guild ?: run {
+            event.reply(getSessionExpiredText(event.userLocale)).setEphemeral(true).queue()
+            return
+        }
+
+        val sessionKey = key(event.user.idLong, guild.idLong)
+        val step = steps[sessionKey] ?: run {
             event.reply(getSessionExpiredText(event.userLocale)).setEphemeral(true).queue()
             return
         }
@@ -46,13 +62,18 @@ internal object StepManager {
             "toggle-duplicate-policy" -> toggleDuplicatePolicy(event, step)
             "set-sponsor" -> setSponsorForm(event, step)
             "set-thumbnail" -> setThumbnailForm(event, step)
-            "confirm-create" -> confirmCreate(event, step)
-            "cancel" -> cancelCreate(event)
+            "confirm-create" -> confirmCreate(event, step, sessionKey)
+            "cancel" -> cancelCreate(event, sessionKey)
         }
     }
 
     fun onModalInteraction(event: ModalInteractionEvent, idMap: Map<String, Any>) {
-        val step = steps[event.user.idLong] ?: run {
+        val guild = event.guild ?: run {
+            event.reply(getSessionExpiredText(event.userLocale)).setEphemeral(true).queue()
+            return
+        }
+
+        val step = steps[key(event.user.idLong, guild.idLong)] ?: run {
             event.reply(getSessionExpiredText(event.userLocale)).setEphemeral(true).queue()
             return
         }
@@ -85,7 +106,7 @@ internal object StepManager {
                     return
                 }
 
-                if (epochSecond <= System.currentTimeMillis() / 1000) {
+                if (epochSecond <= Instant.now().epochSecond) {
                     event.reply(getEndTimeFutureText(event.userLocale)).setEphemeral(true).queue()
                     return
                 }
@@ -116,7 +137,7 @@ internal object StepManager {
 
             "set-thumbnail" -> {
                 val thumbnail = event.getValue("thumbnail")?.asString?.trim().orEmpty()
-                if (thumbnail.isNotBlank() && !thumbnail.startsWith("http://") && !thumbnail.startsWith("https://")) {
+                if (thumbnail.isNotBlank() && !isValidHttpUrl(thumbnail)) {
                     event.reply(getThumbnailFormatText(event.userLocale)).setEphemeral(true).queue()
                     return
                 }
@@ -223,7 +244,7 @@ internal object StepManager {
         ).queue()
     }
 
-    private fun confirmCreate(event: ButtonInteractionEvent, step: Step) {
+    private fun confirmCreate(event: ButtonInteractionEvent, step: Step, sessionKey: SessionKey) {
         val errorText = step.validate(event.userLocale)
         if (errorText != null) {
             event.reply(errorText).setEphemeral(true).queue()
@@ -232,6 +253,11 @@ internal object StepManager {
 
         val guild = event.guild ?: run {
             event.reply("Guild not found.").setEphemeral(true).queue()
+            return
+        }
+
+        if (event.member?.hasPermission(Permission.ADMINISTRATOR) != true) {
+            event.reply(getNoPermissionText(event.userLocale)).setEphemeral(true).queue()
             return
         }
 
@@ -244,7 +270,7 @@ internal object StepManager {
             config = step.data,
             locale = event.userLocale,
         ).queue({ message ->
-            steps.remove(event.user.idLong)
+            steps.remove(sessionKey)
 
             step.hook.editOriginal(
                 messageCreator.getEditBuilder(
@@ -268,8 +294,8 @@ internal object StepManager {
         })
     }
 
-    private fun cancelCreate(event: ButtonInteractionEvent) {
-        val step = steps.remove(event.user.idLong) ?: run {
+    private fun cancelCreate(event: ButtonInteractionEvent, sessionKey: SessionKey) {
+        val step = steps.remove(sessionKey) ?: run {
             event.reply(getSessionExpiredText(event.userLocale)).setEphemeral(true).queue()
             return
         }
@@ -326,13 +352,29 @@ internal object StepManager {
 
     private fun getThumbnailFormatText(locale: net.dv8tion.jda.api.interactions.DiscordLocale): String {
         return if (locale.locale.startsWith("zh")) {
-            "縮圖網址需以 http:// 或 https:// 開頭。"
+            "縮圖網址格式錯誤，請輸入有效的 http(s) URL。"
         } else {
-            "Thumbnail URL must start with http:// or https://"
+            "Invalid thumbnail URL. Please provide a valid http(s) URL."
         }
     }
 
     private fun getNoPrizeText(locale: net.dv8tion.jda.api.interactions.DiscordLocale): String {
         return if (locale.locale.startsWith("zh")) "目前沒有可刪除的獎品。" else "No prize to remove."
+    }
+
+    private fun getNoPermissionText(locale: net.dv8tion.jda.api.interactions.DiscordLocale): String {
+        return if (locale.locale.startsWith("zh")) {
+            "你已失去管理員權限，無法完成建立。"
+        } else {
+            "Administrator permission is required to finish creation."
+        }
+    }
+
+    private fun isValidHttpUrl(value: String): Boolean {
+        return runCatching {
+            val uri = URI(value)
+            val scheme = uri.scheme?.lowercase()
+            (scheme == "http" || scheme == "https") && !uri.host.isNullOrBlank()
+        }.getOrDefault(false)
     }
 }

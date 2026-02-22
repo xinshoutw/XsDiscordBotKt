@@ -128,6 +128,7 @@ internal class Step(
     }
 
     companion object {
+        // Use host timezone so admins can input local wall-clock time directly.
         private val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
         fun formatDateTime(epochSecond: Long): String {

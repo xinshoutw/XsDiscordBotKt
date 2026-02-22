@@ -14,5 +14,5 @@ text_inputs:
     label: "Winner Count"
     style: "SHORT"
     value: "1"
-    placeholder: "1-50"
+    placeholder: "Enter a number from 1 to 50"
     max_length: 2
