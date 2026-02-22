@@ -119,7 +119,11 @@ internal object Ticket {
 
             // Run ticket action
             "press" -> {
-                val ticketData = getTicketDataOrNull(guild.idLong, idMap)
+                val ticketData = getTicketDataOrNull(
+                    guildId = guild.idLong,
+                    idMap = idMap,
+                    fallbackMessageId = event.messageId
+                )
                 if (ticketData == null) {
                     event.reply(ticketDataNotFoundMessage).setEphemeral(true).queue()
                     return
@@ -832,11 +836,20 @@ internal object Ticket {
         return member.roles.any { roleIds.contains(it.idLong) } || member.hasPermission(ADMINISTRATOR)
     }
 
-    private fun getTicketDataOrNull(guildId: Long, idMap: Map<String, Any>) = jsonGuildManager
-        .get(guildId)
-        .data
-        .get(idMap["msg_id"] as String)
-        ?.get((idMap["btn_index"] as String).toInt())
+    private fun getTicketDataOrNull(
+        guildId: Long,
+        idMap: Map<String, Any>,
+        fallbackMessageId: String? = null,
+    ): DataContainer? {
+        val messageId = (idMap["msg_id"] as? String) ?: fallbackMessageId ?: return null
+        val buttonIndex = (idMap["btn_index"] as? String)?.toIntOrNull() ?: return null
+
+        return jsonGuildManager
+            .get(guildId)
+            .data
+            .get(messageId)
+            ?.getOrNull(buttonIndex)
+    }
 
     private val ticketDataNotFoundMessage = "錯誤 (找不到 Ticket 設定資料，可能已被刪除)"
 
