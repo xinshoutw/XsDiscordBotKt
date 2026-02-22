@@ -19,6 +19,7 @@ import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
 import tw.xinshou.discord.core.json.JsonGuildFileManager
 import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 
 
 internal data class GuildSetting(
@@ -28,6 +29,12 @@ internal data class GuildSetting(
 
 internal object WelcomeByeGuild {
     private val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
+
+    private fun createMessageCreator(): MessageCreator = MessageCreator(
+        pluginDirFile = pluginDirectory,
+        defaultLocale = defaultLocale,
+    )
+
     private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
     private val jsonGuildManager = JsonGuildFileManager(
         dataDirectory = File(pluginDirectory, "data"),
@@ -35,17 +42,14 @@ internal object WelcomeByeGuild {
         defaultInstance = GuildSetting()
     )
 
-    private lateinit var messageCreator: MessageCreator
+    private val messageCreatorRef = AtomicReference(createMessageCreator())
 
     internal fun load() {
-        messageCreator = MessageCreator(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = defaultLocale,
-        )
+        messageCreatorRef.set(createMessageCreator())
     }
 
     internal fun reload() {
-        load()
+        messageCreatorRef.set(createMessageCreator())
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
@@ -72,6 +76,7 @@ internal object WelcomeByeGuild {
     }
 
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
+        val messageCreator = messageCreatorRef.get()
         val guild = event.guild
         val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
         val channelId = setting.welcomeChannelId
@@ -92,6 +97,7 @@ internal object WelcomeByeGuild {
     }
 
     fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
+        val messageCreator = messageCreatorRef.get()
         val guild = event.guild
         val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
         val channelId = setting.byeChannelId
@@ -271,21 +277,6 @@ internal object WelcomeByeGuild {
             return
         }
 
-        if (oldChannelId != channel.idLong) {
-            reply(
-                event,
-                WelcomeByeGuildMessageKeys.BYE_UNBIND_NOT_BOUND,
-                WelcomeByeGuildSubstitutorFactory.forCommand(
-                    event = event,
-                    guild = guild,
-                    setting = setting,
-                    selectedChannel = channel,
-                    oldChannelId = oldChannelId,
-                )
-            )
-            return
-        }
-
         setting.byeChannelId = 0L
         dataManager.save()
 
@@ -321,6 +312,7 @@ internal object WelcomeByeGuild {
         messageKey: String,
         substitutor: Substitutor = Placeholder.globalSubstitutor,
     ) {
+        val messageCreator = messageCreatorRef.get()
         val locale = event.guild?.locale ?: event.userLocale
         val editData: MessageEditData = messageCreator.getEditBuilder(messageKey, locale, substitutor).build()
 

@@ -17,5 +17,4 @@ internal object WelcomeByeGuildMessageKeys {
     const val BYE_BIND_ALREADY = "bye-bind-already"
     const val BYE_UNBIND_SUCCESS = "bye-unbind-success"
     const val BYE_UNBIND_EMPTY = "bye-unbind-empty"
-    const val BYE_UNBIND_NOT_BOUND = "bye-unbind-not-bound"
 }
