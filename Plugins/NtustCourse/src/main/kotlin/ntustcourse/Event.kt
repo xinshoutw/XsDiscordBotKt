@@ -26,7 +26,7 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
     }
 
     override fun unload() {
-        if (config.enabled) {
+        if (this::config.isInitialized && config.enabled) {
             NtustCourse.stop()
         }
         super.unload()
