@@ -22,7 +22,7 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         clazzSerializer = CmdFileSerializer::class,
     )
 
-    private val localizerRef = AtomicReference(createLocalizer())
+    private val localizerRef = AtomicReference<StringLocalizer<CmdFileSerializer>?>(null)
 
     override fun load() {
         super.load()
@@ -52,7 +52,9 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         return if (!config.enabled) {
             emptyArray()
         } else {
-            guildCommands(localizerRef.get())
+            guildCommands(
+                localizerRef.get() ?: createLocalizer().also(localizerRef::set)
+            )
         }
     }
 
