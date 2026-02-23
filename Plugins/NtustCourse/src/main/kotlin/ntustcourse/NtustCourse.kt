@@ -2,7 +2,6 @@ package tw.xinshou.discord.plugin.ntustcourse
 
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import tw.xinshou.discord.core.mongodb.CacheDbManager
@@ -13,7 +12,7 @@ import tw.xinshou.discord.plugin.ntustcourse.api.CourseMonitorService
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
-object NtustCourse : ListenerAdapter() {
+object NtustCourse {
     // courseId[channelId[userId]]
     private val cacheDbManager: CacheDbManager = CacheDbManager(Event.pluginName)
     private val recordCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
@@ -30,7 +29,7 @@ object NtustCourse : ListenerAdapter() {
         }
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (!event.isFromGuild) {
             event.hook.editOriginal("This command can only be used in guilds.").queue()
             return
