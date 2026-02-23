@@ -46,7 +46,13 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         NtustCourse.start()
     }
 
-    override fun guildCommands(): Array<CommandData> = guildCommands
+    override fun guildCommands(): Array<CommandData> {
+        return if (!config.enabled) {
+            emptyArray()
+        } else {
+            guildCommands
+        }
+    }
 
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         if (!config.enabled) return
