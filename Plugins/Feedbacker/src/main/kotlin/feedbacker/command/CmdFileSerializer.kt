@@ -1,5 +1,6 @@
 package tw.xinshou.discord.plugin.feedbacker.command
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import tw.xinshou.discord.core.localizations.LocalTemplate
 
@@ -15,7 +16,10 @@ internal data class CmdFileSerializer(
     ) {
         @Serializable
         internal data class Options(
-            val member: LocalTemplate.NameDescriptionString
+            val member: LocalTemplate.NameDescriptionString,
+
+            @SerialName("submit-channel")
+            val submitChannel: LocalTemplate.NameDescriptionString,
         )
     }
 }

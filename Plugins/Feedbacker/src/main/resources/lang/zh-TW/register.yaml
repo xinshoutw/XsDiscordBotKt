@@ -5,3 +5,6 @@ feedbacker:
     member:
       name: "member"
       description: "誰"
+    submit-channel:
+      name: "submit-channel"
+      description: "回饋結果要送到哪個頻道"

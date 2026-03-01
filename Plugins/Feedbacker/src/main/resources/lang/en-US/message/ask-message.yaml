@@ -16,6 +16,7 @@ components:
       - uid:
           action: "submit_star"
           user_id: "%user_id%"
+          submit_channel_id: "%fb_submit_channel_id%"
           star_count: 1
         style: 2
         label: "★"
@@ -23,6 +24,7 @@ components:
       - uid:
           action: "submit_star"
           user_id: "%user_id%"
+          submit_channel_id: "%fb_submit_channel_id%"
           star_count: 2
         style: 2
         label: "★★"
@@ -30,6 +32,7 @@ components:
       - uid:
           action: "submit_star"
           user_id: "%user_id%"
+          submit_channel_id: "%fb_submit_channel_id%"
           star_count: 3
         style: 2
         label: "★★★"
@@ -37,6 +40,7 @@ components:
       - uid:
           action: "submit_star"
           user_id: "%user_id%"
+          submit_channel_id: "%fb_submit_channel_id%"
           star_count: 4
         style: 2
         label: "★★★★"
@@ -44,16 +48,7 @@ components:
       - uid:
           action: "submit_star"
           user_id: "%user_id%"
+          submit_channel_id: "%fb_submit_channel_id%"
           star_count: 5
         style: 2
         label: "★★★★★"
-
-  - !ButtonsComponent
-    buttons: # 5 size limit
-      - uid:
-          action: "fill_form"
-          user_id: "%user_id%"
-        style: 2 # Nonnull, allowed values [ 1 (BLUE), 2 (GRAY), 3 (GREEN), 4 (RED), 5 (LINK) ]
-        label: "Leave a Review" # Ignorable, 80 length limit
-        emoji: # Ignorable
-          formatted: "✉️" # Nonnull

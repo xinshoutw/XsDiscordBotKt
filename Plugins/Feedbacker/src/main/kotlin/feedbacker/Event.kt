@@ -14,7 +14,6 @@ import tw.xinshou.discord.plugin.feedbacker.config.ConfigSerializer
 
 object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
     private lateinit var localizer: StringLocalizer<CmdFileSerializer>
-    internal lateinit var globalLocale: DiscordLocale
 
     override fun load() {
         super.load()
@@ -23,8 +22,6 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             logger.warn("Feedbacker is disabled.")
             return
         }
-
-        globalLocale = DiscordLocale.from(config.language)
 
         localizer = StringLocalizer(
             pluginDirectory,
@@ -40,8 +37,6 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
             logger.warn("Feedbacker is disabled.")
             return
         }
-
-        globalLocale = DiscordLocale.from(config.language)
 
         localizer = StringLocalizer(
             pluginDirectory,

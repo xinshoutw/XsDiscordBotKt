@@ -1,27 +1,24 @@
 package tw.xinshou.discord.plugin.feedbacker
 
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.components.Component
 import net.dv8tion.jda.api.components.actionrow.ActionRow
 import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.components.buttons.ButtonStyle
-import net.dv8tion.jda.api.components.Component
+import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.messagecreator.modal.ModalCreator
+import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
 import tw.xinshou.discord.core.builtin.placeholder.Placeholder
 import tw.xinshou.discord.core.util.ComponentIdManager
 import tw.xinshou.discord.core.util.FieldType
 import tw.xinshou.discord.plugin.feedbacker.Event.componentPrefix
 import tw.xinshou.discord.plugin.feedbacker.Event.config
-import tw.xinshou.discord.plugin.feedbacker.Event.globalLocale
 import tw.xinshou.discord.plugin.feedbacker.Event.pluginDirectory
 import java.io.File
-import java.util.*
 
 internal object Feedbacker {
     private val componentIdManager = ComponentIdManager(
@@ -30,6 +27,7 @@ internal object Feedbacker {
             "action" to FieldType.STRING,
             "user_id" to FieldType.STRING, // placeholder
             "star_count" to FieldType.STRING, // placeholder
+            "submit_channel_id" to FieldType.STRING,
         )
     )
 
@@ -45,16 +43,6 @@ internal object Feedbacker {
         componentIdManager = componentIdManager,
     )
 
-    lateinit var guild: Guild
-    lateinit var submitChannel: TextChannel
-
-    init {
-        jdaBot.getGuildById(config.guildId)?.let {
-            guild = it
-            submitChannel = it.getTextChannelById(config.submitChannelId)!!
-        }
-    }
-
     fun reload() {
         messageCreator = MessageCreator(
             pluginDirFile = pluginDirectory,
@@ -66,26 +54,29 @@ internal object Feedbacker {
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
             componentIdManager = componentIdManager,
         )
-        jdaBot.getGuildById(config.guildId)?.let {
-            guild = it
-            submitChannel = it.getTextChannelById(config.submitChannelId)!!
-        }
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!event.isFromGuild || event.guild!!.idLong != config.guildId) return
+        if (!event.isFromGuild) return
         val member = event.member ?: return
-        if (Collections.disjoint(config.allowRoleId, member.roles.map { it.idLong })) {
+        if (!member.hasPermission(Permission.ADMINISTRATOR)) {
             event.hook.editOriginal(config.formNoPermission).queue()
             return
         }
 
+        val submitChannel = event.getOption("submit-channel")!!.asChannel
+        if (submitChannel.type != ChannelType.TEXT) {
+            event.hook.editOriginal("SubmitChannel must be TextChannel").queue()
+            return
+        }
 
         event.channel.sendMessage(
             messageCreator.getCreateBuilder(
                 key = "ask-message",
                 locale = event.userLocale,
-                substitutor = Placeholder.get(event.getOption("member")!!.asMember!!)
+                substitutor = Placeholder.get(event.getOption("member")!!.asMember!!).put(
+                    "fb_submit_channel_id" to submitChannel.id
+                )
             ).build()
         ).flatMap {
             event.hook.editOriginal(config.formSuccess)
@@ -96,7 +87,6 @@ internal object Feedbacker {
         val idMap = componentIdManager.parse(event.componentId)
         when (idMap["action"]) {
             "submit_star" -> handleStarBtn(event, idMap)
-            "fill_form" -> handleFormBtn(event, idMap)
         }
     }
 
@@ -117,57 +107,33 @@ internal object Feedbacker {
             .filter { it.type == Component.Type.ACTION_ROW }
             .map { topLevel ->
                 val actionRow = topLevel.asActionRow()
-            ActionRow.of(
-                actionRow.components.map { component ->
-                    when (component) {
-                        is Button -> component.withStyle(
-                            if (component.customId == event.componentId) ButtonStyle.PRIMARY
-                            else ButtonStyle.SECONDARY
-                        )
+                ActionRow.of(
+                    actionRow.components.map { component ->
+                        when (component) {
+                            is Button -> component.withStyle(
+                                if (component.customId == event.componentId) ButtonStyle.PRIMARY
+                                else ButtonStyle.SECONDARY
+                            )
 
-                        else -> component
+                            else -> component
+                        }
                     }
-                }
-            )
+                )
             }
 
-        event.deferEdit().flatMap {
-            event.hook.editOriginalComponents(newComponents)
-        }.queue()
-    }
-
-
-    fun handleFormBtn(event: ButtonInteractionEvent, idMap: Map<String, Any>) {
-        if (idMap["user_id"] as String != event.user.id) {
-            event.reply(config.formNotYou).setEphemeral(true).queue()
-            return
-        }
-
-        val locale = event.userLocale
-        var stars: Int = -1
-        event.message.components
-            .firstOrNull { it.type == Component.Type.ACTION_ROW }
-            ?.asActionRow()
-            ?.buttons
-            ?.forEachIndexed { index, button ->
-            if (button.style == ButtonStyle.PRIMARY) {
-                stars = index + 1
-                return@forEachIndexed
-            }
-            }
-
-        if (stars == -1) {
-            event.reply(config.formWarning).setEphemeral(true).queue()
-            return
-        }
-
+        event.hook.editOriginalComponents(newComponents).queue()
         event.replyModal(
             modalCreator.getModalBuilder(
                 key = "fill-form",
-                locale = locale,
-                substitutor = Placeholder.get(event).put("fb_star_count", stars.toString())
+                locale = event.userLocale,
+                substitutor = Placeholder.get(event).putAll(
+                    "fb_star_count" to idMap["star_count"] as String,
+                    "fb_submit_channel_id" to idMap["submit_channel_id"] as String
+                )
             ).build()
         ).queue()
+
+
     }
 
     fun handleFormSubmit(event: ModalInteractionEvent, idMap: Map<String, Any>) {
@@ -178,11 +144,18 @@ internal object Feedbacker {
                 "fb_content" to event.getValue("form")!!.asString
             )
 
+        val submitChannel = event.guild?.getTextChannelById(idMap["submit_channel_id"] as String)
+        if (submitChannel == null) {
+            event.hook.editOriginal("Submit channel not found").queue()
+            return
+        }
 
         event.deferEdit().flatMap {
             submitChannel.sendMessage(
-                messageCreator.getCreateBuilder("print-result", globalLocale, substitutor).build()
+                messageCreator.getCreateBuilder("print-result", event.guildLocale, substitutor).build()
             )
         }.queue()
+
+        event.message?.delete()?.queue()
     }
 }

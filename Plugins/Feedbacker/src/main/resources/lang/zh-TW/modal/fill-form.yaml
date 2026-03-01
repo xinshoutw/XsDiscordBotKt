@@ -2,6 +2,7 @@ title: "您覺得今天的服務怎麼樣呢？ :D" # Nonnull, 100 length limit
 uid:
   action: "submit_form"
   star_count: "%fb_star_count%"
+  submit_channel_id: "%fb_submit_channel_id%"
 
 text_inputs:
   - uid: "form"
