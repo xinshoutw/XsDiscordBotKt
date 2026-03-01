@@ -1,27 +1,10 @@
-# Placeholder 範例（可擴充到任意段落）
-# - %wbg@user_name% -> xinshou
-# - %wbg@guild_owner_mention% -> <@123456789012345678>
-# - %wbg@bye_channel_mention% -> <#123456789012345678>
-# - <t:%wbg@event_timestamp_unix%:R> -> Discord 相對時間顯示
 embeds:
   - author:
       name: "%wbg@guild_name%"
       icon_url: "%wbg@guild_icon_url%"
     title:
-      text: "😢 %wbg@user_effective_name% 已離開伺服器"
+      text: "😢 %wbg@user_effective_name% 離開了我們"
     description: |
-      %wbg@user_mention% 離開了 **%wbg@guild_name%**。
-      目前成員數：**%wbg@guild_member_count%**
+      但願我們會能未來的道路相見...
     thumbnail_url: "%wbg@user_avatar_url%"
-    image_url: "%wbg@guild_banner_url%"
     color_code: "#ED4245"
-    fields:
-      - name: "`離開訊息頻道`"
-        value: "%wbg@bye_channel_mention%"
-        inline: true
-      - name: "`帳號建立`"
-        value: "<t:%wbg@user_created_unix%:R>"
-        inline: true
-      - name: "`伺服器擁有者`"
-        value: "%wbg@guild_owner_mention%"
-        inline: true

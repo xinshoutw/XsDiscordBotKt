@@ -161,16 +161,6 @@ internal object WelcomeByeGuild {
     }
 
     private fun unbindWelcomeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
-        val channel = resolveTargetTextChannel(event) ?: run {
-            val setting = jsonGuildManager[guild.idLong].data
-            reply(
-                event,
-                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
-                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
-            )
-            return
-        }
-
         val dataManager = jsonGuildManager[guild.idLong]
         val setting = dataManager.data
 
@@ -183,7 +173,6 @@ internal object WelcomeByeGuild {
                     event = event,
                     guild = guild,
                     setting = setting,
-                    selectedChannel = channel,
                 )
             )
             return
@@ -199,7 +188,6 @@ internal object WelcomeByeGuild {
                 event = event,
                 guild = guild,
                 setting = setting,
-                selectedChannel = channel,
                 oldChannelId = oldChannelId,
             )
         )
@@ -249,16 +237,6 @@ internal object WelcomeByeGuild {
     }
 
     private fun unbindByeChannel(event: SlashCommandInteractionEvent, guild: Guild) {
-        val channel = resolveTargetTextChannel(event) ?: run {
-            val setting = jsonGuildManager[guild.idLong].data
-            reply(
-                event,
-                WelcomeByeGuildMessageKeys.INVALID_CHANNEL,
-                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, setting)
-            )
-            return
-        }
-
         val dataManager = jsonGuildManager[guild.idLong]
         val setting = dataManager.data
 
@@ -271,7 +249,6 @@ internal object WelcomeByeGuild {
                     event = event,
                     guild = guild,
                     setting = setting,
-                    selectedChannel = channel,
                 )
             )
             return
@@ -287,7 +264,6 @@ internal object WelcomeByeGuild {
                 event = event,
                 guild = guild,
                 setting = setting,
-                selectedChannel = channel,
                 oldChannelId = oldChannelId,
             )
         )

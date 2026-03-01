@@ -1,28 +1,13 @@
-# Placeholder examples (you can reuse these in any section)
-# - %wbg@user_mention% -> <@123456789012345678>
-# - %wbg@member_roles_mentions% -> <@&111111111111111111> <@&222222222222222222> (join event only)
-# - %wbg@guild_rules_channel_mention% -> <#123456789012345678>
-# - <t:%wbg@event_timestamp_unix%:F> -> Discord full timestamp format
 embeds:
   - author:
       name: "%wbg@guild_name%"
       icon_url: "%wbg@guild_icon_url%"
     title:
-      text: "🎉 Welcome %wbg@user_effective_name%"
+      text: "🎉 Welcome %wbg@user_effective_name% joined us"
     description: |
-      Welcome %wbg@user_mention% to **%wbg@guild_name%**!
-      You are member **#%wbg@guild_member_count%** in this server.
-      Please check the rules channel: %wbg@guild_rules_channel_mention%
+      Nice to meet you %wbg@user_effective_name%!
+      You are the **#%wbg@guild_member_count%** member of this server.
+      Please read the rules: %wbg@guild_rules_channel_mention%
+      Don't be shy!
     thumbnail_url: "%wbg@user_avatar_url%"
-    image_url: "%wbg@guild_banner_url%"
     color_code: "#57F287"
-    fields:
-      - name: "`Welcome Channel`"
-        value: "%wbg@welcome_channel_mention%"
-        inline: true
-      - name: "`Account Created`"
-        value: "<t:%wbg@user_created_unix%:R>"
-        inline: true
-      - name: "`Role Count`"
-        value: "%wbg@member_roles_count%"
-        inline: true
