@@ -17,68 +17,74 @@ internal enum class Mode {
 
 internal object Economy {
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        val guildId = event.guild?.idLong ?: return
+
         if (event.name.startsWith("top-")) {
-            handleTopCommands(event)
+            handleTopCommands(event, guildId)
             return
         }
 
         when (event.name) {
-            "balance" -> handleBalance(event)
+            "balance" -> handleBalance(event, guildId)
             "add-money", "remove-money", "set-money", "add-cost", "remove-cost", "set-cost" ->
-                handleMoneyAndCostCommands(event)
+                handleMoneyAndCostCommands(event, guildId)
         }
     }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
+        val guildId = event.guild?.idLong ?: return
         event.deferReply(true).queue {
-            handleButtonBalance(event, it)
+            handleButtonBalance(event, it, guildId)
         }
     }
 
 
-    private fun handleTopCommands(event: SlashCommandInteractionEvent) {
+    private fun handleTopCommands(event: SlashCommandInteractionEvent, guildId: Long) {
         if (checkPermission(event)) return
 
         event.hook.editOriginal(
             MessageReplier.replyBoard(
                 key = event.name,
+                guildId = guildId,
                 user = event.user,
                 userLocale = event.userLocale
             )
         ).queue()
     }
 
-    private fun handleButtonBalance(event: ButtonInteractionEvent, hook: InteractionHook) {
-        updatePapi(event.user)
+    private fun handleButtonBalance(event: ButtonInteractionEvent, hook: InteractionHook, guildId: Long) {
+        updatePapi(guildId, event.user)
         hook.editOriginal(
             MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.get(event.user))
         ).queue()
     }
 
     private fun handleBalance(
-        event: SlashCommandInteractionEvent
+        event: SlashCommandInteractionEvent,
+        guildId: Long
     ) {
         val targetUser = getTargetUser(event)
-        updatePapi(targetUser)
+        updatePapi(guildId, targetUser)
         event.hook.editOriginal(
             MessageReplier.getMessageEditData("balance", event.userLocale, Placeholder.get(targetUser))
         ).queue()
     }
 
     private fun handleMoneyAndCostCommands(
-        event: SlashCommandInteractionEvent
+        event: SlashCommandInteractionEvent,
+        guildId: Long
     ) {
         if (checkPermission(event)) return
         val value: Int = event.getOption("value", 0) { it.asInt }
         if (checkValue(value, event)) return
 
         val targetUser = getTargetUser(event)
-        val userData = queryData(targetUser)
+        val userData = queryData(guildId, targetUser)
         when (event.name) {
             "add-money" -> {
                 val before = userData.data.money
                 userData.addMoney(value)
-                saveAndUpdate(targetUser, userData, "economy_money_before" to "$before")
+                saveAndUpdate(guildId, targetUser, userData, "economy_money_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
@@ -88,6 +94,7 @@ internal object Economy {
                 val beforeCost = userData.data.cost
                 userData.removeMoneyAddCost(value)
                 saveAndUpdate(
+                    guildId,
                     targetUser, userData,
                     "economy_money_before" to "$beforeMoney",
                     "economy_cost_before" to "$beforeCost"
@@ -100,7 +107,7 @@ internal object Economy {
             "set-money" -> {
                 val before = userData.data.money
                 userData.setMoney(value)
-                saveAndUpdate(targetUser, userData, "economy_money_before" to "$before")
+                saveAndUpdate(guildId, targetUser, userData, "economy_money_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortMoneyBoard()
             }
@@ -108,7 +115,7 @@ internal object Economy {
             "add-cost" -> {
                 val before = userData.data.cost
                 userData.addCost(value)
-                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
+                saveAndUpdate(guildId, targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
@@ -116,7 +123,7 @@ internal object Economy {
             "remove-cost" -> {
                 val before = userData.data.cost
                 userData.removeCost(value)
-                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
+                saveAndUpdate(guildId, targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
@@ -124,15 +131,15 @@ internal object Economy {
             "set-cost" -> {
                 val before = userData.data.cost
                 userData.setCost(value)
-                saveAndUpdate(targetUser, userData, "economy_cost_before" to "$before")
+                saveAndUpdate(guildId, targetUser, userData, "economy_cost_before" to "$before")
                 reply(event, Placeholder.get(targetUser))
                 storageManager.sortCostBoard()
             }
         }
     }
 
-    private fun updatePapi(user: User) {
-        val userData = queryData(user)
+    private fun updatePapi(guildId: Long, user: User) {
+        val userData = queryData(guildId, user)
         Placeholder.update(
             user, hashMapOf(
                 "economy_money" to "${userData.data.money}", "economy_cost" to "${userData.data.cost}"
@@ -149,11 +156,12 @@ internal object Economy {
 
 
     private fun saveAndUpdate(
+        guildId: Long,
         user: User,
         data: UserData,
         vararg placeholders: Pair<String, String>
     ) {
-        saveData(data)
+        saveData(guildId, data)
         updatePapi(user, data, placeholders.toMap())
     }
 
@@ -170,9 +178,9 @@ internal object Economy {
         return true
     }
 
-    private fun queryData(user: User): UserData = storageManager.query(user)
+    private fun queryData(guildId: Long, user: User): UserData = storageManager.query(guildId, user)
 
-    private fun saveData(data: UserData) = storageManager.update(data)
+    private fun saveData(guildId: Long, data: UserData) = storageManager.update(guildId, data)
 
     private fun getTargetUser(event: SlashCommandInteractionEvent): User {
         return if (config.adminId.none { it == event.user.idLong }) event.user

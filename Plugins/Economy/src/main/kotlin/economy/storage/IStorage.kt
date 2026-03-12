@@ -8,9 +8,10 @@ import tw.xinshou.discord.plugin.economy.UserData
 
 internal interface IStorage {
     fun init()
-    fun query(user: User): UserData
-    fun update(data: UserData)
+    fun query(guildId: Long, user: User): UserData
+    fun update(guildId: Long, data: UserData)
     fun getEmbedBuilder(
+        guildId: Long,
         type: Type,
         embedBuilder: EmbedBuilder,
         descriptionTemplate: String,

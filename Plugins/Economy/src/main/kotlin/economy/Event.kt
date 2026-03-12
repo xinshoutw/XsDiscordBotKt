@@ -5,8 +5,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import tw.xinshou.discord.core.json.JsonFileManager
 import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
+import tw.xinshou.discord.core.json.JsonGuildFileManager
 import tw.xinshou.discord.core.localizations.StringLocalizer
 import tw.xinshou.discord.core.plugin.PluginEventConfigure
 import tw.xinshou.discord.core.util.GlobalUtil
@@ -36,12 +38,13 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
 
         when (MODE) {
             Mode.Json -> {
+                migrateLegacyDataFileIfNeeded()
                 val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
 
-                JsonImpl.jsonFileManager = JsonFileManager(
-                    File(pluginDirectory, "data/data.json"),
-                    jsonAdapter,
-                    mutableMapOf()
+                JsonImpl.jsonGuildFileManager = JsonGuildFileManager(
+                    dataDirectory = File(pluginDirectory, "data"),
+                    adapter = jsonAdapter,
+                    defaultInstance = mutableMapOf()
                 )
                 storageManager = JsonImpl
             }
@@ -78,12 +81,13 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
 
         when (MODE) {
             Mode.Json -> {
+                migrateLegacyDataFileIfNeeded()
                 val jsonAdapter: JsonAdapter<JsonDataClass> = JsonFileManager.moshi.adapterReified<JsonDataClass>()
 
-                JsonImpl.jsonFileManager = JsonFileManager(
-                    File(pluginDirectory, "data/data.json"),
-                    jsonAdapter,
-                    mutableMapOf()
+                JsonImpl.jsonGuildFileManager = JsonGuildFileManager(
+                    dataDirectory = File(pluginDirectory, "data"),
+                    adapter = jsonAdapter,
+                    defaultInstance = mutableMapOf()
                 )
                 storageManager = JsonImpl
             }
@@ -124,5 +128,47 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         if (!config.enabled) return
         if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
         Economy.onButtonInteraction(event)
+    }
+
+    private fun migrateLegacyDataFileIfNeeded() {
+        val dataDirectory = File(pluginDirectory, "data")
+        val legacyFile = File(dataDirectory, "data.json")
+        if (!legacyFile.exists()) return
+
+        val guildJsonExists = dataDirectory.listFiles()
+            ?.any { it.isFile && it.extension == "json" && it.nameWithoutExtension.toLongOrNull() != null }
+            ?: false
+
+        if (guildJsonExists) {
+            backupLegacyFile(legacyFile)
+            logger.warn("Legacy economy data file moved to backup because guild json files already exist.")
+            return
+        }
+
+        val guilds = jdaBot.guilds
+        if (guilds.size == 1) {
+            val migratedFile = File(dataDirectory, "${guilds.first().idLong}.json")
+            if (legacyFile.renameTo(migratedFile)) {
+                logger.info("Migrated legacy economy data.json to {}.", migratedFile.name)
+            } else {
+                logger.warn("Failed to migrate legacy economy data.json. Keeping backup file.")
+                backupLegacyFile(legacyFile)
+            }
+            return
+        }
+
+        backupLegacyFile(legacyFile)
+        logger.warn(
+            "Legacy economy data.json could not be auto-mapped (guild count: {}). File moved to backup.",
+            guilds.size
+        )
+    }
+
+    private fun backupLegacyFile(legacyFile: File) {
+        val backupFile = File(legacyFile.parentFile, "data.legacy.bak")
+        if (backupFile.exists()) {
+            backupFile.delete()
+        }
+        legacyFile.renameTo(backupFile)
     }
 }

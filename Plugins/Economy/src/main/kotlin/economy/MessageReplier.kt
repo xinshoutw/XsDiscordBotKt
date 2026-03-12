@@ -43,6 +43,7 @@ internal object MessageReplier {
 
     fun replyBoard(
         key: String,
+        guildId: Long,
         user: User,
         userLocale: DiscordLocale,
     ): MessageEditData {
@@ -55,6 +56,7 @@ internal object MessageReplier {
 
         builder.setEmbeds(
             storageManager.getEmbedBuilder(
+                guildId,
                 type,
                 EmbedBuilder(builder.embeds[0]),
                 creator.getMessageData(key, userLocale).embeds[0].description!!,

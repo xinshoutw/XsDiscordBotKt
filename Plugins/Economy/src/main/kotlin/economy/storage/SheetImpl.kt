@@ -29,7 +29,7 @@ internal object SheetImpl : IStorage {
      * @param user The Discord user to query.
      * @return UserData containing the user's economy data.
      */
-    override fun query(user: User): UserData {
+    override fun query(guildId: Long, user: User): UserData {
         val current = query()
         val index = current[0].indexOf(user.idLong)
 
@@ -50,8 +50,8 @@ internal object SheetImpl : IStorage {
      *
      * @param user The user data to be updated.
      */
-    override fun update(user: UserData) {
-        update(user.id, user.data)
+    override fun update(guildId: Long, data: UserData) {
+        update(data.id, data.data)
     }
 
     /**
@@ -61,6 +61,7 @@ internal object SheetImpl : IStorage {
      * @return EmbedBuilder configured to display the leaderboard.
      */
     override fun getEmbedBuilder(
+        guildId: Long,
         type: Type,
         embedBuilder: EmbedBuilder,
         descriptionTemplate: String,
