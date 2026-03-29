@@ -29,7 +29,7 @@ class JsonFileManager<T>(
     init {
         data = if (!file.exists()) {
             logger.debug("File {} does not exist.", file.absolutePath)
-            defaultInstance
+            cloneDefaultInstance()
                 ?: throw IllegalStateException("File ${file.absolutePath} does not exist and no default instance provided")
         } else {
             readFileData()
@@ -70,7 +70,31 @@ class JsonFileManager<T>(
      * 若有預設實例，則回傳它；否則拋出 IllegalStateException。
      */
     private fun defaultOrThrow(message: String, cause: Exception? = null): T {
-        return defaultInstance ?: throw IllegalStateException(message, cause)
+        return cloneDefaultInstance() ?: throw IllegalStateException(message, cause)
+    }
+
+    /**
+     * Clone default instance to avoid sharing mutable references across managers.
+     */
+    private fun cloneDefaultInstance(): T? {
+        val value = defaultInstance ?: return null
+
+        val copiedByAdapter = runCatching {
+            adapter.fromJson(adapter.toJson(value))
+        }.getOrNull()
+
+        if (copiedByAdapter != null) return copiedByAdapter
+
+        @Suppress("UNCHECKED_CAST")
+        return when (value) {
+            is MutableMap<*, *> -> value.toMutableMap() as T
+            is Map<*, *> -> value.toMutableMap() as T
+            is MutableList<*> -> value.toMutableList() as T
+            is List<*> -> value.toMutableList() as T
+            is MutableSet<*> -> value.toMutableSet() as T
+            is Set<*> -> value.toMutableSet() as T
+            else -> value
+        }
     }
 
     @Synchronized
