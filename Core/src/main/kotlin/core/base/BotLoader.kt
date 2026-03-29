@@ -91,7 +91,7 @@ object BotLoader {
             addEventListener(ListenerManager(PluginLoader.guildCommands))
 
             // Register Plugins' Event Listener
-            PluginLoader.listenersQueue.forEach { plugin -> addEventListener(plugin) }
+            PluginLoader.listenersQueue.forEach(this::addEventListener)
 
             // Register Plugins' Global Commands
             updateCommands().addCommands(PluginLoader.globalCommands).queue()
