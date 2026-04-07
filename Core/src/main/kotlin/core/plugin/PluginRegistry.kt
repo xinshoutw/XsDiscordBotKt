@@ -57,6 +57,9 @@ class PluginRegistry(
     val globalCommands: List<CommandData>
         get() = commandRegistry.globalCommands
 
+    fun aggregateListeners(): List<Any> =
+        plugins.values.flatMap { it.plugin.listeners() }
+
     // -- Lifecycle --
 
     suspend fun discoverAndLoad() {
@@ -198,6 +201,9 @@ class PluginRegistry(
         } catch (_: NoSuchFieldException) {
             clazz.getDeclaredConstructor().newInstance() as Plugin
         }
+
+        // Inject config into the plugin instance
+        plugin.config = config
 
         // Create plugin directory
         val pluginDir = File(pluginsDir, config.name).also { it.mkdirs() }

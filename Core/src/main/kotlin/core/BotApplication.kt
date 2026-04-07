@@ -13,6 +13,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import net.dv8tion.jda.api.JDA
+import org.koin.core.context.loadKoinModules
+import org.koin.core.context.unloadKoinModules
+import org.koin.dsl.module
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -32,6 +35,7 @@ class BotApplication(
     lateinit var jda: JDA
         private set
 
+    private var jdaModule: org.koin.core.module.Module? = null
     private var statusChanger: StatusChanger? = null
     private var consoleLogger: ConsoleLogger? = null
     private var appEmoji: AppEmoji? = null
@@ -57,6 +61,14 @@ class BotApplication(
         jda.addEventListener(interactionLogger)
         jda.addEventListener(CoreEventListener(commandRegistry, componentRegistry))
 
+        // 3.5 Register plugin-provided JDA event listeners
+        for (listener in pluginRegistry.aggregateListeners()) {
+            jda.addEventListener(listener)
+        }
+
+        // 3.6 Register JDA in Koin so plugins can access it at runtime
+        jdaModule = module { single<JDA> { jda } }.also { loadKoinModules(it) }
+
         // 4. Wait for JDA ready
         jda.awaitReady()
 
@@ -74,6 +86,8 @@ class BotApplication(
     suspend fun stop() {
         statusChanger?.stop()
         pluginRegistry.unloadAll()
+        jdaModule?.let { unloadKoinModules(it) }
+        jdaModule = null
         if (::jda.isInitialized) {
             jda.shutdown()
             // Await with timeout
