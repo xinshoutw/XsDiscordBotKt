@@ -1,27 +1,37 @@
-package tw.xinshou.discord.plugin.intervalpusher
+package intervalpusher
 
+import core.config.ConfigLoader
+import core.plugin.Plugin
+import core.plugin.PluginConfig
+import core.plugin.PluginContext
+import intervalpusher.config.ConfigSerializer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.plugin.intervalpusher.config.ConfigSerializer
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+
+    internal lateinit var pluginConfig: ConfigSerializer
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pushers = mutableListOf<IntervalPusher>()
 
-    override fun load() {
-        super.load()
+    override fun PluginContext.onLoad() {
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
         pushers.forEach { it.stop() }
         pushers.clear()
 
-        if (!config.enabled) {
+        if (!pluginConfig.enabled) {
             logger.warn("IntervalPusher is disabled.")
             return
         }
 
-        for (listener in config.listeners) {
+        for (listener in pluginConfig.listeners) {
             val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
             pusher.start()
             pushers.add(pusher)
@@ -30,24 +40,11 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         logger.info("IntervalPusher loaded.")
     }
 
-    override fun reload() {
-        super.reload()
-        pushers.forEach { it.stop() }
-        pushers.clear()
-
-        if (!config.enabled) {
-            logger.warn("IntervalPusher is disabled.")
-            return
-        }
-
-        for (listener in config.listeners) {
-            val pusher = IntervalPusher(listener.url, listener.interval, coroutineScope)
-            pusher.start()
-            pushers.add(pusher)
-        }
+    override fun PluginContext.onReload() {
+        onLoad()
     }
 
-    override fun unload() {
+    override fun PluginContext.onUnload() {
         pushers.forEach { it.stop() }
         coroutineScope.cancel()
         logger.info("IntervalPusher unloaded.")

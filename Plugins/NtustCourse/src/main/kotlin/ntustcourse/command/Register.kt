@@ -1,28 +1,27 @@
-package tw.xinshou.discord.plugin.ntustcourse.command
+package ntustcourse.command
 
+import core.command.CommandHandler
+import core.command.slashCommand
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import ntustcourse.NtustCourse
 
 /**
- * Retrieves and constructs an array of guild-specific command configurations for giveaway functionality.
- *
- * @return Array<CommandData> Collection of guild commands for giveaway management.
+ * Retrieves and constructs a list of guild-specific command configurations for course functionality.
  */
-internal val guildCommands: Array<CommandData>
-    get() = arrayOf(
-        Commands.slash("course-add", "add a course").addOption(
-            OptionType.STRING, "id", "the course code to add", true
-        ),
-        Commands.slash("course-remove", "remove a course").addOption(
-            OptionType.STRING, "id", "the course code to remove", true
-        ),
-        Commands.slash("course-list", "list all courses"),
+internal val guildCommands: List<CommandHandler>
+    get() = listOf(
+        slashCommand(
+            data = Commands.slash("course-add", "add a course").addOption(
+                OptionType.STRING, "id", "the course code to add", true
+            ),
+        ) { event -> NtustCourse.onSlashCommandInteraction(event) },
+        slashCommand(
+            data = Commands.slash("course-remove", "remove a course").addOption(
+                OptionType.STRING, "id", "the course code to remove", true
+            ),
+        ) { event -> NtustCourse.onSlashCommandInteraction(event) },
+        slashCommand(
+            data = Commands.slash("course-list", "list all courses"),
+        ) { event -> NtustCourse.onSlashCommandInteraction(event) },
     )
-
-
-internal val commandStringSet: Set<String> = setOf(
-    "course-add",
-    "course-remove",
-    "course-list",
-)

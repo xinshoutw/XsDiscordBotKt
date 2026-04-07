@@ -1,27 +1,27 @@
-package tw.xinshou.discord.plugin.addons.ticket
+package addons.ticket
 
+import core.i18n.MessageTemplate
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.plugin.addons.ticket.Event.config
-import tw.xinshou.discord.plugin.addons.ticket.Event.pluginDirectory
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 internal object TicketAddons {
-    private var messageCreator = MessageCreator(
-        pluginDirectory,
-        DiscordLocale.CHINESE_TAIWAN
+    private var messageTemplate = MessageTemplate(
+        langDir = File(Event.pluginDirectory, "lang"),
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
     )
 
     internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirectory,
-            DiscordLocale.CHINESE_TAIWAN
+        messageTemplate = MessageTemplate(
+            langDir = File(Event.pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         )
     }
 
     fun onChannelCreate(event: ChannelCreateEvent) {
+        val config = Event.pluginConfig
         if (!event.isFromGuild && event.guild.id != config.guildId) return
         if (config.prefix.none { event.channel.name.startsWith(it) }) return
 
@@ -30,8 +30,8 @@ internal object TicketAddons {
 
             val delay: Long = config.delayMillis
             event.channel.asTextChannel().sendMessage(
-                messageCreator.getCreateBuilder(
-                    key = "not-online",
+                messageTemplate.buildCreate(
+                    messageId = "not-online",
                     locale = DiscordLocale.CHINESE_TAIWAN
                 ).build()
             ).queueAfter(delay, TimeUnit.MILLISECONDS)

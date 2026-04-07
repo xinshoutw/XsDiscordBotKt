@@ -1,26 +1,21 @@
 package tw.xinshou.discord.plugin.basiccalculator
 
+import core.i18n.MessageTemplate
+import core.placeholder.Substitutor
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.plugin.basiccalculator.Event.pluginDirectory
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
 
 
 internal object BasicCalculator {
-    private var messageCreator = MessageCreator(
-        pluginDirectory,
-        DiscordLocale.CHINESE_TAIWAN
-    )
+    private lateinit var messageTemplate: MessageTemplate
 
-    internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirectory,
-            DiscordLocale.CHINESE_TAIWAN
+    internal fun init() {
+        messageTemplate = MessageTemplate(
+            langDir = Event.pluginContext.pluginDirectory.resolve("lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         )
     }
 
@@ -30,30 +25,32 @@ internal object BasicCalculator {
         try {
             ans = evaluateExpression(formula)
         } catch (e: IllegalArgumentException) {
+            val substitutor = Substitutor().putAll(
+                "bc_question" to formula,
+                "bc_error" to (e.message ?: "Unknown error"),
+            )
+
             event.hook.editOriginal(
-                MessageEditData.fromCreateData(
-                    messageCreator.getCreateBuilder(
-                        "error",
-                        event.userLocale,
-                        (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(
-                            "bc_question" to formula,
-                            "bc_error" to (e.message ?: "Unknown error"),
-                        )
-                    ).build()
-                )
+                messageTemplate.buildEdit(
+                    "error",
+                    event.userLocale,
+                    substitutor,
+                ).build()
             ).queue()
             return
         }
 
+        val substitutor = Substitutor().putAll(
+            "bc_question" to formula,
+            "bc_answer" to ans,
+            "bc_answer_round" to ans.split('.', limit = 1)[0],
+        )
+
         event.channel.sendMessage(
-            messageCreator.getCreateBuilder(
+            messageTemplate.buildCreate(
                 "basic-calculate",
                 event.userLocale,
-                (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(
-                    "bc_question" to formula,
-                    "bc_answer" to ans,
-                    "bc_answer_round" to ans.split('.', limit = 1)[0],
-                )
+                substitutor,
             ).build()
         ).flatMap {
             event.hook.deleteOriginal()
@@ -68,7 +65,6 @@ internal object BasicCalculator {
     private fun evaluateExpression(expression: String): String {
         fun isOperator(c: Char): Boolean = c in listOf('+', '-', '*', '/', '^')
 
-        // 優先級
         fun precedence(c: Char): Int = when (c) {
             '+', '-' -> 1
             '*', '/' -> 2
@@ -76,7 +72,6 @@ internal object BasicCalculator {
             else -> 0
         }
 
-        // 中輟表達式轉後輟表達式
         fun infixToPostfix(exp: String): List<String> {
             val output = mutableListOf<String>()
             val stack = Stack<Char>()
@@ -92,11 +87,8 @@ internal object BasicCalculator {
                     continue
                 }
 
-                // 數字
                 if (c.isDigit() || c == '.') {
-                    // 檢查是否為隱式乘法
                     if (prevTokenType == TokenType.NUMBER || prevTokenType == TokenType.RIGHT_PAREN) {
-                        // 插入乘號
                         while (!stack.isEmpty() && precedence('*') <= precedence(stack.peek())) {
                             output.add(stack.pop().toString())
                         }
@@ -112,10 +104,7 @@ internal object BasicCalculator {
                     prevTokenType = TokenType.NUMBER
                     continue
                 } else if (c == '(') {
-                    // 左括號
-                    // 檢查是否為隱式乘法
                     if (prevTokenType == TokenType.NUMBER || prevTokenType == TokenType.RIGHT_PAREN) {
-                        // 插入乘號
                         while (!stack.isEmpty() && precedence('*') <= precedence(stack.peek())) {
                             output.add(stack.pop().toString())
                         }
@@ -130,10 +119,9 @@ internal object BasicCalculator {
                     if (stack.isEmpty()) {
                         throw IllegalArgumentException("Unmatched bracket")
                     }
-                    stack.pop() // Drop '('
+                    stack.pop()
                     prevTokenType = TokenType.RIGHT_PAREN
                 } else if (isOperator(c)) {
-                    // 負數
                     if (c == '-' && (prevTokenType == TokenType.OPERATOR || prevTokenType == TokenType.LEFT_PAREN)) {
                         output.add("0")
                     }
@@ -181,7 +169,7 @@ internal object BasicCalculator {
                             '*' -> a.multiply(b)
                             '/' -> a.divide(b, 10, RoundingMode.HALF_UP)
                             '^' -> a.pow(b.toInt())
-                            else -> throw IllegalArgumentException("Unknown Operator：$op")
+                            else -> throw IllegalArgumentException("Unknown Operator: $op")
                         }
                         stack.push(result)
                     }
@@ -205,4 +193,3 @@ internal object BasicCalculator {
         return evaluatePostfix(infixToPostfix(expression))
     }
 }
-

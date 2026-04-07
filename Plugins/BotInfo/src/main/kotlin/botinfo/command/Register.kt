@@ -1,9 +1,9 @@
 package tw.xinshou.discord.plugin.botinfo.command
 
+import core.i18n.Localizer
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import tw.xinshou.discord.core.localizations.StringLocalizer
 
 private object Keys {
     const val BASE = "botInfo"
@@ -11,9 +11,9 @@ private object Keys {
     const val DESCRIPTION = "$BASE.description"
 }
 
-internal fun globalCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
+internal fun globalCommands(localizer: Localizer): List<CommandData> = listOf(
     Commands.slash("bot-info", "show about the bot data")
-        .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
+        .setNameLocalizations(localizer[Keys.NAME].toMap())
+        .setDescriptionLocalizations(localizer[Keys.DESCRIPTION].toMap())
         .setDefaultPermissions(DefaultMemberPermissions.ENABLED),
 )

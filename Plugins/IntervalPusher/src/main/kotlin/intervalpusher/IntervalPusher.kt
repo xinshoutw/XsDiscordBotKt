@@ -1,9 +1,10 @@
-package tw.xinshou.discord.plugin.intervalpusher
+package intervalpusher
 
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.JDA
+import org.koin.java.KoinJavaComponent.getKoin
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
@@ -22,10 +23,8 @@ internal class IntervalPusher(
         .build()
     private var job: Job? = null
 
-    // Logger 實例
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    // 掛起函數來獲取 ping 值並構建 URL
     private suspend fun buildUrl(url: String): String {
         return try {
             val ping = getRestPing()
@@ -36,22 +35,23 @@ internal class IntervalPusher(
         }
     }
 
-    // 掛起函數來獲取 JDA 的 REST Ping
-    private suspend fun getRestPing(): Long = suspendCancellableCoroutine { cont ->
-        jdaBot.restPing.queue({ ping ->
-            if (cont.isActive) {
-                cont.resume(ping) { cause, _, _ ->
-                    logger.warn("Coroutine was cancelled while waiting for restPing! Cause: $cause!")
+    private suspend fun getRestPing(): Long {
+        val jda: JDA = getKoin().get()
+        return suspendCancellableCoroutine { cont ->
+            jda.restPing.queue({ ping ->
+                if (cont.isActive) {
+                    cont.resume(ping) { cause, _, _ ->
+                        logger.warn("Coroutine was cancelled while waiting for restPing! Cause: $cause!")
+                    }
                 }
-            }
-        }, { throwable ->
-            if (cont.isActive) {
-                cont.resumeWithException(throwable)
-            }
-        })
+            }, { throwable ->
+                if (cont.isActive) {
+                    cont.resumeWithException(throwable)
+                }
+            })
+        }
     }
 
-    // 開始 IntervalPusher
     fun start() {
         if (job?.isActive == true) {
             logger.warn("IntervalPusher is already running!")
@@ -61,17 +61,14 @@ internal class IntervalPusher(
         job = scope.launch(Dispatchers.IO) {
             while (isActive) {
                 try {
-                    // 構建包含最新 ping 的 URL
                     val updatedUrl = buildUrl(originUrl)
 
-                    // 使用 Java HttpClient 建立請求
                     val request = HttpRequest.newBuilder()
                         .uri(URI.create(updatedUrl))
                         .timeout(Duration.ofSeconds(30))
                         .GET()
                         .build()
 
-                    // 使用 suspendCancellableCoroutine 將 CompletableFuture 轉換為 suspend function
                     val response = suspendCancellableCoroutine<HttpResponse<String>> { cont ->
                         val future = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
 
@@ -89,13 +86,11 @@ internal class IntervalPusher(
                             }
                         }
 
-                        // 當協程被取消時，取消 HTTP 請求
                         cont.invokeOnCancellation {
                             future.cancel(true)
                         }
                     }
 
-                    // 處理 HTTP 回應
                     when (response.statusCode()) {
                         in 200..299 -> {
                             logger.debug("Successfully queried URL: $updatedUrl.")
@@ -108,7 +103,7 @@ internal class IntervalPusher(
                         }
 
                         521 -> {
-                            logger.warn("Status Monitor is OFFLINE! (Code: 521)!") // Response from Cloudflare
+                            logger.warn("Status Monitor is OFFLINE! (Code: 521)!")
                         }
 
                         else -> {
@@ -127,10 +122,8 @@ internal class IntervalPusher(
         logger.info("IntervalPusher started.")
     }
 
-    // 停止 IntervalPusher
     fun stop() {
         job?.cancel()
-        // Java HttpClient 會自動管理資源，不需要手動清理
         logger.info("IntervalPusher stopped.")
     }
 }

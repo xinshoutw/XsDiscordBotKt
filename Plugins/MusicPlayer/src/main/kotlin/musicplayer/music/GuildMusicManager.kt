@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import net.dv8tion.jda.api.entities.Member
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.plugin.musicplayer.Event
+import tw.xinshou.discord.plugin.musicplayer.Event.pluginConfig
 import java.time.Instant
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -47,7 +47,7 @@ class GuildMusicManager(
 
         // 從配置文件獲取預設音量，如果獲取失敗則使用 15
         val defaultVolume = try {
-            Event.config.player.defaultVolume
+            pluginConfig.player.defaultVolume
         } catch (e: Exception) {
             logger.warn("Failed to get default volume from config, using 15", e)
             15

@@ -1,11 +1,9 @@
 package tw.xinshou.discord.plugin.logger.chat
 
-import net.dv8tion.jda.api.entities.Guild
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import tw.xinshou.discord.plugin.api.sqlite.SQLiteFileManager
-import tw.xinshou.discord.plugin.logger.chat.Event.config
+import tw.xinshou.discord.plugin.logger.chat.Event.pluginConfig
 import tw.xinshou.discord.plugin.logger.chat.Event.pluginDirectory
 import tw.xinshou.discord.plugin.logger.chat.JsonManager.dataMap
 import java.io.File
@@ -24,39 +22,16 @@ internal object DbManager {
         Files.createDirectories(dataFolder.toPath())
 
         dataFolder.listFiles()?.filter { it.isFile && it.extension == "db" }?.forEach fileLoop@{ file ->
-            val guild: Guild? = jdaBot.getGuildById(file.nameWithoutExtension)
-            if (!config.logAll && guild == null) {
-                file.delete()
-                return@fileLoop
-            }
-
             try {
                 val conn = getConnection(file.nameWithoutExtension)
                 logger.info("Processing database file: {}...", file.name)
                 conn.createStatement().use { stmt ->
                     stmt.executeQuery("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")
                         .use { rs ->
-                            val notExistsChannelId: MutableList<Long> = mutableListOf()
-
                             while (rs.next()) {
                                 val channelId = rs.getString("name").toLong()
                                 logger.debug("Creating database channel '$channelId'...")
-
-                                if (jdaBot.getGuildChannelById(channelId) == null && !config.logAll) {
-                                    notExistsChannelId.add(channelId)
-                                } else {
-                                    logger.debug("Channel $channelId already exists.")
-                                    channelTableCache.add(channelId)
-                                }
-                            }
-
-                            // Drop tables that no longer have a corresponding channel
-                            if (notExistsChannelId.isNotEmpty()) {
-                                conn.createStatement().use { stmt ->
-                                    notExistsChannelId.forEach { tableName ->
-                                        stmt.executeUpdate("DROP TABLE IF EXISTS $tableName;")
-                                    }
-                                }
+                                channelTableCache.add(channelId)
                             }
                         }
                 }
@@ -169,7 +144,6 @@ internal object DbManager {
         conn: Connection,
         detectChannelId: Long
     ) {
-        // avoid multiple init
         if (detectChannelId in channelTableCache) return
 
         conn.createStatement().use { stmt ->
@@ -180,8 +154,7 @@ internal object DbManager {
                         "message               TEXT  NOT NULL,  " +
                         "update_count           INT  NOT NULL  " +
                         ")",
-
-                )
+            )
             channelTableCache.add(detectChannelId)
         }
     }

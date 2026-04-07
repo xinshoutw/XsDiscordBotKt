@@ -1,75 +1,67 @@
 package tw.xinshou.discord.plugin.feedbacker
 
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import core.command.CommandHandler
+import core.command.ComponentHandler
+import core.command.componentHandler
+import core.command.slashCommand
+import core.config.ConfigLoader
+import core.i18n.Localizer
+import core.plugin.Plugin
+import core.plugin.PluginConfig
+import core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.feedbacker.command.CmdFileSerializer
 import tw.xinshou.discord.plugin.feedbacker.command.guildCommands
 import tw.xinshou.discord.plugin.feedbacker.config.ConfigSerializer
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginDirectory: File
 
-    override fun load() {
-        super.load()
+    override fun PluginContext.onLoad() {
+        pluginDirectory = this.pluginDirectory
 
-        if (!config.enabled) {
+        pluginConfig = ConfigLoader.load(
+            File(pluginDirectory, "config.yaml"),
+            "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("Feedbacker is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirectory,
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
         )
     }
 
-    override fun reload() {
-        super.reload()
+    override fun PluginContext.onReload() {
+        onLoad()
 
-        if (!config.enabled) {
-            logger.warn("Feedbacker is disabled.")
-            return
-        }
-
-        localizer = StringLocalizer(
-            pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
+        if (!pluginConfig.enabled) return
 
         Feedbacker.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+
+        return guildCommands(localizer)
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkCommandString(event, "feedbacker")) return
-        Feedbacker.onSlashCommandInteraction(event)
-    }
+    override fun components(): List<ComponentHandler> {
+        val prefix = config.componentPrefix
+        if (prefix.isBlank()) return emptyList()
 
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Feedbacker.onButtonInteraction(event)
-    }
-
-    override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
-        Feedbacker.onModalInteraction(event)
+        return listOf(
+            componentHandler(prefix) {
+                onButton = { event -> Feedbacker.onButtonInteraction(event) }
+                onModal = { event -> Feedbacker.onModalInteraction(event) }
+            }
+        )
     }
 }

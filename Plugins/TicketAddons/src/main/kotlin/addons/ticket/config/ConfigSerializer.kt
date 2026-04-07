@@ -1,4 +1,4 @@
-package tw.xinshou.discord.plugin.addons.ticket.config
+package addons.ticket.config
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

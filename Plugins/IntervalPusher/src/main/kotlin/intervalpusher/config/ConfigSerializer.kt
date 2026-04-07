@@ -1,4 +1,4 @@
-package tw.xinshou.discord.plugin.intervalpusher.config
+package intervalpusher.config
 
 import kotlinx.serialization.Serializable
 

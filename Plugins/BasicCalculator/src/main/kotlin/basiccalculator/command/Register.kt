@@ -1,10 +1,10 @@
 package tw.xinshou.discord.plugin.basiccalculator.command
 
+import core.i18n.Localizer
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.discord.core.localizations.StringLocalizer
 
 private object Keys {
     const val BASE = "basicCalculate"
@@ -15,13 +15,13 @@ private object Keys {
     const val OPT_FORMULA_DESC = "$OPT_FORMULA.description"
 }
 
-internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
+internal fun guildCommands(localizer: Localizer): List<CommandData> = listOf(
     Commands.slash("basic-calculate", "calculate + - * / ^ ( ) math problem")
-        .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
+        .setNameLocalizations(localizer[Keys.NAME].toMap())
+        .setDescriptionLocalizations(localizer[Keys.DESCRIPTION].toMap())
         .addOptions(
             OptionData(OptionType.STRING, "formula", "What's problem?", true)
-                .setNameLocalizations(localizer.getLocaleData(Keys.OPT_FORMULA_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.OPT_FORMULA_DESC))
+                .setNameLocalizations(localizer[Keys.OPT_FORMULA_NAME].toMap())
+                .setDescriptionLocalizations(localizer[Keys.OPT_FORMULA_DESC].toMap())
         )
 )

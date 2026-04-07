@@ -1,21 +1,45 @@
-package tw.xinshou.discord.plugin.addons.ticket
+package addons.ticket
 
+import core.config.ConfigLoader
+import core.plugin.Plugin
+import core.plugin.PluginConfig
+import core.plugin.PluginContext
+import addons.ticket.config.ConfigSerializer
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.plugin.addons.ticket.config.ConfigSerializer
+import net.dv8tion.jda.api.hooks.ListenerAdapter
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    override fun load() {
-        super.load()
-        if (!config.enabled) {
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var pluginDirectory: File
+
+    private val jdaListener = object : ListenerAdapter() {
+        override fun onChannelCreate(event: ChannelCreateEvent) {
+            if (!pluginConfig.enabled) return
+            TicketAddons.onChannelCreate(event)
+        }
+    }
+
+    override fun PluginContext.onLoad() {
+        pluginDirectory = this.pluginDirectory
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("TicketAddons is disabled.")
             return
         }
     }
 
-    override fun reload() {
-        super.reload()
-        if (!config.enabled) {
+    override fun PluginContext.onReload() {
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("TicketAddons is disabled.")
             return
         }
@@ -23,8 +47,5 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         TicketAddons.reload()
     }
 
-    override fun onChannelCreate(event: ChannelCreateEvent) {
-        if (!config.enabled) return
-        TicketAddons.onChannelCreate(event)
-    }
+    override fun listeners(): List<Any> = listOf(jdaListener)
 }

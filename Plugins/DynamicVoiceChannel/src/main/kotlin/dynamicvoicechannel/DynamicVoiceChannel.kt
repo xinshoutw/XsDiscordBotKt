@@ -1,5 +1,10 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel
 
+import core.i18n.MessageTemplate
+import core.placeholder.Substitutor
+import core.placeholder.withCommand
+import core.placeholder.withMember
+import core.placeholder.withUser
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
@@ -8,27 +13,25 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.core.mongodb.CacheDbManager
-import tw.xinshou.discord.core.mongodb.ICacheDb
 import tw.xinshou.discord.plugin.dynamicvoicechannel.Event.pluginDirectory
 import tw.xinshou.discord.plugin.dynamicvoicechannel.json.DataContainer
+import java.io.File
 
 
 internal object DynamicVoiceChannel {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val cacheDbManager: CacheDbManager = CacheDbManager(Event.pluginName)
-    private val generatedCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
-    private var messageCreator = MessageCreator(
-        pluginDirectory,
-        DiscordLocale.CHINESE_TAIWAN
+    // TODO: MongoDB cache replacement - using in-memory map for now
+    private val generatedCache: MutableMap<Long, Long> = mutableMapOf()
+
+    private var messageTemplate = MessageTemplate(
+        langDir = File(pluginDirectory, "lang"),
+        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
     )
 
     internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirectory,
-            DiscordLocale.CHINESE_TAIWAN
+        messageTemplate = MessageTemplate(
+            langDir = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         )
     }
 
@@ -40,16 +43,21 @@ internal object DynamicVoiceChannel {
         val formatName2 = event.getOption("format-name-2") { it.asString }!!
         val category = channel.parentCategory
 
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withCommand(event)
+
         if (category == null) {
             event.hook.editOriginal(
-                messageCreator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
+                messageTemplate.buildEdit("must-under-category", locale, substitutor).build()
             ).queue()
             return
         }
 
         JsonManager.addData(guild.idLong, DataContainer(category.idLong, channel.name, formatName1, formatName2))
         event.hook.editOriginal(
-            messageCreator.getEditBuilder("bind-success", locale, Placeholder.get(event)).build()
+            messageTemplate.buildEdit("bind-success", locale, substitutor).build()
         ).queue()
     }
 
@@ -59,9 +67,14 @@ internal object DynamicVoiceChannel {
         val channel = event.getOption("channel", event.channel) { it.asChannel } as VoiceChannel
         val category = channel.parentCategory
 
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withCommand(event)
+
         if (category == null) {
             event.hook.editOriginal(
-                messageCreator.getEditBuilder("must-under-category", locale, Placeholder.get(event)).build()
+                messageTemplate.buildEdit("must-under-category", locale, substitutor).build()
             ).queue()
             return
         }
@@ -69,10 +82,10 @@ internal object DynamicVoiceChannel {
         val status = JsonManager.removeData(guild.idLong, category.idLong, channel.name)
 
         event.hook.editOriginal(
-            messageCreator.getEditBuilder(
+            messageTemplate.buildEdit(
                 if (status) "unbind-fail" else "unbind-success",
                 locale,
-                Placeholder.get(event)
+                substitutor
             ).build()
         ).queue()
     }
@@ -88,16 +101,12 @@ internal object DynamicVoiceChannel {
         }
     }
 
-
-// ------------------------------------------------------------
-
     fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
         val channelJoin = event.channelJoined
         val channelLeft = event.channelLeft
 
         if (channelJoin != null && channelJoin.members.size == 1) {
             val data = JsonManager.getData(channelJoin.parentCategoryIdLong, channelJoin.name) ?: return
-
             firstJoin(event, channelJoin.asVoiceChannel(), data)
         }
 
@@ -110,27 +119,25 @@ internal object DynamicVoiceChannel {
     }
 
     fun firstJoin(event: GuildVoiceUpdateEvent, channelJoin: VoiceChannel, data: DataContainer) {
-        // create a new channel, move it to the top of the category
+        val substitutor = Substitutor()
+            .withUser(event.member.user)
+            .withMember(event.member)
+            .put("dvc@custom_name", event.member.effectiveName.split(" - ").first())
+
         channelJoin.createCopy().flatMap {
             it.manager.setPosition(0)
         }.flatMap {
             channelJoin.manager.let {
                 it.setPosition(1)
-                it.setName(
-                    Placeholder.get(event.member).putAll(
-                        "dvc@custom_name" to event.member.effectiveName.split(" - ").first()
-                    ).parse(data.formatName1)
-                )
+                it.setName(substitutor.parse(data.formatName1))
                 it.putMemberPermissionOverride(
                     event.member.idLong,
                     listOf(Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS),
                     emptyList<Permission>()
                 )
             }
-
         }.queue()
 
-        // add the new channel to the tracked list
-        generatedCache.put(channelJoin.idLong, event.member.idLong)
+        generatedCache[channelJoin.idLong] = event.member.idLong
     }
 }

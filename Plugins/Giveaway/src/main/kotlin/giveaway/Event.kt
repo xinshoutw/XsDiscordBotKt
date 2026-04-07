@@ -1,118 +1,84 @@
 package tw.xinshou.discord.plugin.giveaway
 
+import core.command.CommandHandler
+import core.command.ComponentHandler
+import core.command.componentHandler
+import core.config.ConfigLoader
+import core.i18n.Localizer
+import core.plugin.Plugin
+import core.plugin.PluginConfig
+import core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.giveaway.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.giveaway.command.commandNameSet
 import tw.xinshou.discord.plugin.giveaway.command.guildCommands
 import tw.xinshou.discord.plugin.giveaway.config.ConfigSerializer
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+object Event : ListenerAdapter(), Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginDirectory: File
 
     private fun resolveLocale(localeTag: String): DiscordLocale {
         return runCatching { DiscordLocale.from(localeTag) }
             .getOrDefault(DiscordLocale.CHINESE_TAIWAN)
     }
 
-    override fun load() {
-        super.load()
+    override fun PluginContext.onLoad() {
+        pluginDirectory = this.pluginDirectory
         Giveaway.stopAutoDrawScheduler()
 
-        if (!config.enabled) {
+        pluginConfig = ConfigLoader.load(File(pluginDirectory, "config.yaml"), "/config.yaml")
+
+        if (!pluginConfig.enabled) {
             logger.warn("Giveaway is disabled.")
             return
         }
 
-        val defaultLocale = resolveLocale(config.defaultLocale)
+        val defaultLocale = resolveLocale(pluginConfig.defaultLocale)
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = defaultLocale,
-            clazzSerializer = CmdFileSerializer::class,
         )
 
         Giveaway.reload(defaultLocale)
-        Giveaway.startAutoDrawScheduler(config.autoDrawIntervalSeconds)
+        Giveaway.startAutoDrawScheduler(pluginConfig.autoDrawIntervalSeconds)
     }
 
-    override fun reload() {
-        super.reload()
+    override fun PluginContext.onUnload() {
         Giveaway.stopAutoDrawScheduler()
+    }
 
-        if (!config.enabled) {
-            logger.warn("Giveaway is disabled.")
-            return
-        }
+    override fun PluginContext.onReload() {
+        onUnload()
+        onLoad()
+    }
 
-        val defaultLocale = resolveLocale(config.defaultLocale)
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        if (!::localizer.isInitialized) return emptyList()
+        return guildCommands(localizer)
+    }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = defaultLocale,
-            clazzSerializer = CmdFileSerializer::class,
+    override fun components(): List<ComponentHandler> {
+        val prefix = config.componentPrefix
+        if (prefix.isBlank()) return emptyList()
+
+        return listOf(
+            componentHandler(prefix) {
+                onButton = { event -> Giveaway.onButtonInteraction(event) }
+                onStringSelect = { event -> Giveaway.onStringSelectInteraction(event) }
+                onEntitySelect = { event -> Giveaway.onEntitySelectInteraction(event) }
+                onModal = { event -> Giveaway.onModalInteraction(event) }
+            }
         )
-
-        Giveaway.reload(defaultLocale)
-        Giveaway.startAutoDrawScheduler(config.autoDrawIntervalSeconds)
-    }
-
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else if (!::localizer.isInitialized) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
-        }
-    }
-
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
-        Giveaway.onSlashCommandInteraction(event)
-    }
-
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Giveaway.onButtonInteraction(event)
-    }
-
-    override fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Giveaway.onStringSelectInteraction(event)
-    }
-
-    override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Giveaway.onEntitySelectInteraction(event)
-    }
-
-    override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
-        Giveaway.onModalInteraction(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         Giveaway.onGuildLeave(event)
-    }
-
-    override fun unload() {
-        Giveaway.stopAutoDrawScheduler()
-        super.unload()
     }
 }

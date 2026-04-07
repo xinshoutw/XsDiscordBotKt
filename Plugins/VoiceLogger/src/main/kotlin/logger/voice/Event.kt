@@ -1,110 +1,82 @@
 package tw.xinshou.discord.plugin.logger.voice
 
-
+import core.command.CommandHandler
+import core.command.ComponentHandler
+import core.command.componentHandler
+import core.config.ConfigLoader
+import core.i18n.Localizer
+import core.plugin.Plugin
+import core.plugin.PluginConfig
+import core.plugin.PluginContext
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateVoiceStatusEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.logger.voice.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.logger.voice.command.PlaceholderSerializer
 import tw.xinshou.discord.plugin.logger.voice.command.guildCommands
 import tw.xinshou.discord.plugin.logger.voice.config.ConfigSerializer
+import java.io.File
 
+object Event : ListenerAdapter(), Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var registerLocalizer: Localizer
+    internal lateinit var placeholderLocalizer: Localizer
+    internal lateinit var pluginDirectory: File
 
-/**
- * Main class for the Economy plugin managing configurations, commands, and data handling.
- */
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var registerLocalizer: StringLocalizer<CmdFileSerializer>
-    internal lateinit var placeholderLocalizer: StringLocalizer<PlaceholderSerializer>
+    override fun PluginContext.onLoad() {
+        pluginDirectory = this.pluginDirectory
 
-    override fun load() {
-        super.load()
+        pluginConfig = ConfigLoader.load(
+            File(pluginDirectory, "config.yaml"),
+            "/config.yaml"
+        )
 
-        if (!config.enabled) {
+        if (!pluginConfig.enabled) {
             logger.warn("VoiceLogger is disabled.")
             return
         }
 
-        registerLocalizer = StringLocalizer(
-            pluginDirectory,
+        registerLocalizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-            fileName = "register.yaml",
         )
 
-        placeholderLocalizer = StringLocalizer(
-            pluginDirectory,
+        placeholderLocalizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = PlaceholderSerializer::class,
-            fileName = "placeholder.yaml",
         )
     }
 
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("VoiceLogger is disabled.")
-            return
-        }
-
-        registerLocalizer = StringLocalizer(
-            pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-            fileName = "register.yaml",
-        )
-
-        placeholderLocalizer = StringLocalizer(
-            pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = PlaceholderSerializer::class,
-            fileName = "placeholder.yaml",
-        )
-
+    override fun PluginContext.onReload() {
+        onLoad()
+        if (!pluginConfig.enabled) return
         VoiceLogger.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(registerLocalizer)
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(registerLocalizer)
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkCommandString(event, "voice-logger setting")) return
-        VoiceLogger.onSlashCommandInteraction(event)
-    }
+    override fun components(): List<ComponentHandler> {
+        val prefix = config.componentPrefix
+        if (prefix.isBlank()) return emptyList()
 
-    override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        VoiceLogger.onEntitySelectInteraction(event)
-    }
-
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        VoiceLogger.onButtonInteraction(event)
+        return listOf(
+            componentHandler(prefix) {
+                onButton = { event -> VoiceLogger.onButtonInteraction(event) }
+                onEntitySelect = { event -> VoiceLogger.onEntitySelectInteraction(event) }
+            }
+        )
     }
 
     override fun onChannelUpdateVoiceStatus(event: ChannelUpdateVoiceStatusEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         VoiceLogger.onChannelUpdateVoiceStatus(event)
     }
 
     override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         VoiceLogger.onGuildVoiceUpdate(event)
     }
 }

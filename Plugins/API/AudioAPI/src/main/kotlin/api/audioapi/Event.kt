@@ -1,6 +1,9 @@
 package tw.xinshou.discord.plugin.api.audioapi
 
-import tw.xinshou.discord.core.plugin.PluginEvent
+import core.plugin.Plugin
+import core.plugin.PluginConfig
 
 
-object Event : PluginEvent(false)
+object Event : Plugin {
+    override lateinit var config: PluginConfig
+}

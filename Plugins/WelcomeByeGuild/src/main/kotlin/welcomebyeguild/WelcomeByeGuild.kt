@@ -1,6 +1,8 @@
-package tw.xinshou.discord.plugin.welcomebyeguild
+package welcomebyeguild
 
-import com.squareup.moshi.JsonAdapter
+import core.i18n.MessageTemplate
+import core.placeholder.Substitutor
+import core.util.GuildJsonFile
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.ChannelType
@@ -11,17 +13,11 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.core.builtin.placeholder.Substitutor
-import tw.xinshou.discord.core.json.JsonFileManager
-import tw.xinshou.discord.core.json.JsonFileManager.Companion.adapterReified
-import tw.xinshou.discord.core.json.JsonGuildFileManager
-import tw.xinshou.discord.plugin.welcomebyeguild.Event.pluginDirectory
+import kotlinx.serialization.Serializable
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-
+@Serializable
 internal data class GuildSetting(
     var welcomeChannelId: Long = 0L,
     var byeChannelId: Long = 0L,
@@ -30,30 +26,31 @@ internal data class GuildSetting(
 internal object WelcomeByeGuild {
     private val defaultLocale: DiscordLocale = DiscordLocale.CHINESE_TAIWAN
 
-    private fun createMessageCreator(): MessageCreator = MessageCreator(
-        pluginDirFile = pluginDirectory,
+    private fun createMessageTemplate(): MessageTemplate = MessageTemplate(
+        langDir = File(Event.pluginDirectory, "lang"),
         defaultLocale = defaultLocale,
     )
 
-    private val jsonAdapter: JsonAdapter<GuildSetting> = JsonFileManager.moshi.adapterReified<GuildSetting>()
-    private val jsonGuildManager = JsonGuildFileManager(
-        dataDirectory = File(pluginDirectory, "data"),
-        adapter = jsonAdapter,
-        defaultInstance = GuildSetting()
+    private val jsonGuildManager = GuildJsonFile(
+        directory = File(Event.pluginDirectory, "data"),
+        serializer = GuildSetting.serializer(),
+        defaultInstance = { GuildSetting() },
     )
 
-    private val messageCreatorRef = AtomicReference(createMessageCreator())
+    private val messageTemplateRef = AtomicReference(createMessageTemplate())
 
     internal fun load() {
-        messageCreatorRef.set(createMessageCreator())
+        messageTemplateRef.set(createMessageTemplate())
     }
 
     internal fun reload() {
-        messageCreatorRef.set(createMessageCreator())
+        messageTemplateRef.set(createMessageTemplate())
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
-        jsonGuildManager.removeAndSave(event.guild.idLong)
+        // GuildJsonFile doesn't have removeAndSave, but we can delete the file
+        val file = File(File(Event.pluginDirectory, "data"), "${event.guild.idLong}.json")
+        if (file.exists()) file.delete()
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
@@ -63,7 +60,11 @@ internal object WelcomeByeGuild {
         }
 
         if (!hasAdminPermission(event)) {
-            reply(event, WelcomeByeGuildMessageKeys.NO_PERMISSION, Placeholder.get(event))
+            reply(
+                event,
+                WelcomeByeGuildMessageKeys.NO_PERMISSION,
+                WelcomeByeGuildSubstitutorFactory.forCommand(event, guild, jsonGuildManager[guild.idLong].data)
+            )
             return
         }
 
@@ -76,9 +77,9 @@ internal object WelcomeByeGuild {
     }
 
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
-        val messageCreator = messageCreatorRef.get()
+        val messageTemplate = messageTemplateRef.get()
         val guild = event.guild
-        val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        val setting = jsonGuildManager[guild.idLong].data
         val channelId = setting.welcomeChannelId
         if (channelId == 0L) return
 
@@ -92,14 +93,14 @@ internal object WelcomeByeGuild {
         )
 
         channel.sendMessage(
-            messageCreator.getCreateBuilder(WelcomeByeGuildMessageKeys.WELCOME, guild.locale, substitutor).build()
+            messageTemplate.buildCreate(WelcomeByeGuildMessageKeys.WELCOME, guild.locale, substitutor).build()
         ).queue()
     }
 
     fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
-        val messageCreator = messageCreatorRef.get()
+        val messageTemplate = messageTemplateRef.get()
         val guild = event.guild
-        val setting = jsonGuildManager.mapper[guild.idLong]?.data ?: return
+        val setting = jsonGuildManager[guild.idLong].data
         val channelId = setting.byeChannelId
         if (channelId == 0L) return
 
@@ -113,7 +114,7 @@ internal object WelcomeByeGuild {
         )
 
         channel.sendMessage(
-            messageCreator.getCreateBuilder(WelcomeByeGuildMessageKeys.BYE, guild.locale, substitutor).build()
+            messageTemplate.buildCreate(WelcomeByeGuildMessageKeys.BYE, guild.locale, substitutor).build()
         ).queue()
     }
 
@@ -286,11 +287,11 @@ internal object WelcomeByeGuild {
     private fun reply(
         event: SlashCommandInteractionEvent,
         messageKey: String,
-        substitutor: Substitutor = Placeholder.globalSubstitutor,
+        substitutor: Substitutor? = null,
     ) {
-        val messageCreator = messageCreatorRef.get()
+        val messageTemplate = messageTemplateRef.get()
         val locale = event.guild?.locale ?: event.userLocale
-        val editData: MessageEditData = messageCreator.getEditBuilder(messageKey, locale, substitutor).build()
+        val editData: MessageEditData = messageTemplate.buildEdit(messageKey, locale, substitutor).build()
 
         if (event.isAcknowledged) {
             event.hook.editOriginal(editData).queue()

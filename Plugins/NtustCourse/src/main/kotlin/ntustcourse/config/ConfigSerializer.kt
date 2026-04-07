@@ -1,4 +1,4 @@
-package tw.xinshou.discord.plugin.ntustcourse.config
+package ntustcourse.config
 
 import kotlinx.serialization.Serializable
 

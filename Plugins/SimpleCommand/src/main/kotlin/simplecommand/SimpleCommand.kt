@@ -1,21 +1,17 @@
-package tw.xinshou.discord.plugin.simplecommand
+package simplecommand
 
+import core.i18n.MessageTemplate
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.plugin.simplecommand.Event.pluginDirectory
+import java.io.File
 
 internal object SimpleCommand {
-    private var creator = MessageCreator(
-        pluginDirFile = pluginDirectory,
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN
-    )
+    private var creator: MessageTemplate
+        get() = Event.messageTemplate
+        set(_) {}
 
     internal fun reload() {
-        creator = MessageCreator(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN
-        )
+        // messageTemplate is reloaded in Event.onLoad()
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
@@ -23,35 +19,35 @@ internal object SimpleCommand {
             "cub-none-card" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(
-                    creator.getCreateBuilder("cub-none-card").build()
+                    creator.buildCreate("cub-none-card").build()
                 ).queue()
             }
 
             "tsib-none-card" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(
-                    creator.getCreateBuilder("tsib-none-card").build()
+                    creator.buildCreate("tsib-none-card").build()
                 ).queue()
             }
 
             "ctcb-none-card" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(
-                    creator.getCreateBuilder("ctcb-none-card").build()
+                    creator.buildCreate("ctcb-none-card").build()
                 ).queue()
             }
 
             "ctcb-remit" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(
-                    creator.getCreateBuilder("ctcb-remit").build()
+                    creator.buildCreate("ctcb-remit").build()
                 ).queue()
             }
 
             "chpytwtp-remit" -> {
                 event.hook.deleteOriginal().queue()
                 event.channel.sendMessage(
-                    creator.getCreateBuilder("chpytwtp-remit").build()
+                    creator.buildCreate("chpytwtp-remit").build()
                 ).queue()
             }
         }
