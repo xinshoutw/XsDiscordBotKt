@@ -5,7 +5,8 @@
 #   ████   ███████ ██   ██ ███████ ██  ██████  ██   ████ ███████
 [versions]
 idea-ext = "1.4"
-jda = "6.3.0"
+jda = "6.4.1"
+jdave = "0.1.8"
 logback = "1.5.27"
 kaml = "0.104.0"
 commons-io = "2.21.0"
@@ -68,6 +69,11 @@ udpqueue_native_linux_musl_aarch64 = { group = "club.minnced", name = "udpqueue-
 udpqueue_native_win_x64 = { group = "club.minnced", name = "udpqueue-native-win-x86-64", version.ref = "udpqueue" }
 udpqueue_native_win_x86 = { group = "club.minnced", name = "udpqueue-native-win-x86", version.ref = "udpqueue" }
 udpqueue_native_darwin = { group = "club.minnced", name = "udpqueue-native-darwin", version.ref = "udpqueue" }
+jdave_api = { group = "club.minnced", name = "jdave-api", version.ref = "jdave" }
+jdave_native_linux_x64 = { group = "club.minnced", name = "jdave-native-linux-x86-64", version.ref = "jdave" }
+jdave_native_linux_aarch64 = { group = "club.minnced", name = "jdave-native-linux-aarch64", version.ref = "jdave" }
+jdave_native_win_x64 = { group = "club.minnced", name = "jdave-native-win-x86-64", version.ref = "jdave" }
+jdave_native_darwin = { group = "club.minnced", name = "jdave-native-darwin", version.ref = "jdave" }
 embed_mongo = { group = "de.flapdoodle.embed", name = "de.flapdoodle.embed.mongo", version.ref = "embed-mongo" }
 protobuf_java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
 jline = { group = "org.jline", name = "jline", version.ref = "jline" }

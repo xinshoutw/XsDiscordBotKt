@@ -69,6 +69,12 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.json)
 
+    implementation(libs.jdave.api)
+    implementation(libs.jdave.native.linux.x64)
+    implementation(libs.jdave.native.linux.aarch64)
+    implementation(libs.jdave.native.win.x64)
+    implementation(libs.jdave.native.darwin)
+
     implementation(libs.embed.mongo)
     implementation(libs.protobuf.java)
     implementation(libs.jline)
@@ -90,7 +96,10 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveFileName.set("${project.name}-$version.jar")
     destinationDirectory.set(outputPath)
     manifest {
-        attributes("Main-Class" to "tw.xinshou.discord.core.MainKt")
+        attributes(
+            "Main-Class" to "tw.xinshou.discord.core.MainKt",
+            "Enable-Native-Access" to "ALL-UNNAMED",
+        )
     }
 }
 
