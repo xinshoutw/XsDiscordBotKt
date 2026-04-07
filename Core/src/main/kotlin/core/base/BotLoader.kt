@@ -1,7 +1,9 @@
 package tw.xinshou.discord.core.base
 
+import club.minnced.discord.jdave.interop.JDaveSessionFactory
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.audio.AudioModuleConfig
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -52,6 +54,10 @@ object BotLoader {
         PluginLoader.preLoad()
         try {
             jdaBot = JDABuilder.createDefault(Arguments.botToken ?: token)
+                .setAudioModuleConfig(
+                    AudioModuleConfig()
+                        .withDaveSessionFactory(JDaveSessionFactory())
+                )
                 .setBulkDeleteSplittingEnabled(false)
                 .disableCache(
                     CacheFlag.ACTIVITY,
