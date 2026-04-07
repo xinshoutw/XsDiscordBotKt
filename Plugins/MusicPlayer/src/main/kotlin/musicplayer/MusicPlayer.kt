@@ -773,11 +773,11 @@ object MusicPlayer {
 
     private fun getGuildAudioPlayer(guild: Guild): GuildMusicManager {
         val guildId = guild.idLong
-        return musicManagers.computeIfAbsent(guildId) {
-            val musicManager = GuildMusicManager(playerManager.createPlayer(), guildId)
-            guild.audioManager.sendingHandler = musicManager.sendHandler
-            musicManager
+        val musicManager = musicManagers.computeIfAbsent(guildId) {
+            GuildMusicManager(playerManager.createPlayer(), guildId)
         }
+        guild.audioManager.sendingHandler = musicManager.sendHandler
+        return musicManager
     }
 
     // Button interaction handlers

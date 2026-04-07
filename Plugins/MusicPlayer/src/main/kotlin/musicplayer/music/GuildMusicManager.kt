@@ -205,8 +205,8 @@ class GuildMusicManager(
      * 停止播放
      */
     fun stop() {
-        audioPlayer.stopTrack()
         scheduler.clearQueue()
+        audioPlayer.stopTrack()
         updateActivity()
     }
 

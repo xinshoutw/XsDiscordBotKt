@@ -31,28 +31,29 @@ class TrackSchedulerCompat(
      */
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
         try {
-            // 只在正常結束時處理播放邏輯
-            if (endReason == AudioTrackEndReason.FINISHED || endReason == AudioTrackEndReason.STOPPED || endReason == AudioTrackEndReason.LOAD_FAILED) {
-                when {
-                    singleTrackLoop -> {
-                        // 單曲循環：重新播放當前歌曲
-                        val currentTrack = historyIndexManager.currentTrack
-                        if (currentTrack != null) {
-                            player.startTrack(currentTrack.makeClone(), false)
-                        } else {
-                            logger.warn("Single track loop: no current track to restart")
-                        }
-                    }
+            // 只在允許播放下一首時處理（FINISHED / LOAD_FAILED）
+            // STOPPED 和 REPLACED 不應觸發下一首播放
+            if (!endReason.mayStartNext) return
 
-                    sequentialPlayback -> {
-                        // 順序播放：播放下一首
-                        historyIndexManager.onTrackEnd()
+            when {
+                singleTrackLoop -> {
+                    // 單曲循環：重新播放當前歌曲
+                    val currentTrack = historyIndexManager.currentTrack
+                    if (currentTrack != null) {
+                        player.startTrack(currentTrack.makeClone(), false)
+                    } else {
+                        logger.warn("Single track loop: no current track to restart")
                     }
+                }
 
-                    else -> {
-                        // 預設行為：順序播放
-                        historyIndexManager.onTrackEnd()
-                    }
+                sequentialPlayback -> {
+                    // 順序播放：播放下一首
+                    historyIndexManager.onTrackEnd()
+                }
+
+                else -> {
+                    // 預設行為：順序播放
+                    historyIndexManager.onTrackEnd()
                 }
             }
         } catch (e: Exception) {
