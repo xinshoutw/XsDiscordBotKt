@@ -78,7 +78,7 @@ class BotApplication(
             jda.shutdown()
             // Await with timeout
             withTimeoutOrNull(10_000) {
-                while (!jda.status.isShutdown) {
+                while (jda.status != JDA.Status.SHUTDOWN) {
                     delay(100)
                 }
             }

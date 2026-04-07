@@ -29,7 +29,6 @@ fun processMemberCachePolicy(policies: List<String>): MemberCachePolicy {
             "ONLINE" -> MemberCachePolicy.ONLINE
             "OWNER" -> MemberCachePolicy.OWNER
             "PENDING" -> MemberCachePolicy.PENDING
-            "BOOSTS" -> MemberCachePolicy.BOOSTS
             else -> error("Unknown MemberCachePolicy: $policy")
         }
     }

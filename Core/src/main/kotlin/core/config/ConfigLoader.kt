@@ -6,7 +6,8 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 object ConfigLoader {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    @PublishedApi
+    internal val logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * Load a @Serializable config from [file] using KAML.

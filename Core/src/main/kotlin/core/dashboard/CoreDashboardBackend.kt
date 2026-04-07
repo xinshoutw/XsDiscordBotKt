@@ -1,46 +1,19 @@
 package core.dashboard
 
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 
-class DashboardServer(
-    private val port: Int = 3000,
-) {
-    private var server: EmbeddedServer<*, *>? = null
+/**
+ * Dashboard server stub. Real implementation lives in WebDashboard module.
+ * This provides the interface for Core to start/stop the dashboard lifecycle.
+ */
+class DashboardServer {
+    private val logger = LoggerFactory.getLogger(DashboardServer::class.java)
 
     fun start() {
-        server = embeddedServer(Netty, port = port) {
-            install(ContentNegotiation) {
-                json(Json { prettyPrint = true; ignoreUnknownKeys = true })
-            }
-            install(CORS) {
-                anyHost()
-                allowMethod(HttpMethod.Get)
-                allowMethod(HttpMethod.Post)
-                allowMethod(HttpMethod.Put)
-                allowHeader(HttpHeaders.ContentType)
-            }
-            routing {
-                get("/api/health") {
-                    call.respondText("OK")
-                }
-                // Placeholder routes for future dashboard features
-                get("/api/plugins") {
-                    call.respondText("[]", ContentType.Application.Json)
-                }
-            }
-        }.start(wait = false)
+        logger.info("Dashboard server placeholder (real impl in WebDashboard module)")
     }
 
     fun stop() {
-        server?.stop(1000, 2000)
+        // no-op
     }
 }
