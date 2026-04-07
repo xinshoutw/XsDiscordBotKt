@@ -7,13 +7,14 @@
 idea-ext = "1.4"
 jda = "6.4.1"
 jdave = "0.1.8"
+jda-ktx = "0.13.0"
+koin = "4.2.0"
 logback = "1.5.27"
 kaml = "0.104.0"
 commons-io = "2.21.0"
 commons-text = "1.15.0"
 mongo-driver = "5.6.2"
-moshi = "1.15.2"
-kotlin = "2.2.21"
+kotlin = "2.3.10"
 shadowPlugin = "9.3.1"
 annotations = "26.0.2-1"
 udpqueue = "0.2.9"
@@ -24,7 +25,7 @@ jline = "3.30.6"
 clikt = "5.1.0"
 jansi = "2.4.2"
 jsoup = "1.22.1"
-kotlin-v = "2.2.21"
+kotlin-v = "2.3.10"
 versions-plugin = "0.53.0"
 ktor = "3.2.3"
 kotlinx-serialization-json = "1.9.0"
@@ -54,9 +55,14 @@ logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
 commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
 commons-text = { group = "org.apache.commons", name = "commons-text", version.ref = "commons-text" }
-mongodb-driver-kotlin-sync = { group = "org.mongodb", name = "mongodb-driver-kotlin-sync", version.ref = "mongo-driver" }
-moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+mongodb-driver-kotlin-coroutine = { group = "org.mongodb", name = "mongodb-driver-kotlin-coroutine", version.ref = "mongo-driver" }
+bson-kotlinx = { group = "org.mongodb", name = "bson-kotlinx", version.ref = "mongo-driver" }
 kotlinx_coroutines_core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+koin_core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
+koin_ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
+koin_logger_slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
+koin_test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin" }
+jda_ktx = { group = "club.minnced", name = "jda-ktx", version.ref = "jda-ktx" }
 
 # Additional dependencies
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
