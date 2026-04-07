@@ -24,7 +24,7 @@ object Event : ListenerAdapter(), Plugin {
     internal lateinit var pluginDirectory: File
 
     override fun PluginContext.onLoad() {
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginDirectory = pluginDirectory
 
         pluginConfig = ConfigLoader.load(
             File(pluginDirectory, "config.yaml"),

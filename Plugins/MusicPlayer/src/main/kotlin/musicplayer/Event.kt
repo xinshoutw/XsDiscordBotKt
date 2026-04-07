@@ -23,7 +23,7 @@ object Event : ListenerAdapter(), Plugin {
     internal val logger get() = org.slf4j.LoggerFactory.getLogger(this::class.java)
 
     override fun PluginContext.onLoad() {
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginDirectory = pluginDirectory
 
         pluginConfig = ConfigLoader.load(File(pluginDirectory, "config.yaml"), "/config.yaml")
 

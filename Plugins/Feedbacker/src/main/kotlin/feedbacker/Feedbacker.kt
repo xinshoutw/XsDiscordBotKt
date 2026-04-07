@@ -14,9 +14,10 @@ import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.modals.Modal
 import tw.xinshou.discord.plugin.feedbacker.Event.config
 import tw.xinshou.discord.plugin.feedbacker.Event.pluginConfig
 import tw.xinshou.discord.plugin.feedbacker.Event.pluginDirectory
@@ -127,10 +128,10 @@ internal object Feedbacker {
         )
 
         val modal = Modal.create(modalId, "Feedback Form")
-            .addActionRow(
-                TextInput.create("form", "Your feedback", TextInputStyle.PARAGRAPH)
+            .addComponents(
+                Label.of("Your feedback", TextInput.create("form", TextInputStyle.PARAGRAPH)
                     .setRequired(true)
-                    .build()
+                    .build())
             )
             .build()
 

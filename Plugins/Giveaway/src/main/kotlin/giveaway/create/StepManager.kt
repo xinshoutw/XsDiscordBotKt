@@ -7,9 +7,10 @@ import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.modals.Modal
 import tw.xinshou.discord.plugin.giveaway.Giveaway
 import tw.xinshou.discord.plugin.giveaway.Giveaway.componentId
 import tw.xinshou.discord.plugin.giveaway.Giveaway.messageTemplate
@@ -103,20 +104,23 @@ internal object StepManager {
 
     private fun showModal(event: ButtonInteractionEvent, subAction: String, label: String, defaultValue: String) {
         val modalId = componentId.build("action" to "create", "sub_action" to subAction)
-        val input = TextInput.create("value", label, TextInputStyle.SHORT)
+        val input = TextInput.create("value", TextInputStyle.SHORT)
             .setValue(defaultValue)
             .setRequired(subAction != "set-description" && subAction != "set-sponsor" && subAction != "set-thumbnail")
             .build()
-        event.replyModal(Modal.create(modalId, label).addActionRow(input).build()).queue()
+        event.replyModal(Modal.create(modalId, label).addComponents(Label.of(label, input)).build()).queue()
     }
 
     private fun showPrizeModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "add-prize")
-        val nameInput = TextInput.create("prize-name", "Prize Name", TextInputStyle.SHORT)
+        val nameInput = TextInput.create("prize-name", TextInputStyle.SHORT)
             .setValue("Prize ${step.data.prizes.size + 1}").setRequired(true).build()
-        val countInput = TextInput.create("winner-count", "Winner Count", TextInputStyle.SHORT)
+        val countInput = TextInput.create("winner-count", TextInputStyle.SHORT)
             .setValue("1").setRequired(true).build()
-        event.replyModal(Modal.create(modalId, "Add Prize").addActionRow(nameInput).addActionRow(countInput).build()).queue()
+        event.replyModal(Modal.create(modalId, "Add Prize")
+            .addComponents(Label.of("Prize Name", nameInput))
+            .addComponents(Label.of("Winner Count", countInput))
+            .build()).queue()
     }
 
     private fun confirmCreate(event: ButtonInteractionEvent, step: Step, sessionKey: SessionKey) {

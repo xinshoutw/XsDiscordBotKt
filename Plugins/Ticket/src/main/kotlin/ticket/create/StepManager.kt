@@ -10,9 +10,11 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.modals.Modal
+import tw.xinshou.discord.plugin.ticket.json.serializer.DataContainer
 import tw.xinshou.discord.plugin.ticket.Ticket.componentId
 import tw.xinshou.discord.plugin.ticket.Ticket.jsonGuildManager
 import tw.xinshou.discord.plugin.ticket.Ticket.messageTemplate
@@ -68,40 +70,42 @@ internal object StepManager {
 
     private fun showReasonModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "preview-reason")
-        event.replyModal(Modal.create(modalId, "Preview Reason").addActionRow(TextInput.create("reason", "Reason", TextInputStyle.PARAGRAPH).setValue(step.data.json.reasonTitle).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Preview Reason").addComponents(Label.of("Reason", TextInput.create("reason", TextInputStyle.PARAGRAPH).setValue(step.data.json.reasonTitle).build())).build()).queue()
     }
 
     private fun showAuthorModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "modify-author")
-        event.replyModal(Modal.create(modalId, "Modify Author").addActionRow(TextInput.create("author", "Author", TextInputStyle.SHORT).setValue(step.data.author ?: "").setRequired(false).build()).addActionRow(TextInput.create("image", "Icon URL", TextInputStyle.SHORT).setValue(step.data.authorIconUrl ?: "").setRequired(false).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Modify Author").addComponents(Label.of("Author", TextInput.create("author", TextInputStyle.SHORT).setValue(step.data.author ?: "").setRequired(false).build())).addComponents(Label.of("Icon URL", TextInput.create("image", TextInputStyle.SHORT).setValue(step.data.authorIconUrl ?: "").setRequired(false).build())).build()).queue()
     }
 
     private fun showContentModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "modify-content")
-        event.replyModal(Modal.create(modalId, "Modify Content").addActionRow(TextInput.create("title", "Title", TextInputStyle.SHORT).setValue(step.data.title ?: "").setRequired(false).build()).addActionRow(TextInput.create("desc", "Description", TextInputStyle.PARAGRAPH).setValue(step.data.description ?: "").setRequired(false).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Modify Content").addComponents(Label.of("Title", TextInput.create("title", TextInputStyle.SHORT).setValue(step.data.title ?: "").setRequired(false).build())).addComponents(Label.of("Description", TextInput.create("desc", TextInputStyle.PARAGRAPH).setValue(step.data.description ?: "").setRequired(false).build())).build()).queue()
     }
 
     private fun showColorModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "modify-embed-color")
-        event.replyModal(Modal.create(modalId, "Modify Color").addActionRow(TextInput.create("color", "Hex Color (#RRGGBB)", TextInputStyle.SHORT).setValue(String.format("#%06X", step.data.color and 0xFFFFFF)).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Modify Color").addComponents(Label.of("Hex Color (#RRGGBB)", TextInput.create("color", TextInputStyle.SHORT).setValue(String.format("#%06X", step.data.color and 0xFFFFFF)).build())).build()).queue()
     }
 
     private fun showBtnTextModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "modify-btn-text")
-        event.replyModal(Modal.create(modalId, "Modify Button").addActionRow(TextInput.create("btn-text", "Button Text", TextInputStyle.SHORT).setValue(step.data.btnText ?: "").setRequired(false).build()).addActionRow(TextInput.create("btn-emoji", "Button Emoji", TextInputStyle.SHORT).setValue(step.data.btnEmoji?.asReactionCode ?: "").setRequired(false).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Modify Button").addComponents(Label.of("Button Text", TextInput.create("btn-text", TextInputStyle.SHORT).setValue(step.data.btnText ?: "").setRequired(false).build())).addComponents(Label.of("Button Emoji", TextInput.create("btn-emoji", TextInputStyle.SHORT).setValue(step.data.btnEmoji?.asReactionCode ?: "").setRequired(false).build())).build()).queue()
     }
 
     private fun showReasonTitleModal(event: ButtonInteractionEvent, step: Step) {
         val modalId = componentId.build("action" to "create", "sub_action" to "modify-reason")
-        event.replyModal(Modal.create(modalId, "Modify Reason").addActionRow(TextInput.create("reason", "Reason Title", TextInputStyle.SHORT).setValue(step.data.json.reasonTitle).build()).build()).queue()
+        event.replyModal(Modal.create(modalId, "Modify Reason").addComponents(Label.of("Reason Title", TextInput.create("reason", TextInputStyle.SHORT).setValue(step.data.json.reasonTitle).build())).build()).queue()
     }
 
     private fun confirmCreate(event: ButtonInteractionEvent) {
         val step = steps[event.user.idLong] ?: return event.deferEdit().queue()
         val manager = jsonGuildManager[event.guild!!.idLong]
         step.confirmCreateAction(event.userLocale, event.channel).map {
-            val tmp = manager.data[it.id]
-            if (tmp == null) manager.data[it.id] = mutableListOf(step.json)
+            @Suppress("UNCHECKED_CAST")
+            val mutableData = manager.data as MutableMap<String, MutableList<DataContainer>>
+            val tmp = mutableData[it.id]
+            if (tmp == null) mutableData[it.id] = mutableListOf(step.json)
             else tmp.add(step.json)
             manager.save()
         }.queue()

@@ -15,8 +15,8 @@ internal object Event : Plugin {
     internal lateinit var pluginDirectory: File
 
     override fun PluginContext.onLoad() {
-        pluginName = this.pluginName
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginName = pluginName
+        this@Event.pluginDirectory = pluginDirectory
         pluginConfig = ConfigLoader.load<ConfigSerializer>(
             File(pluginDirectory, "config.yaml"), "/config.yaml"
         )

@@ -52,7 +52,9 @@ internal object JsonManager {
         val setting = getChannelData(listenChannelId, guild).toggle()
 
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        @Suppress("UNCHECKED_CAST")
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .allowMode = setting.getChannelMode()
         jsonFile.save()
 
@@ -67,7 +69,9 @@ internal object JsonManager {
         val setting = getChannelData(listenChannelId, guild).addAllows(detectedChannelIds)
 
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        @Suppress("UNCHECKED_CAST")
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .allow = setting.getAllow()
         jsonFile.save()
 
@@ -82,7 +86,9 @@ internal object JsonManager {
         val setting = getChannelData(listenChannelId, guild).addBlocks(detectedChannelIds)
 
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        @Suppress("UNCHECKED_CAST")
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .block = setting.getBlock()
         jsonFile.save()
 

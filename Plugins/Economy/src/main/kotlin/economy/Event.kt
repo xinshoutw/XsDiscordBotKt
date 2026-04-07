@@ -6,6 +6,7 @@ import core.command.componentHandler
 import core.config.ConfigLoader
 import core.i18n.Localizer
 import core.util.GuildJsonFile
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import core.plugin.Plugin
@@ -30,7 +31,7 @@ object Event : Plugin {
     internal lateinit var storageManager: IStorage
 
     override fun PluginContext.onLoad() {
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginDirectory = pluginDirectory
 
         pluginConfig = ConfigLoader.load(
             File(pluginDirectory, "config.yaml"),
@@ -45,9 +46,10 @@ object Event : Plugin {
         when (MODE) {
             Mode.Json -> {
                 migrateLegacyDataFileIfNeeded()
+                @Suppress("UNCHECKED_CAST")
                 JsonImpl.jsonGuildFileManager = GuildJsonFile(
                     directory = File(pluginDirectory, "data"),
-                    serializer = MapSerializer(String.serializer(), DataContainer.serializer()),
+                    serializer = MapSerializer(String.serializer(), DataContainer.serializer()) as KSerializer<JsonDataClass>,
                     defaultInstance = { mutableMapOf() },
                 )
                 storageManager = JsonImpl

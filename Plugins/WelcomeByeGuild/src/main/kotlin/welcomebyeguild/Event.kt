@@ -40,7 +40,7 @@ object Event : Plugin {
     }
 
     override fun PluginContext.onLoad() {
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginDirectory = pluginDirectory
         pluginConfig = ConfigLoader.load<ConfigSerializer>(
             File(pluginDirectory, "config.yaml"), "/config.yaml"
         )

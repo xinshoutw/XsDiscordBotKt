@@ -174,7 +174,8 @@ internal object Giveaway {
 
         return channel.sendMessage(createData).map { message ->
             val finalizedGiveaway = giveaway.copy(messageId = message.idLong)
-            manager.data[giveawayId] = finalizedGiveaway
+            @Suppress("UNCHECKED_CAST")
+            (manager.data as MutableMap<String, GiveawayInstance>)[giveawayId] = finalizedGiveaway
             manager.save()
             message
         }
@@ -256,7 +257,8 @@ internal object Giveaway {
 
     private fun saveGiveaway(giveaway: GiveawayInstance) {
         val manager = jsonGuildManager[giveaway.guildId]
-        manager.data[giveaway.id] = giveaway
+        @Suppress("UNCHECKED_CAST")
+        (manager.data as MutableMap<String, GiveawayInstance>)[giveaway.id] = giveaway
         manager.save()
     }
 

@@ -27,7 +27,7 @@ object Event : ListenerAdapter(), Plugin {
     }
 
     override fun PluginContext.onLoad() {
-        pluginDirectory = this.pluginDirectory
+        this@Event.pluginDirectory = pluginDirectory
         Giveaway.stopAutoDrawScheduler()
 
         pluginConfig = ConfigLoader.load(File(pluginDirectory, "config.yaml"), "/config.yaml")

@@ -35,9 +35,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.components.text.TextInput
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import net.dv8tion.jda.api.interactions.modals.Modal
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.modals.Modal
 import net.dv8tion.jda.api.requests.restaction.pagination.MessagePaginationAction
 import net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction.PaginationOrder.FORWARD
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
@@ -115,7 +116,7 @@ internal object Ticket {
                     "btn_index" to (idMap["btn_index"] as String),
                 )
                 val modal = Modal.create(modalId, "Ticket")
-                    .addActionRow(TextInput.create("reason", reason, TextInputStyle.PARAGRAPH).setRequired(true).build())
+                    .addComponents(Label.of(reason, TextInput.create("reason", TextInputStyle.PARAGRAPH).setRequired(true).build()))
                     .build()
                 event.replyModal(modal).queue()
             }

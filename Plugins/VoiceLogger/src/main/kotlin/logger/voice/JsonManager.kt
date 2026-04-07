@@ -46,7 +46,8 @@ internal object JsonManager {
     fun toggle(guild: Guild, listenChannelId: Long): ChannelData {
         val setting = getChannelData(listenChannelId, guild).toggle()
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .allowMode = setting.getChannelMode()
         jsonFile.save()
         return setting
@@ -55,7 +56,8 @@ internal object JsonManager {
     fun addAllowChannels(guild: Guild, listenChannelId: Long, detectedChannelIds: Set<Long>): ChannelData {
         val setting = getChannelData(listenChannelId, guild).addAllows(detectedChannelIds)
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .allow = setting.getAllow()
         jsonFile.save()
         return setting
@@ -64,7 +66,8 @@ internal object JsonManager {
     fun addBlockChannels(guild: Guild, listenChannelId: Long, detectedChannelIds: Set<Long>): ChannelData {
         val setting = getChannelData(listenChannelId, guild).addBlocks(detectedChannelIds)
         val jsonFile = jsonGuildManager[guild.idLong]
-        jsonFile.data.getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
+        (jsonFile.data as MutableMap<String, DataContainer>)
+            .getOrPut(listenChannelId.toString()) { DataContainer(false, mutableSetOf(), mutableSetOf()) }
             .block = setting.getBlock()
         jsonFile.save()
         return setting
