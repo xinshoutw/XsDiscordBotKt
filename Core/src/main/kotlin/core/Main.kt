@@ -27,19 +27,19 @@ internal fun main(args: Array<String>) = runBlocking {
         modules(coreModule)
     }
 
-    // Resolve from Koin
+    // Apply CLI token override directly in Koin
     val config: BotConfig = getKoin().get()
-    val db: DatabaseProvider = getKoin().get()
-    val pluginRegistry: PluginRegistry = getKoin().get()
-    val dashboard: DashboardServer = getKoin().get()
-
-    // Allow CLI token override, then validate
-    val effectiveConfig = if (Arguments.token != null) {
-        config.copy(botToken = Arguments.token!!)
-    } else config
+    if (Arguments.token != null) {
+        getKoin().declare(config.copy(botToken = Arguments.token!!))
+    }
+    val effectiveConfig: BotConfig = getKoin().get()
     require(effectiveConfig.botToken != "YOUR_BOT_TOKEN_HERE") {
         "Bot token is not set. Provide it in config.yaml or via -t/--token"
     }
+
+    val db: DatabaseProvider = getKoin().get()
+    val pluginRegistry: PluginRegistry = getKoin().get()
+    val dashboard: DashboardServer = getKoin().get()
 
     val bot = BotApplication(
         effectiveConfig,
