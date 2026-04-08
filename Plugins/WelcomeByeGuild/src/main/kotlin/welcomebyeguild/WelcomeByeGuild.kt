@@ -48,9 +48,7 @@ internal object WelcomeByeGuild {
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
-        // GuildJsonFile doesn't have removeAndSave, but we can delete the file
-        val file = File(File(Event.pluginDirectory, "data"), "${event.guild.idLong}.json")
-        if (file.exists()) file.delete()
+        jsonGuildManager.remove(event.guild.idLong)
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {

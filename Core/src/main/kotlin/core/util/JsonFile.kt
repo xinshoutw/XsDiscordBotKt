@@ -75,4 +75,11 @@ class GuildJsonFile<T : Any>(
             JsonFile(file, serializer, defaultInstance(), json)
         }
     }
+
+    fun remove(guildId: Long) = remove(guildId.toString())
+
+    fun remove(guildId: String) {
+        cache.remove(guildId)?.delete()
+            ?: File(directory, "$guildId.json").delete()
+    }
 }
