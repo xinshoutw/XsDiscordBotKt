@@ -1,7 +1,7 @@
-package core.plugin
+package tw.xinshou.discord.core.plugin
 
-import core.command.CommandHandler
-import core.command.ComponentHandler
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.ComponentHandler
 import org.koin.core.module.Module
 
 interface Plugin {

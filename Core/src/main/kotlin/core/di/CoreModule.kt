@@ -1,12 +1,12 @@
-package core.di
+package tw.xinshou.discord.core.di
 
-import core.builtin.*
-import core.command.*
-import core.config.*
-import core.dashboard.DashboardServer
-import core.database.DatabaseProvider
-import core.logger.InteractionLogger
-import core.plugin.PluginRegistry
+import tw.xinshou.discord.core.builtin.*
+import tw.xinshou.discord.core.command.*
+import tw.xinshou.discord.core.config.*
+import tw.xinshou.discord.core.dashboard.DashboardServer
+import tw.xinshou.discord.core.database.DatabaseProvider
+import tw.xinshou.discord.core.logger.InteractionLogger
+import tw.xinshou.discord.core.plugin.PluginRegistry
 import org.koin.core.module.dsl.*
 import org.koin.dsl.module
 import java.io.File

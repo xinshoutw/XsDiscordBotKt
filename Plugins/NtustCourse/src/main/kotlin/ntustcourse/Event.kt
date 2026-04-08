@@ -1,12 +1,12 @@
-package ntustcourse
+package tw.xinshou.discord.plugin.ntustcourse
 
-import core.command.CommandHandler
-import core.config.ConfigLoader
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
-import ntustcourse.command.guildCommands
-import ntustcourse.config.ConfigSerializer
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
+import tw.xinshou.discord.plugin.ntustcourse.command.guildCommands
+import tw.xinshou.discord.plugin.ntustcourse.config.ConfigSerializer
 import java.io.File
 
 /**

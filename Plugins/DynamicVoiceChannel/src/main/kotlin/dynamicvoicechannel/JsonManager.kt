@@ -1,6 +1,6 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel
 
-import core.util.GuildJsonFile
+import tw.xinshou.discord.core.util.GuildJsonFile
 import kotlinx.serialization.builtins.ListSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

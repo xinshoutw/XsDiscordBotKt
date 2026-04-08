@@ -1,4 +1,4 @@
-package core.config
+package tw.xinshou.discord.core.config
 
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.serializer

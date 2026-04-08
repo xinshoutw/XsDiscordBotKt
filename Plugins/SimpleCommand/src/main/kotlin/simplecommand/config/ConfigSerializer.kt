@@ -1,4 +1,4 @@
-package simplecommand.config
+package tw.xinshou.discord.plugin.simplecommand.config
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package core.util
+package tw.xinshou.discord.core.util
 
 class ComponentId(
     private val prefix: String,

@@ -1,15 +1,15 @@
-package welcomebyeguild.command
+package tw.xinshou.discord.plugin.welcomebyeguild.command
 
-import core.command.CommandHandler
-import core.command.slashCommand
-import core.i18n.Localizer
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import welcomebyeguild.WelcomeByeGuild
+import tw.xinshou.discord.plugin.welcomebyeguild.WelcomeByeGuild
 
 private object Keys {
     const val WELCOME_BIND_NAME = "welcomeChannelBind.name"

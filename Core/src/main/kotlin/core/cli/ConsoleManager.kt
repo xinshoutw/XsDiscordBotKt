@@ -1,6 +1,6 @@
-package core.cli
+package tw.xinshou.discord.core.cli
 
-import core.logger.JLineLogbackAppender
+import tw.xinshou.discord.core.logger.JLineLogbackAppender
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

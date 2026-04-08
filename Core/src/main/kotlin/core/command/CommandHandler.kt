@@ -1,4 +1,4 @@
-package core.command
+package tw.xinshou.discord.core.command
 
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent

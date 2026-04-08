@@ -1,7 +1,7 @@
-package core.builtin
+package tw.xinshou.discord.core.builtin
 
-import core.config.BotConfig
-import core.placeholder.Substitutor
+import tw.xinshou.discord.core.config.BotConfig
+import tw.xinshou.discord.core.placeholder.Substitutor
 import net.dv8tion.jda.api.JDA
 
 class ConsoleLogger(

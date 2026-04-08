@@ -1,4 +1,4 @@
-package core.i18n
+package tw.xinshou.discord.core.i18n
 
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.json.JsonElement

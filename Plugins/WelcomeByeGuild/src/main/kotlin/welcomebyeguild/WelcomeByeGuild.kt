@@ -1,8 +1,8 @@
-package welcomebyeguild
+package tw.xinshou.discord.plugin.welcomebyeguild
 
-import core.i18n.MessageTemplate
-import core.placeholder.Substitutor
-import core.util.GuildJsonFile
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.util.GuildJsonFile
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.ChannelType

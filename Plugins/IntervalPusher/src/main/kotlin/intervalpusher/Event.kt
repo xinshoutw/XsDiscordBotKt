@@ -1,10 +1,10 @@
-package intervalpusher
+package tw.xinshou.discord.plugin.intervalpusher
 
-import core.config.ConfigLoader
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
-import intervalpusher.config.ConfigSerializer
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
+import tw.xinshou.discord.plugin.intervalpusher.config.ConfigSerializer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

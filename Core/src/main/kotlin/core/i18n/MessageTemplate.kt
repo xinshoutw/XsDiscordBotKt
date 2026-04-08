@@ -1,7 +1,7 @@
-package core.i18n
+package tw.xinshou.discord.core.i18n
 
 import com.charleskorn.kaml.Yaml
-import core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.Substitutor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.dv8tion.jda.api.EmbedBuilder

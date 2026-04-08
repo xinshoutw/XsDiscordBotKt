@@ -1,8 +1,8 @@
-package core.plugin
+package tw.xinshou.discord.core.plugin
 
 import com.charleskorn.kaml.Yaml
-import core.command.CommandRegistry
-import core.command.ComponentRegistry
+import tw.xinshou.discord.core.command.CommandRegistry
+import tw.xinshou.discord.core.command.ComponentRegistry
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag

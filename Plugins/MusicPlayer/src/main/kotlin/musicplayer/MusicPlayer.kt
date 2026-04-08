@@ -9,11 +9,11 @@ import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceM
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import core.i18n.MessageTemplate
-import core.placeholder.Substitutor
-import core.placeholder.withMember
-import core.placeholder.withUser
-import core.util.ComponentId
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.util.ComponentId
 import dev.lavalink.youtube.YoutubeAudioSourceManager
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission

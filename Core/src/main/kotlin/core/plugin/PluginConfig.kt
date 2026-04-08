@@ -1,4 +1,4 @@
-package core.plugin
+package tw.xinshou.discord.core.plugin
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

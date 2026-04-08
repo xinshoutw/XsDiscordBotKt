@@ -1,4 +1,4 @@
-package core.logger
+package tw.xinshou.discord.core.logger
 
 object Color {
     // Reset

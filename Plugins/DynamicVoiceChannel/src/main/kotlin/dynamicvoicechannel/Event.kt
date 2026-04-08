@@ -1,11 +1,11 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel
 
-import core.command.CommandHandler
-import core.config.ConfigLoader
-import core.i18n.Localizer
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter

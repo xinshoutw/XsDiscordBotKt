@@ -1,8 +1,8 @@
 package tw.xinshou.discord.plugin.logger.chat.command
 
-import core.command.CommandHandler
-import core.command.slashCommand
-import core.i18n.Localizer
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.Commands

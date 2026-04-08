@@ -1,4 +1,4 @@
-package welcomebyeguild.config
+package tw.xinshou.discord.plugin.welcomebyeguild.config
 
 import kotlinx.serialization.Serializable
 

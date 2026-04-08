@@ -1,4 +1,4 @@
-package core.util
+package tw.xinshou.discord.core.util
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

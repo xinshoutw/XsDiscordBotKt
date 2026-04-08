@@ -1,6 +1,6 @@
-package core.builtin
+package tw.xinshou.discord.core.builtin
 
-import core.config.BotConfig
+import tw.xinshou.discord.core.config.BotConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

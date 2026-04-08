@@ -1,4 +1,4 @@
-package core.dashboard
+package tw.xinshou.discord.core.dashboard
 
 import org.slf4j.LoggerFactory
 

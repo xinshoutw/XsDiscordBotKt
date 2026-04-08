@@ -1,13 +1,13 @@
-package core
+package tw.xinshou.discord.core
 
-import core.cli.ConsoleManager
-import core.config.BotConfig
-import core.dashboard.DashboardServer
-import core.database.DatabaseProvider
-import core.di.coreModule
-import core.logger.LogbackConfig
-import core.plugin.PluginRegistry
-import core.util.Arguments
+import tw.xinshou.discord.core.cli.ConsoleManager
+import tw.xinshou.discord.core.config.BotConfig
+import tw.xinshou.discord.core.dashboard.DashboardServer
+import tw.xinshou.discord.core.database.DatabaseProvider
+import tw.xinshou.discord.core.di.coreModule
+import tw.xinshou.discord.core.logger.LogbackConfig
+import tw.xinshou.discord.core.plugin.PluginRegistry
+import tw.xinshou.discord.core.util.Arguments
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
@@ -33,12 +33,13 @@ internal fun main(args: Array<String>) = runBlocking {
     val pluginRegistry: PluginRegistry = getKoin().get()
     val dashboard: DashboardServer = getKoin().get()
 
-    // Validate token
-    require(config.botToken != "YOUR_BOT_TOKEN_HERE") { "Bot token is not set in config.yaml" }
-    // Allow CLI token override
+    // Allow CLI token override, then validate
     val effectiveConfig = if (Arguments.token != null) {
         config.copy(botToken = Arguments.token!!)
     } else config
+    require(effectiveConfig.botToken != "YOUR_BOT_TOKEN_HERE") {
+        "Bot token is not set. Provide it in config.yaml or via -t/--token"
+    }
 
     val bot = BotApplication(
         effectiveConfig,

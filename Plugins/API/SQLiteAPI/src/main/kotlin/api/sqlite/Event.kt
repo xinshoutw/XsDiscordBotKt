@@ -1,8 +1,8 @@
 package tw.xinshou.discord.plugin.api.sqlite
 
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import org.slf4j.LoggerFactory
 
 

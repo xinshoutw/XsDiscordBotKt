@@ -1,16 +1,16 @@
-package simplecommand
+package tw.xinshou.discord.plugin.simplecommand
 
-import core.command.CommandHandler
-import core.command.slashCommand
-import core.config.ConfigLoader
-import core.i18n.Localizer
-import core.i18n.MessageTemplate
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import simplecommand.command.guildCommands
-import simplecommand.config.ConfigSerializer
+import tw.xinshou.discord.plugin.simplecommand.command.guildCommands
+import tw.xinshou.discord.plugin.simplecommand.config.ConfigSerializer
 import java.io.File
 
 object Event : Plugin {

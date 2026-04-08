@@ -1,9 +1,9 @@
 package tw.xinshou.discord.plugin.autorole
 
-import core.config.ConfigLoader
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import tw.xinshou.discord.plugin.autorole.config.ConfigSerializer

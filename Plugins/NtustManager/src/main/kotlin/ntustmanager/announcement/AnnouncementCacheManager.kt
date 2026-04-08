@@ -1,9 +1,9 @@
-package ntustmanager.announcement
+package tw.xinshou.discord.plugin.ntustmanager.announcement
 
-import core.database.DatabaseProvider
+import tw.xinshou.discord.core.database.DatabaseProvider
 import org.koin.java.KoinJavaComponent.getKoin
 import org.slf4j.LoggerFactory
-import ntustmanager.util.UrlUtils
+import tw.xinshou.discord.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.ConcurrentHashMap
 
 class AnnouncementCacheManager(pluginName: String) {

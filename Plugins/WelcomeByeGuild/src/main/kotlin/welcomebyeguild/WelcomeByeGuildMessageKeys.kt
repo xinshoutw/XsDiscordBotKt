@@ -1,4 +1,4 @@
-package welcomebyeguild
+package tw.xinshou.discord.plugin.welcomebyeguild
 
 internal object WelcomeByeGuildMessageKeys {
     const val WELCOME = "welcome"

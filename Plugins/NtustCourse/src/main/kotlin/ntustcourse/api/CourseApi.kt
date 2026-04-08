@@ -1,4 +1,4 @@
-package ntustcourse.api
+package tw.xinshou.discord.plugin.ntustcourse.api
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -1,12 +1,12 @@
-package simplecommand.command
+package tw.xinshou.discord.plugin.simplecommand.command
 
-import core.command.CommandHandler
-import core.command.slashCommand
-import core.i18n.Localizer
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.Commands
-import simplecommand.SimpleCommand
+import tw.xinshou.discord.plugin.simplecommand.SimpleCommand
 
 private object Keys {
     const val CUB_NONE_CARD_NAME = "cubNoneCard.name"

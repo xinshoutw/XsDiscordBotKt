@@ -1,13 +1,13 @@
-package ntustmanager.announcement
+package tw.xinshou.discord.plugin.ntustmanager.announcement
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
-import ntustmanager.service.GeminiApiService
-import ntustmanager.util.HtmlMinifier
-import ntustmanager.util.UrlUtils
+import tw.xinshou.discord.plugin.ntustmanager.service.GeminiApiService
+import tw.xinshou.discord.plugin.ntustmanager.util.HtmlMinifier
+import tw.xinshou.discord.plugin.ntustmanager.util.UrlUtils
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

@@ -1,12 +1,12 @@
-package ntustmanager.announcement
+package tw.xinshou.discord.plugin.ntustmanager.announcement
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
-import ntustmanager.Event
-import ntustmanager.service.GeminiApiService
-import ntustmanager.util.UrlUtils
+import tw.xinshou.discord.plugin.ntustmanager.Event
+import tw.xinshou.discord.plugin.ntustmanager.service.GeminiApiService
+import tw.xinshou.discord.plugin.ntustmanager.util.UrlUtils
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit

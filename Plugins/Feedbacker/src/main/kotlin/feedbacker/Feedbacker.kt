@@ -1,10 +1,10 @@
 package tw.xinshou.discord.plugin.feedbacker
 
-import core.i18n.MessageTemplate
-import core.placeholder.Substitutor
-import core.placeholder.withMember
-import core.placeholder.withUser
-import core.util.ComponentId
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.util.ComponentId
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.components.Component
 import net.dv8tion.jda.api.components.actionrow.ActionRow

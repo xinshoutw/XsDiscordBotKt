@@ -1,6 +1,6 @@
 package tw.xinshou.discord.plugin.economy.storage
 
-import core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.Substitutor
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
 import tw.xinshou.discord.plugin.economy.Economy.Type

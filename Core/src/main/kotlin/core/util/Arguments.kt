@@ -1,4 +1,4 @@
-package core.util
+package tw.xinshou.discord.core.util
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
@@ -7,7 +7,7 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 
 object Arguments {
-    var langTag: String = ""
+    var forceRenewLangResources: Boolean = false
         private set
     var ignoreUpdate: Boolean = false
         private set
@@ -22,8 +22,10 @@ object Arguments {
 
     fun parse(args: Array<String>) {
         val command = object : CliktCommand(name = "xsdiscordbot") {
-            val lang by option("-Flang", help = "Language tag override")
-                .default("")
+            val forceRenewLang by option(
+                "-Flang", "--force-renew-lang-resources",
+                help = "Force re-export all plugin lang resource files, overwriting existing files"
+            ).flag(default = false)
             val ignore by option("-I", "--ignore-update", help = "Ignore update checks")
                 .flag(default = false)
             val offline by option("-N", "--no-online", help = "Disable online features")
@@ -37,7 +39,7 @@ object Arguments {
                 .default("INFO")
 
             override fun run() {
-                langTag = lang
+                forceRenewLangResources = forceRenewLang
                 ignoreUpdate = ignore
                 noOnline = offline
                 autoDeferInteractionReplies = autoDefer

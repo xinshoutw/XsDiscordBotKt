@@ -1,4 +1,4 @@
-package core.util
+package tw.xinshou.discord.core.util
 
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User

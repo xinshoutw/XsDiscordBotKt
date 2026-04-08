@@ -1,6 +1,6 @@
-package addons.ticket
+package tw.xinshou.discord.plugin.addons.ticket
 
-import core.i18n.MessageTemplate
+import tw.xinshou.discord.core.i18n.MessageTemplate
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale

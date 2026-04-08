@@ -1,4 +1,4 @@
-package intervalpusher
+package tw.xinshou.discord.plugin.intervalpusher
 
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.JDA

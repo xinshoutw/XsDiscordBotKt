@@ -1,4 +1,4 @@
-package ntustmanager.announcement
+package tw.xinshou.discord.plugin.ntustmanager.announcement
 
 enum class AnnouncementType {
     STUDENT_DORMITORY,

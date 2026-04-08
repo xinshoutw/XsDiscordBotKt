@@ -1,10 +1,10 @@
-package core
+package tw.xinshou.discord.core
 
-import core.builtin.*
-import core.command.*
-import core.config.BotConfig
-import core.logger.InteractionLogger
-import core.plugin.PluginRegistry
+import tw.xinshou.discord.core.builtin.*
+import tw.xinshou.discord.core.command.*
+import tw.xinshou.discord.core.config.BotConfig
+import tw.xinshou.discord.core.logger.InteractionLogger
+import tw.xinshou.discord.core.plugin.PluginRegistry
 import dev.minn.jda.ktx.jdabuilder.light
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

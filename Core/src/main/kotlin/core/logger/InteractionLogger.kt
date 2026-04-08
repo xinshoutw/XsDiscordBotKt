@@ -1,6 +1,6 @@
-package core.logger
+package tw.xinshou.discord.core.logger
 
-import core.util.Arguments
+import tw.xinshou.discord.core.util.Arguments
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent

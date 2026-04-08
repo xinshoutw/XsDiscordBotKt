@@ -1,3 +1,3 @@
-package core.database
+package tw.xinshou.discord.core.database
 
-typealias DatabaseConfig = core.config.BotConfig.DatabaseConfig
+typealias DatabaseConfig = tw.xinshou.discord.core.config.BotConfig.DatabaseConfig

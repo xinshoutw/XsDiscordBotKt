@@ -1,11 +1,11 @@
 package tw.xinshou.discord.plugin.ticket
 
-import core.i18n.MessageTemplate
-import core.placeholder.Substitutor
-import core.placeholder.withUser
-import core.placeholder.withMember
-import core.util.ComponentId
-import core.util.GuildJsonFile
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.util.ComponentId
+import tw.xinshou.discord.core.util.GuildJsonFile
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer

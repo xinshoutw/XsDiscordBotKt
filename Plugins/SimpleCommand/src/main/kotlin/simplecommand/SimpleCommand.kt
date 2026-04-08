@@ -1,6 +1,6 @@
-package simplecommand
+package tw.xinshou.discord.plugin.simplecommand
 
-import core.i18n.MessageTemplate
+import tw.xinshou.discord.core.i18n.MessageTemplate
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import java.io.File

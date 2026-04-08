@@ -1,4 +1,4 @@
-package ntustmanager.config
+package tw.xinshou.discord.plugin.ntustmanager.config
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

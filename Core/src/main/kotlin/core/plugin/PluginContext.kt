@@ -1,6 +1,6 @@
-package core.plugin
+package tw.xinshou.discord.core.plugin
 
-import core.util.FileGetter
+import tw.xinshou.discord.core.util.FileGetter
 import org.slf4j.Logger
 import java.io.File
 

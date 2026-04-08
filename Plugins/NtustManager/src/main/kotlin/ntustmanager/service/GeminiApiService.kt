@@ -1,4 +1,4 @@
-package ntustmanager.service
+package tw.xinshou.discord.plugin.ntustmanager.service
 
 import com.google.genai.Client
 import com.google.genai.types.Content
@@ -9,9 +9,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
-import ntustmanager.announcement.AnnouncementLink
-import ntustmanager.config.ConfigSerializer
-import ntustmanager.util.UrlUtils
+import tw.xinshou.discord.plugin.ntustmanager.announcement.AnnouncementLink
+import tw.xinshou.discord.plugin.ntustmanager.config.ConfigSerializer
+import tw.xinshou.discord.plugin.ntustmanager.util.UrlUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap

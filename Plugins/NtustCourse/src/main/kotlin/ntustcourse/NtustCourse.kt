@@ -1,11 +1,11 @@
-package ntustcourse
+package tw.xinshou.discord.plugin.ntustcourse
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
-import ntustcourse.api.CourseEvent
-import ntustcourse.api.CourseMonitorService
+import tw.xinshou.discord.plugin.ntustcourse.api.CourseEvent
+import tw.xinshou.discord.plugin.ntustcourse.api.CourseMonitorService
 import org.koin.java.KoinJavaComponent.getKoin
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap

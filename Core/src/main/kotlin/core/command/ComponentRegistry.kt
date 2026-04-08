@@ -1,4 +1,4 @@
-package core.command
+package tw.xinshou.discord.core.command
 
 import org.slf4j.LoggerFactory
 

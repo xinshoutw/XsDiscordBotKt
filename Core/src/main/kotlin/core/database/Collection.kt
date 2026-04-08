@@ -1,4 +1,4 @@
-package core.database
+package tw.xinshou.discord.core.database
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions

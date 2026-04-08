@@ -1,8 +1,8 @@
 package tw.xinshou.discord.plugin.giveaway
 
-import core.i18n.MessageTemplate
-import core.util.ComponentId
-import core.util.GuildJsonFile
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.util.ComponentId
+import tw.xinshou.discord.core.util.GuildJsonFile
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import net.dv8tion.jda.api.EmbedBuilder

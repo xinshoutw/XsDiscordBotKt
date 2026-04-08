@@ -1,9 +1,9 @@
-package ntustmanager.util
+package tw.xinshou.discord.plugin.ntustmanager.util
 
 import org.slf4j.LoggerFactory
-import ntustmanager.announcement.AnnouncementData
-import ntustmanager.announcement.AnnouncementLink
-import ntustmanager.announcement.UrlType
+import tw.xinshou.discord.plugin.ntustmanager.announcement.AnnouncementData
+import tw.xinshou.discord.plugin.ntustmanager.announcement.AnnouncementLink
+import tw.xinshou.discord.plugin.ntustmanager.announcement.UrlType
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

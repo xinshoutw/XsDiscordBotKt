@@ -1,4 +1,4 @@
-package core.placeholder
+package tw.xinshou.discord.core.placeholder
 
 import org.apache.commons.text.StringSubstitutor
 

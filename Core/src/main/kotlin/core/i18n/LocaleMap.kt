@@ -1,4 +1,4 @@
-package core.i18n
+package tw.xinshou.discord.core.i18n
 
 import net.dv8tion.jda.api.interactions.DiscordLocale
 

@@ -1,14 +1,14 @@
 package tw.xinshou.discord.plugin.feedbacker
 
-import core.command.CommandHandler
-import core.command.ComponentHandler
-import core.command.componentHandler
-import core.command.slashCommand
-import core.config.ConfigLoader
-import core.i18n.Localizer
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.ComponentHandler
+import tw.xinshou.discord.core.command.componentHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import tw.xinshou.discord.plugin.feedbacker.command.guildCommands
 import tw.xinshou.discord.plugin.feedbacker.config.ConfigSerializer

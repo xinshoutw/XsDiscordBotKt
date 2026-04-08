@@ -1,7 +1,7 @@
 package tw.xinshou.discord.plugin.api.audioapi
 
-import core.plugin.Plugin
-import core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
 
 
 object Event : Plugin {

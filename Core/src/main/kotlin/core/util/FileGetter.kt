@@ -1,4 +1,4 @@
-package core.util
+package tw.xinshou.discord.core.util
 
 import java.io.File
 import java.io.InputStream

@@ -1,12 +1,12 @@
-package ntustmanager
+package tw.xinshou.discord.plugin.ntustmanager
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.koin.java.KoinJavaComponent.getKoin
 import org.slf4j.LoggerFactory
-import ntustmanager.announcement.*
-import ntustmanager.service.GeminiApiService
+import tw.xinshou.discord.plugin.ntustmanager.announcement.*
+import tw.xinshou.discord.plugin.ntustmanager.service.GeminiApiService
 
 /**
  * Main NTUST Manager class responsible for coordinating announcement monitoring

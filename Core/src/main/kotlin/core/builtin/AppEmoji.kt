@@ -1,4 +1,4 @@
-package core.builtin
+package tw.xinshou.discord.core.builtin
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji

@@ -1,6 +1,6 @@
 package tw.xinshou.discord.plugin._example.command
 
-import core.i18n.Localizer
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands

@@ -1,4 +1,4 @@
-package ntustmanager.announcement
+package tw.xinshou.discord.plugin.ntustmanager.announcement
 
 data class AnnouncementLink(
     val type: AnnouncementType, // the type of the announcement

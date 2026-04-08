@@ -1,10 +1,10 @@
-package ntustmanager
+package tw.xinshou.discord.plugin.ntustmanager
 
-import core.config.ConfigLoader
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
-import ntustmanager.config.ConfigSerializer
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
+import tw.xinshou.discord.plugin.ntustmanager.config.ConfigSerializer
 import java.io.File
 
 internal object Event : Plugin {

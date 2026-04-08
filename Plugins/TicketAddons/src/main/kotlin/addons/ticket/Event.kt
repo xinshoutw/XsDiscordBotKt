@@ -1,10 +1,10 @@
-package addons.ticket
+package tw.xinshou.discord.plugin.addons.ticket
 
-import core.config.ConfigLoader
-import core.plugin.Plugin
-import core.plugin.PluginConfig
-import core.plugin.PluginContext
-import addons.ticket.config.ConfigSerializer
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
+import tw.xinshou.discord.plugin.addons.ticket.config.ConfigSerializer
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.io.File

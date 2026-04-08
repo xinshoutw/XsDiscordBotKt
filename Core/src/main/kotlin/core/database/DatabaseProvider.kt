@@ -1,4 +1,4 @@
-package core.database
+package tw.xinshou.discord.core.database
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
@@ -25,7 +25,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class DatabaseProvider(private val config: core.config.BotConfig.DatabaseConfig) {
+class DatabaseProvider(private val config: tw.xinshou.discord.core.config.BotConfig.DatabaseConfig) {
     lateinit var client: MongoClient
         private set
 
