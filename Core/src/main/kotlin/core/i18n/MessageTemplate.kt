@@ -37,7 +37,7 @@ class MessageTemplate(
         }
 
         langDir.listFiles()?.filter { it.isDirectory }?.forEach { localeDir ->
-            val locale = parseLocale(localeDir.name) ?: run {
+            val locale = parseDiscordLocale(localeDir.name) ?: run {
                 logger.warn("Unknown locale directory: {}", localeDir.name)
                 return@forEach
             }
@@ -64,18 +64,6 @@ class MessageTemplate(
         return result
     }
 
-    private fun parseLocale(tag: String): DiscordLocale? {
-        return try {
-            DiscordLocale.from(tag)
-        } catch (_: Exception) {
-            try {
-                DiscordLocale.from(tag.replace('_', '-'))
-            } catch (_: Exception) {
-                null
-            }
-        }
-    }
-
     private fun resolveMessageData(messageId: String, locale: DiscordLocale?): MessageData? {
         val effectiveLocale = locale ?: defaultLocale
         return messages[effectiveLocale]?.get(messageId)
@@ -87,34 +75,22 @@ class MessageTemplate(
         messageId: String,
         locale: DiscordLocale? = null,
         substitutor: Substitutor? = null,
-    ): MessageCreateBuilder {
-        val data = resolveMessageData(messageId, locale)
-            ?: throw IllegalArgumentException("Message not found: $messageId")
-
-        val builder = MessageCreateBuilder()
-
-        data.content?.let { builder.setContent(substitutor.apply(it)) }
-
-        if (data.embeds.isNotEmpty()) {
-            builder.setEmbeds(data.embeds.map { buildEmbed(it, substitutor) })
-        }
-
-        if (data.components.isNotEmpty()) {
-            builder.setComponents(data.components.map { buildActionRow(it, substitutor) })
-        }
-
-        return builder
-    }
+    ): MessageCreateBuilder = MessageCreateBuilder().also { populateBuilder(it, messageId, locale, substitutor) }
 
     fun buildEdit(
         messageId: String,
         locale: DiscordLocale? = null,
         substitutor: Substitutor? = null,
-    ): MessageEditBuilder {
+    ): MessageEditBuilder = MessageEditBuilder().also { populateBuilder(it, messageId, locale, substitutor) }
+
+    private fun <T> populateBuilder(
+        builder: T,
+        messageId: String,
+        locale: DiscordLocale?,
+        substitutor: Substitutor?,
+    ) where T : net.dv8tion.jda.api.utils.messages.AbstractMessageBuilder<*, *> {
         val data = resolveMessageData(messageId, locale)
             ?: throw IllegalArgumentException("Message not found: $messageId")
-
-        val builder = MessageEditBuilder()
 
         data.content?.let { builder.setContent(substitutor.apply(it)) }
 
@@ -125,8 +101,6 @@ class MessageTemplate(
         if (data.components.isNotEmpty()) {
             builder.setComponents(data.components.map { buildActionRow(it, substitutor) })
         }
-
-        return builder
     }
 
     private fun buildEmbed(data: EmbedData, substitutor: Substitutor?): net.dv8tion.jda.api.entities.MessageEmbed {

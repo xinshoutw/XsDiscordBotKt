@@ -8,7 +8,9 @@ import core.plugin.PluginRegistry
 import dev.minn.jda.ktx.jdabuilder.light
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -36,6 +38,8 @@ class BotApplication(
         private set
 
     private var jdaModule: org.koin.core.module.Module? = null
+    private var eventListener: CoreEventListener? = null
+    private val builtinScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var statusChanger: StatusChanger? = null
     private var consoleLogger: ConsoleLogger? = null
     private var appEmoji: AppEmoji? = null
@@ -59,7 +63,8 @@ class BotApplication(
 
         // 3. Register central event listener
         jda.addEventListener(interactionLogger)
-        jda.addEventListener(CoreEventListener(commandRegistry, componentRegistry))
+        eventListener = CoreEventListener(commandRegistry, componentRegistry)
+        jda.addEventListener(eventListener)
 
         // 3.5 Register plugin-provided JDA event listeners
         for (listener in pluginRegistry.aggregateListeners()) {
@@ -77,7 +82,7 @@ class BotApplication(
 
         // 6. Start builtin features
         statusChanger = StatusChanger(jda, config.statusChanger)
-        statusChanger?.start(CoroutineScope(Dispatchers.Default))
+        statusChanger?.start(builtinScope)
 
         consoleLogger = ConsoleLogger(jda, config.consoleLoggers)
         appEmoji = AppEmoji(jda).also { it.initialize() }
@@ -85,12 +90,13 @@ class BotApplication(
 
     suspend fun stop() {
         statusChanger?.stop()
+        eventListener?.cancel()
+        builtinScope.cancel()
         pluginRegistry.unloadAll()
         jdaModule?.let { unloadKoinModules(it) }
         jdaModule = null
         if (::jda.isInitialized) {
             jda.shutdown()
-            // Await with timeout
             withTimeoutOrNull(10_000) {
                 while (jda.status != JDA.Status.SHUTDOWN) {
                     delay(100)
@@ -117,47 +123,40 @@ class BotApplication(
     }
 }
 
-// Internal: Central event listener that dispatches to registries
 private class CoreEventListener(
     private val commandRegistry: CommandRegistry,
     private val componentRegistry: ComponentRegistry,
 ) : ListenerAdapter() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    fun cancel() = scope.cancel()
+
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         scope.launch { commandRegistry.dispatch(event) }
     }
 
     override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        scope.launch {
-            val handler = componentRegistry.findHandler(event.componentId)
-            handler?.onButton?.invoke(event)
-        }
+        dispatchComponent(event.componentId) { it.onButton?.invoke(event) }
     }
 
     override fun onModalInteraction(event: ModalInteractionEvent) {
-        scope.launch {
-            val handler = componentRegistry.findHandler(event.modalId)
-            handler?.onModal?.invoke(event)
-        }
+        dispatchComponent(event.modalId) { it.onModal?.invoke(event) }
     }
 
     override fun onStringSelectInteraction(event: StringSelectInteractionEvent) {
-        scope.launch {
-            val handler = componentRegistry.findHandler(event.componentId)
-            handler?.onStringSelect?.invoke(event)
-        }
+        dispatchComponent(event.componentId) { it.onStringSelect?.invoke(event) }
     }
 
     override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        scope.launch {
-            val handler = componentRegistry.findHandler(event.componentId)
-            handler?.onEntitySelect?.invoke(event)
-        }
+        dispatchComponent(event.componentId) { it.onEntitySelect?.invoke(event) }
     }
 
     override fun onGuildJoin(event: GuildJoinEvent) {
-        // Register guild commands for new guilds
         event.guild.updateCommands().addCommands(commandRegistry.guildCommands).queue()
+    }
+
+    private fun dispatchComponent(id: String, action: suspend (ComponentHandler) -> Unit) {
+        val handler = componentRegistry.findHandler(id) ?: return
+        scope.launch { action(handler) }
     }
 }

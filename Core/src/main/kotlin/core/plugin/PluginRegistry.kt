@@ -3,7 +3,6 @@ package core.plugin
 import com.charleskorn.kaml.Yaml
 import core.command.CommandRegistry
 import core.command.ComponentRegistry
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -30,6 +29,7 @@ class PluginRegistry(
         val config: PluginConfig,
         val context: PluginContext,
         val koinModule: Module,
+        val classLoader: URLClassLoader?,
     )
 
     // -- Aggregated JDA requirements --
@@ -50,12 +50,6 @@ class PluginRegistry(
         val allPolicies = plugins.values.flatMap { it.config.requireMemberCachePolicies }
         return processMemberCachePolicy(allPolicies)
     }
-
-    val guildCommands: List<CommandData>
-        get() = commandRegistry.guildCommands
-
-    val globalCommands: List<CommandData>
-        get() = commandRegistry.globalCommands
 
     fun aggregateListeners(): List<Any> =
         plugins.values.flatMap { it.plugin.listeners() }
@@ -222,13 +216,13 @@ class PluginRegistry(
 
         // Register commands and components
         for (handler in plugin.commands()) {
-            commandRegistry.register(handler)
+            commandRegistry.register(handler, config.name)
         }
         for (handler in plugin.components()) {
             componentRegistry.register(handler)
         }
 
-        plugins[config.name] = PluginEntry(plugin, config, context, koinModule)
+        plugins[config.name] = PluginEntry(plugin, config, context, koinModule, classLoader)
     }
 
     private fun unloadPlugin(name: String) {
@@ -237,6 +231,7 @@ class PluginRegistry(
 
         with(entry.plugin) { entry.context.onUnload() }
         unloadKoinModules(entry.koinModule)
+        entry.classLoader?.close()
 
         // Deregister commands and components
         commandRegistry.deregisterAll(name)

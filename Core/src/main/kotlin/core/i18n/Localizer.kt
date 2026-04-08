@@ -27,7 +27,7 @@ class Localizer(
         }
 
         langDir.listFiles()?.filter { it.isDirectory }?.forEach { localeDir ->
-            val locale = parseLocale(localeDir.name)
+            val locale = parseDiscordLocale(localeDir.name)
             if (locale == null) {
                 logger.warn("Unknown locale directory: {}", localeDir.name)
                 return@forEach
@@ -72,19 +72,6 @@ class Localizer(
             else -> {}
         }
         return result
-    }
-
-    private fun parseLocale(tag: String): DiscordLocale? {
-        return try {
-            DiscordLocale.from(tag)
-        } catch (_: Exception) {
-            // Try replacing underscore with hyphen (e.g. "zh_TW" -> "zh-TW")
-            try {
-                DiscordLocale.from(tag.replace('_', '-'))
-            } catch (_: Exception) {
-                null
-            }
-        }
     }
 
     operator fun get(key: String): LocaleMap =
