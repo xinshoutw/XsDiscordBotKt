@@ -1,5 +1,11 @@
 package tw.xinshou.discord.plugin.logger.voice
 
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.placeholder.withGuild
+import tw.xinshou.discord.core.util.ComponentId
 import net.dv8tion.jda.api.audit.ActionType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.IMentionable
@@ -14,108 +20,85 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.core.builtin.placeholder.Substitutor
-import tw.xinshou.discord.core.util.ComponentIdManager
-import tw.xinshou.discord.core.util.FieldType
-import tw.xinshou.discord.plugin.logger.voice.Event.componentPrefix
+import tw.xinshou.discord.plugin.logger.voice.Event.config
 import tw.xinshou.discord.plugin.logger.voice.Event.placeholderLocalizer
 import tw.xinshou.discord.plugin.logger.voice.Event.pluginDirectory
 import tw.xinshou.discord.plugin.logger.voice.JsonManager.dataMap
+import java.io.File
 import java.util.stream.Collectors
 
 
 internal object VoiceLogger {
-    private val componentIdManager = ComponentIdManager(
-        prefix = componentPrefix,
+    private val componentId = ComponentId(
+        prefix = config.componentPrefix,
         idKeys = mapOf(
-            "action" to FieldType.STRING,
+            "action" to ComponentId.FieldType.STRING,
         )
     )
 
-    private var messageCreator = MessageCreator(
-        pluginDirFile = pluginDirectory,
+    private var messageTemplate = MessageTemplate(
+        langDir = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        componentIdManager = componentIdManager,
+        componentIdPrefix = config.componentPrefix,
     )
 
     internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirFile = pluginDirectory,
+        messageTemplate = MessageTemplate(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            componentIdManager = componentIdManager,
+            componentIdPrefix = config.componentPrefix,
         )
     }
 
-    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
-        getSettingMenu(
-            dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
-            event.userLocale,
-            Placeholder.get(event)
-        )
-    ).queue()
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
+        event.hook.editOriginal(
+            getSettingMenu(
+                dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
+                event.userLocale,
+                substitutor
+            )
+        ).queue()
+    }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
-        val idMap = componentIdManager.parse(event.componentId)
+        val idMap = componentId.parse(event.componentId)
         when (idMap["action"]) {
             "toggle_btn" -> onToggleButton(event)
-            "modify_allow_btn" -> createSelButton(
-                event = event,
-                key = "modify-allow",
-            )
-
-            "modify_block_btn" -> createSelButton(
-                event = event,
-                key = "modify-block",
-            )
-
+            "modify_allow_btn" -> createSelButton(event, "modify-allow")
+            "modify_block_btn" -> createSelButton(event, "modify-block")
             "delete_btn" -> onDeleteButton(event)
         }
     }
 
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        // update
         val guild = event.guild!!
         val channelIds = event.values
             .stream()
             .map { obj: IMentionable -> obj.idLong }
             .collect(Collectors.toSet())
-        val idMap = componentIdManager.parse(event.componentId)
+        val idMap = componentId.parse(event.componentId)
         val channelData = when (idMap["action"]) {
-            "modify_allow_menu" -> {
-                JsonManager.addAllowChannels(
-                    guild = guild,
-                    listenChannelId = event.channelIdLong,
-                    detectedChannelIds = channelIds
-                )
-            }
-
-            "modify_block_menu" -> {
-                JsonManager.addBlockChannels(
-                    guild = guild,
-                    listenChannelId = event.channelIdLong,
-                    detectedChannelIds = channelIds
-                )
-            }
-
-            else -> throw Exception("Unknown key ${event.componentId.removePrefix(componentPrefix)}")
+            "modify_allow_menu" -> JsonManager.addAllowChannels(guild, event.channelIdLong, channelIds)
+            "modify_block_menu" -> JsonManager.addBlockChannels(guild, event.channelIdLong, channelIds)
+            else -> throw Exception("Unknown key ${event.componentId.removePrefix(config.componentPrefix)}")
         }
 
-        // reply
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
         event.deferEdit().flatMap {
-            event.hook.editOriginal(
-                getSettingMenu(
-                    channelData,
-                    event.userLocale,
-                    Placeholder.get(event)
-                )
-            )
+            event.hook.editOriginal(getSettingMenu(channelData, event.userLocale, substitutor))
         }.queue()
     }
 
     fun onChannelUpdateVoiceStatus(event: ChannelUpdateVoiceStatusEvent) {
-        val guildId = event.guild.idLong
         val locale =
             if (!event.guild.features.contains("COMMUNITY")) DiscordLocale.CHINESE_TAIWAN
             else event.guild.locale
@@ -129,7 +112,7 @@ internal object VoiceLogger {
             .flatMap {
                 event.guild.retrieveMemberById(it[0].userIdLong)
             }.map {
-                val data = StatusEventData(guildId, locale, channel, it, oldStr, newStr)
+                val data = StatusEventData(event.guild.idLong, locale, channel, it, oldStr, newStr)
                 if (newStr!!.isEmpty()) {
                     onChannelStatusDelete(event, data)
                 } else if (oldStr!!.isEmpty()) {
@@ -142,14 +125,13 @@ internal object VoiceLogger {
 
 
     fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
-        val guildId = event.guild.idLong
         val locale =
             if (!event.guild.features.contains("COMMUNITY")) DiscordLocale.CHINESE_TAIWAN
             else event.guild.locale
         val member = event.member
         val channelJoin = event.channelJoined
         val channelLeft = event.channelLeft
-        val data = VoiceEventData(guildId, locale, member, channelJoin, channelLeft)
+        val data = VoiceEventData(event.guild.idLong, locale, member, channelJoin, channelLeft)
 
         if (channelJoin == null) {
             onChannelLeft(event, data)
@@ -167,63 +149,39 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.get(member).putAll(
+            val substitutor = Substitutor().withUser(member.user).withMember(member).putAll(
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_after" to data.newStr!!,
             )
-
-            data.channel.parentCategory?.let { category ->
-                substitutor.put(
-                    "vl_category_mention" to category.asMention,
-                )
-            }
-
+            data.channel.parentCategory?.let { substitutor.put("vl_category_mention", it.asMention) }
             sendListenChannel("on-status-new", event.guild, listenChannelIds, substitutor)
         }
     }
 
     private fun createSelButton(event: ButtonInteractionEvent, key: String) {
+        val substitutor = Substitutor().withUser(event.user).withMember(event.member).withGuild(event.guild)
         event.editMessage(
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
-                    key,
-                    event.userLocale,
-                    Placeholder.get(event)
-                ).build()
+                messageTemplate.buildCreate(key, event.userLocale, substitutor).build()
             )
         ).queue()
     }
 
-
     private fun onToggleButton(event: ButtonInteractionEvent) {
-        // update
         val channelData = JsonManager.toggle(event.guild!!, event.channel.idLong)
-
-        // reply
+        val substitutor = Substitutor().withUser(event.user).withMember(event.member).withGuild(event.guild)
         event.deferEdit().flatMap {
-            event.hook.editOriginal(
-                getSettingMenu(
-                    channelData,
-                    event.userLocale,
-                    Placeholder.get(event)
-                )
-            )
+            event.hook.editOriginal(getSettingMenu(channelData, event.userLocale, substitutor))
         }.queue()
     }
 
     private fun onDeleteButton(event: ButtonInteractionEvent) {
-        // update
         JsonManager.delete(event.guild!!.idLong, event.channel.idLong)
-
-        // reply
+        val substitutor = Substitutor().withUser(event.user).withMember(event.member).withGuild(event.guild)
         event.editMessage(
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
-                    "delete",
-                    event.userLocale,
-                    Placeholder.get(event)
-                ).build()
+                messageTemplate.buildCreate("delete", event.userLocale, substitutor).build()
             )
         ).queue()
     }
@@ -235,19 +193,13 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.get(member).putAll(
+            val substitutor = Substitutor().withUser(member.user).withMember(member).putAll(
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_before" to data.oldStr!!,
                 "vl_status_after" to data.newStr!!,
             )
-
-            data.channel.parentCategory?.let { category ->
-                substitutor.put(
-                    "vl_category_mention" to category.asMention,
-                )
-            }
-
+            data.channel.parentCategory?.let { substitutor.put("vl_category_mention", it.asMention) }
             sendListenChannel("on-status-update", event.guild, listenChannelIds, substitutor)
         }
     }
@@ -259,18 +211,12 @@ internal object VoiceLogger {
         if (listenChannelIds.isEmpty()) return
 
         data.member?.let { member ->
-            val substitutor = Placeholder.get(member).putAll(
+            val substitutor = Substitutor().withUser(member.user).withMember(member).putAll(
                 "vl_channel_mention" to data.channel.asMention,
                 "vl_channel_url" to data.channel.jumpUrl,
                 "vl_status_before" to data.oldStr!!,
             )
-
-            data.channel.parentCategory?.let { category ->
-                substitutor.put(
-                    "vl_category_mention" to category.asMention,
-                )
-            }
-
+            data.channel.parentCategory?.let { substitutor.put("vl_category_mention", it.asMention) }
             sendListenChannel("on-status-delete", event.guild, listenChannelIds, substitutor)
         }
     }
@@ -281,18 +227,12 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.get(data.member).putAll(
+        val substitutor = Substitutor().withUser(data.member.user).withMember(data.member).putAll(
             "vl_channel_join_mention" to data.channelJoin!!.asMention,
             "vl_channel_join_name" to data.channelJoin.name,
             "vl_channel_join_url" to data.channelJoin.jumpUrl,
         )
-
-        data.channelJoin.parentCategory?.let { category ->
-            substitutor.put(
-                "vl_category_join_mention" to category.asMention,
-            )
-        }
-
+        data.channelJoin.parentCategory?.let { substitutor.put("vl_category_join_mention", it.asMention) }
         sendListenChannel("on-channel-join", event.guild, listenChannelIds, substitutor)
     }
 
@@ -305,26 +245,15 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.get(data.member).putAll(
+        val substitutor = Substitutor().withUser(data.member.user).withMember(data.member).putAll(
             "vl_channel_join_url" to data.channelJoin!!.jumpUrl,
             "vl_channel_join_name" to data.channelJoin.name,
             "vl_channel_left_mention" to data.channelLeft!!.asMention,
             "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
-
-        data.channelJoin.parentCategory?.let { category ->
-            substitutor.put(
-                "vl_category_join_mention" to category.asMention,
-            )
-        }
-
-        data.channelLeft.parentCategory?.let { category ->
-            substitutor.put(
-                "vl_category_left_mention" to category.asMention,
-            )
-        }
-
+        data.channelJoin.parentCategory?.let { substitutor.put("vl_category_join_mention", it.asMention) }
+        data.channelLeft.parentCategory?.let { substitutor.put("vl_category_left_mention", it.asMention) }
         sendListenChannel("on-channel-switch", event.guild, listenChannelIds, substitutor)
     }
 
@@ -334,27 +263,19 @@ internal object VoiceLogger {
             .map { (key, _) -> key }
         if (listenChannelIds.isEmpty()) return
 
-        val substitutor = Placeholder.get(data.member).putAll(
+        val substitutor = Substitutor().withUser(data.member.user).withMember(data.member).putAll(
             "vl_channel_left_mention" to data.channelLeft!!.asMention,
             "vl_channel_left_name" to data.channelLeft.name,
             "vl_channel_left_url" to data.channelLeft.jumpUrl,
         )
-
-        data.channelLeft.parentCategory?.let { category ->
-            substitutor.put(
-                "vl_category_left_mention" to category.asMention,
-            )
-        }
-
+        data.channelLeft.parentCategory?.let { substitutor.put("vl_category_left_mention", it.asMention) }
         sendListenChannel("on-channel-left", event.guild, listenChannelIds, substitutor)
     }
 
     private fun sendListenChannel(key: String, guild: Guild, listenChannelId: List<Long>, substitutor: Substitutor) {
-        val message = messageCreator.getCreateBuilder(key, guild.locale, substitutor).build()
-
+        val message = messageTemplate.buildCreate(key, guild.locale, substitutor).build()
         listenChannelId.forEach {
             val listenChannel = guild.getGuildChannelById(it) ?: return
-
             when (listenChannel) {
                 is TextChannel -> listenChannel.sendMessage(message).queue()
                 is VoiceChannel -> listenChannel.sendMessage(message).queue()
@@ -364,26 +285,17 @@ internal object VoiceLogger {
     }
 
     private data class StatusEventData(
-        val guildId: Long,
-        val locale: DiscordLocale,
-        val channel: VoiceChannel,
-        val member: Member?,
-        val oldStr: String?,
-        val newStr: String?,
+        val guildId: Long, val locale: DiscordLocale, val channel: VoiceChannel,
+        val member: Member?, val oldStr: String?, val newStr: String?,
     )
 
     private data class VoiceEventData(
-        val guildId: Long,
-        val locale: DiscordLocale,
-        val member: Member,
-        val channelJoin: AudioChannel?,
-        val channelLeft: AudioChannel?,
+        val guildId: Long, val locale: DiscordLocale, val member: Member,
+        val channelJoin: AudioChannel?, val channelLeft: AudioChannel?,
     )
 
     private fun getSettingMenu(
-        channelData: ChannelData,
-        locale: DiscordLocale,
-        substitutor: Substitutor
+        channelData: ChannelData, locale: DiscordLocale, substitutor: Substitutor
     ): MessageEditData {
         val allowListFormat = placeholderLocalizer.get("allowListFormat", locale)
         val blockListFormat = placeholderLocalizer.get("blockListFormat", locale)
@@ -392,15 +304,13 @@ internal object VoiceLogger {
             if (channelData.getAllow().isEmpty()) {
                 append(substitutor.parse(placeholderLocalizer.get("empty", locale)))
             } else {
-                channelData.getAllow()
-                    .map { it.toString() }
-                    .map {
-                        substitutor.parse(
-                            allowListFormat
-                                .replace("%allowlist_channel_mention%", "<#${it}>")
-                                .replace("%allowlist_channel_id%", it)
-                        )
-                    }.forEach { append(it) }
+                channelData.getAllow().map { it.toString() }.map {
+                    substitutor.parse(
+                        allowListFormat
+                            .replace("%allowlist_channel_mention%", "<#${it}>")
+                            .replace("%allowlist_channel_id%", it)
+                    )
+                }.forEach { append(it) }
             }
         }.toString()
 
@@ -408,33 +318,24 @@ internal object VoiceLogger {
             if (channelData.getBlock().isEmpty()) {
                 append(substitutor.parse(placeholderLocalizer.get("empty", locale)))
             } else {
-                channelData.getBlock()
-                    .map { it.toString() }
-                    .map {
-                        substitutor.parse(
-                            blockListFormat
-                                .replace("%blocklist_channel_mention%", "<#${it}>")
-                                .replace("%blocklist_channel_id%", it)
-                        )
-                    }.forEach { append(it) }
+                channelData.getBlock().map { it.toString() }.map {
+                    substitutor.parse(
+                        blockListFormat
+                            .replace("%blocklist_channel_mention%", "<#${it}>")
+                            .replace("%blocklist_channel_id%", it)
+                    )
+                }.forEach { append(it) }
             }
         }.toString()
 
-        substitutor.apply {
-            putAll(
-                "vl_channel_mode" to if (channelData.getChannelMode()) "ALLOW" else "BLOCK",
-                "vl_allow_list_format" to allowString,
-                "vl_block_list_format" to blockString
-            )
-        }
-
+        substitutor.putAll(
+            "vl_channel_mode" to if (channelData.getChannelMode()) "ALLOW" else "BLOCK",
+            "vl_allow_list_format" to allowString,
+            "vl_block_list_format" to blockString
+        )
 
         return MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
-                "voice-logger@setting",
-                locale,
-                substitutor
-            ).build()
+            messageTemplate.buildCreate("voice-logger@setting", locale, substitutor).build()
         )
     }
 }

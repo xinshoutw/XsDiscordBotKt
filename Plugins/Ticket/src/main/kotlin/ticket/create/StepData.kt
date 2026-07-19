@@ -15,9 +15,8 @@ import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
-import tw.xinshou.discord.core.util.ComponentField
-import tw.xinshou.discord.plugin.ticket.Ticket.componentIdManager
-import tw.xinshou.discord.plugin.ticket.Ticket.messageCreator
+import tw.xinshou.discord.plugin.ticket.Ticket.componentId
+import tw.xinshou.discord.plugin.ticket.Ticket.messageTemplate
 import tw.xinshou.discord.plugin.ticket.json.serializer.DataContainer
 
 internal class Step(
@@ -28,169 +27,62 @@ internal class Step(
 
     fun renderEmbedAction(locale: DiscordLocale): WebhookMessageEditAction<Message?> {
         val messageEditData = if (message == null) {
-            messageCreator.getEditBuilder(
-                "create-ticket",
-                locale,
-                modelMapper = mapOf(
-                    "tt@embed-demo" to previewEmbed,
-                    "tt@btn-demo" to previewComponent,
-                )
-            ).build()
+            messageTemplate.buildEdit("create-ticket", locale).build()
         } else {
-            messageCreator.getEditBuilder(
-                "add-ticket",
-                locale,
-                modelMapper = mapOf(
-                    "tt@embed-demo" to previewEmbed,
-                    "tt@btn-demo" to previewComponent,
-                )
-            ).build()
+            messageTemplate.buildEdit("add-ticket", locale).build()
         }
-
         return hook.editOriginal(messageEditData)
     }
 
-    val json: DataContainer
-        get() {
-            return data.json
-        }
+    val json: DataContainer get() = data.json
 
     fun setAuthor(name: String?, iconURL: String?) {
-        if (name == null) {
-            data.author = null
-            data.authorIconUrl = null
-            return
-        }
-
-        data.author = name
-        data.authorIconUrl = iconURL
+        if (name == null) { data.author = null; data.authorIconUrl = null; return }
+        data.author = name; data.authorIconUrl = iconURL
     }
-
-    fun setTitle(title: String?) {
-        data.title = title
-    }
-
-    fun setDesc(desc: String?) {
-        data.description = desc
-    }
-
-    fun setReason(reason: String) {
-        if (reason.isEmpty()) return
-        data.json.reasonTitle = reason
-    }
-
-    fun setAdminIds(adminId: List<Long>) {
-        data.json.adminIds = adminId.toMutableList()
-    }
-
-    fun setCategoryId(categoryId: Long) {
-        data.json.categoryId = categoryId
-    }
-
-    fun setColor(color: Int) {
-        data.color = color
-    }
-
-    fun setBtnContent(content: String?) {
-        data.btnText = content
-    }
-
-    fun setBtnEmoji(emoji: Emoji?) {
-        data.btnEmoji = emoji
-    }
-
-    fun setBtnStyle(style: ButtonStyle?) {
-        data.btnStyle = style
-    }
+    fun setTitle(title: String?) { data.title = title }
+    fun setDesc(desc: String?) { data.description = desc }
+    fun setReason(reason: String) { if (reason.isEmpty()) return; data.json.reasonTitle = reason }
+    fun setAdminIds(adminId: List<Long>) { data.json.adminIds = adminId.toMutableList() }
+    fun setCategoryId(categoryId: Long) { data.json.categoryId = categoryId }
+    fun setColor(color: Int) { data.color = color }
+    fun setBtnContent(content: String?) { data.btnText = content }
+    fun setBtnEmoji(emoji: Emoji?) { data.btnEmoji = emoji }
+    fun setBtnStyle(style: ButtonStyle?) { data.btnStyle = style }
 
     fun confirmCreateAction(locale: DiscordLocale, channel: MessageChannelUnion): RestAction<Message> {
         hook.deleteOriginal().queue()
-
         if (message == null) {
-            // send a new message
-            val createMessageData = messageCreator.getCreateBuilder(
-                "confirm-create",
-                locale,
-                modelMapper = mapOf(
-                    "tt@embed" to previewEmbed,
-                    "tt@btn" to buildTicketButton("0"),
-                )
-            ).build()
-
+            val createMessageData = messageTemplate.buildCreate("confirm-create", locale).build()
             return channel.sendMessage(createMessageData)
         }
-
-        // modify the original message
-        // TODO: currently, we only support modifying the message components
-        //       we should also support modifying the message content soon
-        val actionRow = message.components
-            .firstOrNull { it.type == Component.Type.ACTION_ROW }
-            ?.asActionRow()
+        val actionRow = message.components.firstOrNull { it.type == Component.Type.ACTION_ROW }?.asActionRow()
             ?: throw IllegalStateException("Cannot find action row in the target message.")
-
-        val updatedButtons = actionRow.components
-            .map { it as ActionRowChildComponent }
-            .toMutableList()
-            .apply { add(buildTicketButton(size.toString())) }
-
-        val messageEditData = MessageEditBuilder()
-            .setEmbeds(previewEmbed)
-            .setComponents(ActionRow.of(updatedButtons))
-            .build()
-
+        val updatedButtons = actionRow.components.map { it as ActionRowChildComponent }.toMutableList().apply { add(buildTicketButton(size.toString())) }
+        val messageEditData = MessageEditBuilder().setEmbeds(previewEmbed).setComponents(ActionRow.of(updatedButtons)).build()
         return message.editMessage(messageEditData)
     }
 
-
     val previewEmbed: MessageEmbed
-        get() {
-            if (message == null) return EmbedBuilder()
-                .setAuthor(data.author, null, data.authorIconUrl)
-                .setTitle(data.title)
-                .setDescription(data.description)
-                .setColor(data.color).build()
-
-            return message.embeds[0]
-        }
+        get() = if (message == null) EmbedBuilder().setAuthor(data.author, null, data.authorIconUrl).setTitle(data.title).setDescription(data.description).setColor(data.color).build()
+        else message.embeds[0]
 
     val previewComponent: Button
-        get() = Button.of(
-            data.btnStyle ?: ButtonStyle.SUCCESS,
-            componentIdManager.build(
-                ComponentField("sub_action", "prev"),
-            ), data.btnText, data.btnEmoji
-        )
+        get() = Button.of(data.btnStyle ?: ButtonStyle.SUCCESS, componentId.build("sub_action" to "prev"), data.btnText, data.btnEmoji)
 
     private fun buildTicketButton(index: String): Button {
-        return Button.of(
-            data.btnStyle ?: ButtonStyle.SUCCESS,
-            componentIdManager.build(
-                mapOf(
-                    "action" to "press",
-                    "btn_index" to index
-                )
-            ),
-            data.btnText,
-            data.btnEmoji
-        )
+        return Button.of(data.btnStyle ?: ButtonStyle.SUCCESS, componentId.build("action" to "press", "btn_index" to index), data.btnText, data.btnEmoji)
     }
-
 }
 
-
 internal data class StepData(
-    val json: DataContainer = DataContainer(
-        reasonTitle = "有任何可以幫助的問題嗎~",
-        adminIds = mutableListOf(),
-        categoryId = 0
-    ),
-    var author: String? = "Ticket 服務",
-    var authorIconUrl: String? =
-        "https://img.lovepik.com/free-png/20211116/lovepik-customer-service-personnel-icon-png-image_400960955_wh1200.png",
-    var title: String? = "\uD83D\uDEE0 聯絡我們",
-    var description: String? = "✨ 點擊下方 **[按鈕]**，並提供所遭遇的問題，我們盡快給予答覆！ ✨",
+    val json: DataContainer = DataContainer(reasonTitle = "How can we help?", adminIds = mutableListOf(), categoryId = 0),
+    var author: String? = "Ticket Service",
+    var authorIconUrl: String? = "https://img.lovepik.com/free-png/20211116/lovepik-customer-service-personnel-icon-png-image_400960955_wh1200.png",
+    var title: String? = "\uD83D\uDEE0 Contact Us",
+    var description: String? = "Click the button below to create a ticket!",
     var color: Int = 0x00FFFF,
-    var btnText: String? = "聯絡我們",
-    var btnEmoji: Emoji? = Emoji.fromUnicode("✉"),
+    var btnText: String? = "Contact Us",
+    var btnEmoji: Emoji? = Emoji.fromUnicode("\u2709"),
     var btnStyle: ButtonStyle? = ButtonStyle.SUCCESS,
 )

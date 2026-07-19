@@ -1,62 +1,58 @@
 package tw.xinshou.discord.plugin._example
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin._example.command.CmdFileSerializer
 import tw.xinshou.discord.plugin._example.command.guildCommands
 import tw.xinshou.discord.plugin._example.config.ConfigSerializer
 
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+object Event : Plugin {
+    override lateinit var config: PluginConfig
 
-    override fun load() {
-        super.load()
+    internal lateinit var pluginContext: PluginContext
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginConfig: ConfigSerializer
 
-        if (!config.enabled) {
+    override fun PluginContext.onLoad() {
+        pluginContext = this
+
+        pluginConfig = ConfigLoader.load(
+            file = pluginDirectory.resolve("config.yaml"),
+            default = "/config.yaml",
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("_Example is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        fileGetter.export("lang/", pluginDirectory)
+
+        localizer = Localizer(
+            langDir = pluginDirectory.resolve("lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
-    }
-
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("_Example is disabled.")
-            return
-        }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
         )
 
-        _Example.reload()
+        _Example.init()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
+    override fun PluginContext.onReload() {
+        onLoad()
+        _Example.init()
+    }
+
+    override fun commands(): List<CommandHandler> {
+        if (!pluginConfig.enabled) return emptyList()
+        return guildCommands(localizer).map { data ->
+            slashCommand(data) { event ->
+                _Example.onSlashCommandInteraction(event)
+            }
         }
-    }
-
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkCommandString(event, "example-command")) return
-        _Example.onSlashCommandInteraction(event)
     }
 }

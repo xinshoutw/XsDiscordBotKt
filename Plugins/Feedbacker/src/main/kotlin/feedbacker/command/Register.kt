@@ -1,11 +1,13 @@
 package tw.xinshou.discord.plugin.feedbacker.command
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.discord.core.localizations.StringLocalizer
+import tw.xinshou.discord.plugin.feedbacker.Feedbacker
 
 private object Keys {
     const val BASE = "feedbacker"
@@ -19,17 +21,19 @@ private object Keys {
     const val FEEDBACKER_OPT_SUBMIT_CHANNEL_DESC = "$FEEDBACKER_OPTIONS.submitChannel.description"
 }
 
-internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
-    Commands.slash("feedbacker", "Create a feedback form for a member")
-        .setNameLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_DESC))
-        .addOptions(
-            OptionData(OptionType.USER, "member", "Specify the member", true)
-                .setNameLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_OPT_MEMBER_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_OPT_MEMBER_DESC)),
-            OptionData(OptionType.CHANNEL, "submit-channel", "Specify the submit channel", true)
-                .setChannelTypes(ChannelType.TEXT)
-                .setNameLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_OPT_SUBMIT_CHANNEL_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.FEEDBACKER_OPT_SUBMIT_CHANNEL_DESC)),
-        ),
+internal fun guildCommands(localizer: Localizer): List<CommandHandler> = listOf(
+    slashCommand(
+        data = Commands.slash("feedbacker", "Create a feedback form for a member")
+            .setNameLocalizations(localizer[Keys.FEEDBACKER_NAME].toMap())
+            .setDescriptionLocalizations(localizer[Keys.FEEDBACKER_DESC].toMap())
+            .addOptions(
+                OptionData(OptionType.USER, "member", "Specify the member", true)
+                    .setNameLocalizations(localizer[Keys.FEEDBACKER_OPT_MEMBER_NAME].toMap())
+                    .setDescriptionLocalizations(localizer[Keys.FEEDBACKER_OPT_MEMBER_DESC].toMap()),
+                OptionData(OptionType.CHANNEL, "submit-channel", "Specify the submit channel", true)
+                    .setChannelTypes(ChannelType.TEXT)
+                    .setNameLocalizations(localizer[Keys.FEEDBACKER_OPT_SUBMIT_CHANNEL_NAME].toMap())
+                    .setDescriptionLocalizations(localizer[Keys.FEEDBACKER_OPT_SUBMIT_CHANNEL_DESC].toMap()),
+            ),
+    ) { event -> Feedbacker.onSlashCommandInteraction(event) }
 )

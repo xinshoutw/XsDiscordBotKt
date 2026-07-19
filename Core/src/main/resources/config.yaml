@@ -2,18 +2,28 @@
 ################ General Settings ################
 ##################################################
 
-general_settings:
-  bot_token: "ODgAAAAAAAAAAADkx.GBBBBI.V6CCCCCCCCCCCCCCCCCCCCCCCC9mfsU"
+bot_token: "YOUR_BOT_TOKEN_HERE"
 
-builtin_settings:
-  status_changer_settings:
-    # PLAYING / STREAMING / LISTENING / WATCHING / CUSTOM_STATUS / COMPETING
-    activity_messages:
-      - "COMPETING;開發中...;5000"
-      - "COMPETING;Developing...;5000"
+# Set to false to use a standalone MongoDB instance
+database:
+  embedded: true
+  connection_string: "mongodb://localhost:27017"
+  port: 27017
+  data_path: "mongodb-data"
 
-  console_logger_settings:
-    - guild_id: 858672865355890708
-      channel_id: 1277193832378667040
-      log_type: [ "command", "button", "modal" ]
-      format: "[%cl_type%] %user_name% `%cl_interaction_string%`"
+# Bot status cycling
+status_changer:
+  # PLAYING / STREAMING / LISTENING / WATCHING / CUSTOM_STATUS / COMPETING
+  activities:
+    - "COMPETING;開發中...;5000"
+    - "COMPETING;Developing...;5000"
+
+# Console logging to Discord channels
+console_loggers:
+  - guild_id: 0
+    channel_id: 0
+    log_types: [ "command", "button", "modal" ]
+    format: "[%cl_type%] %user_name% `%cl_interaction_string%`"
+
+# Interaction handling
+auto_defer_replies: true

@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import tw.xinshou.discord.plugin.logger.chat.json.DataContainer
 
 internal class ChannelData(
-    private val guild: Guild,
+    private val guild: Guild?,
     initData: DataContainer? = null
 ) {
     private var channelMode: ChannelMode = ChannelMode.Allow
@@ -28,23 +28,25 @@ internal class ChannelData(
     fun getAllow() = allow
     fun getBlock() = block
 
-    fun getCurrentDetectChannels(): List<GuildChannel> = when (channelMode) {
-        ChannelMode.Allow -> {
-            allow.mapNotNull { guild.getGuildChannelById(it) }
-                .flatMap { channel ->
-                    if (channel is Category) channel.channels else listOf(channel)
-                }
-        }
+    fun getCurrentDetectChannels(): List<GuildChannel> {
+        val g = guild ?: return emptyList()
+        return when (channelMode) {
+            ChannelMode.Allow -> {
+                allow.mapNotNull { g.getGuildChannelById(it) }
+                    .flatMap { channel ->
+                        if (channel is Category) channel.channels else listOf(channel)
+                    }
+            }
 
-        ChannelMode.Block -> {
-            block.mapNotNull { guild.getGuildChannelById(it) }
-                .flatMap { channel ->
-                    if (channel is Category) channel.channels else listOf(channel)
-                }
-                .let { ignoreChannels -> guild.channels.filter { it !in ignoreChannels } }
+            ChannelMode.Block -> {
+                block.mapNotNull { g.getGuildChannelById(it) }
+                    .flatMap { channel ->
+                        if (channel is Category) channel.channels else listOf(channel)
+                    }
+                    .let { ignoreChannels -> g.channels.filter { it !in ignoreChannels } }
+            }
         }
     }
-
 
     fun toggle(): ChannelData {
         channelMode = if (channelMode == ChannelMode.Allow) {

@@ -2,7 +2,12 @@ package tw.xinshou.discord.plugin.dynamicvoicechannel.command
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import tw.xinshou.discord.core.localizations.LocalTemplate
+
+@Serializable
+internal data class NameDescriptionString(
+    val name: String,
+    val description: String,
+)
 
 @Serializable
 internal data class CmdFileSerializer(
@@ -28,13 +33,11 @@ internal data class CmdFileSerializer(
             ) {
                 @Serializable
                 internal data class Options(
-                    val channel: LocalTemplate.NameDescriptionString,
-
+                    val channel: NameDescriptionString,
                     @SerialName("format-name-1")
-                    val formatName1: LocalTemplate.NameDescriptionString,
-
+                    val formatName1: NameDescriptionString,
                     @SerialName("format-name-2")
-                    val formatName2: LocalTemplate.NameDescriptionString,
+                    val formatName2: NameDescriptionString,
                 )
             }
 
@@ -46,7 +49,7 @@ internal data class CmdFileSerializer(
             ) {
                 @Serializable
                 internal data class Options(
-                    val channel: LocalTemplate.NameDescriptionString,
+                    val channel: NameDescriptionString,
                 )
             }
         }

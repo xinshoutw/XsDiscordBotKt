@@ -1,9 +1,11 @@
 package tw.xinshou.discord.plugin.giveaway.data
 
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import kotlin.math.min
 import kotlin.random.Random
 
+@Serializable
 data class GiveawayPrize(
     val name: String,
     val winnerCount: Int = 1,
@@ -14,6 +16,7 @@ enum class WinnerDuplicatePolicy {
     UNIQUE_ACROSS_PRIZES,
 }
 
+@Serializable
 data class GiveawayConfig(
     var title: String = "",
     var description: String = "",
@@ -29,11 +32,8 @@ data class GiveawayConfig(
 
     fun deepCopy(): GiveawayConfig {
         return GiveawayConfig(
-            title = title,
-            description = description,
-            sponsor = sponsor,
-            thumbnailUrl = thumbnailUrl,
-            endAtEpochSecond = endAtEpochSecond,
+            title = title, description = description, sponsor = sponsor,
+            thumbnailUrl = thumbnailUrl, endAtEpochSecond = endAtEpochSecond,
             winnerDuplicatePolicy = winnerDuplicatePolicy,
             prizes = prizes.map { it.copy() }.toMutableList(),
         )
@@ -42,11 +42,13 @@ data class GiveawayConfig(
     fun totalWinnerSlots(): Int = prizes.sumOf { it.winnerCount.coerceAtLeast(1) }
 }
 
+@Serializable
 data class PrizeWinners(
     val prizeName: String,
     val winnerIds: MutableList<Long> = mutableListOf(),
 )
 
+@Serializable
 data class GiveawayInstance(
     val id: String,
     val guildId: Long,
@@ -65,9 +67,7 @@ data class GiveawayInstance(
 internal typealias GiveawayGuildData = MutableMap<String, GiveawayInstance>
 
 internal fun drawPrizeWinners(
-    config: GiveawayConfig,
-    participants: Set<Long>,
-    random: Random = Random,
+    config: GiveawayConfig, participants: Set<Long>, random: Random = Random,
 ): MutableList<PrizeWinners> {
     if (config.prizes.isEmpty()) return mutableListOf()
 
@@ -87,10 +87,8 @@ internal fun drawPrizeWinners(
             continue
         }
 
-        // A single prize will never contain duplicate winners.
         val shuffled = pool.shuffled(random)
         val picked = shuffled.take(min(targetCount, shuffled.size))
-
         results += PrizeWinners(prize.name, picked.toMutableList())
 
         if (config.winnerDuplicatePolicy == WinnerDuplicatePolicy.UNIQUE_ACROSS_PRIZES) {

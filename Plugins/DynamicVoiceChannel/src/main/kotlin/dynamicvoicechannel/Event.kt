@@ -1,79 +1,58 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel
 
-
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.dynamicvoicechannel.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.dynamicvoicechannel.command.commandStringSet
 import tw.xinshou.discord.plugin.dynamicvoicechannel.command.guildCommands
 import tw.xinshou.discord.plugin.dynamicvoicechannel.config.ConfigSerializer
+import java.io.File
 
+internal object Event : ListenerAdapter(), Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginDirectory: File
 
-/**
- * Main class for the Economy plugin managing configurations, commands, and data handling.
- */
-internal object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+    override fun PluginContext.onLoad() {
+        this@Event.pluginDirectory = pluginDirectory
+        pluginConfig = ConfigLoader.load(File(pluginDirectory, "config.yaml"), "/config.yaml")
 
-    override fun load() {
-        super.load()
-
-        if (!config.enabled) {
+        if (!pluginConfig.enabled) {
             logger.warn("DynamicVoiceChannel is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
         )
     }
 
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("DynamicVoiceChannel is disabled.")
-            return
-        }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
-
+    override fun PluginContext.onReload() {
+        onLoad()
+        if (!pluginConfig.enabled) return
         DynamicVoiceChannel.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
-        }
-    }
-
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
-        DynamicVoiceChannel.onSlashCommandInteraction(event)
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(localizer)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         DynamicVoiceChannel.onGuildLeave(event)
     }
 
     override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         DynamicVoiceChannel.onGuildVoiceUpdate(event)
     }
 }

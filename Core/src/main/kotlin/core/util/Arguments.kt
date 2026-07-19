@@ -1,60 +1,52 @@
 package tw.xinshou.discord.core.util
 
-import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import tw.xinshou.discord.core.logger.LogBackManager
 
+object Arguments {
+    var forceRenewLangResources: Boolean = false
+        private set
+    var ignoreUpdate: Boolean = false
+        private set
+    var noOnline: Boolean = false
+        private set
+    var autoDeferInteractionReplies: Boolean = true
+        private set
+    var token: String? = null
+        private set
+    var logLevel: String = "INFO"
+        private set
 
-internal object Arguments : CliktCommand() {
-    val forceRenewLangResources: Boolean
-            by option(
-                "-Flang",
-                "--force-renew-lang-resources",
-                help = "WARNING, Force re-export all plugin lang resource files, overwriting existing files.",
+    fun parse(args: Array<String>) {
+        val command = object : CliktCommand(name = "xsdiscordbot") {
+            val forceRenewLang by option(
+                "-Flang", "--force-renew-lang-resources",
+                help = "Force re-export all plugin lang resource files, overwriting existing files"
             ).flag(default = false)
-
-
-    val ignoreVersionCheck: Boolean
-            by option(
-                "-I",
-                "--ignore-update",
-                help = "Ignore the version check from GitHub"
-            ).flag(default = false)
-
-    val noBuild: Boolean
-            by option(
-                "-N",
-                "--no-online",
-                help = "Do not let bot online"
-            ).flag(default = false)
-
-    val autoDeferInteractionReplies: Boolean
-            by option(
+            val ignore by option("-I", "--ignore-update", help = "Ignore update checks")
+                .flag(default = false)
+            val offline by option("-N", "--no-online", help = "Disable online features")
+                .flag(default = false)
+            val autoDefer by option(
                 "--auto-defer-interactions",
-                help = "Automatically defer slash/context interactions before plugin handlers."
-            ).flag(
-                "--no-auto-defer-interactions",
-                default = true
-            )
+                help = "Auto-defer interaction replies"
+            ).flag("--no-auto-defer-interactions", default = true)
+            val tokenOpt by option("-t", "--token", help = "Bot token")
+            val logLevelOpt by option("-l", "--log-level", help = "Log level")
+                .default("INFO")
 
-    val botToken: String?
-            by option(
-                "-t",
-                "--token",
-                help = "Set bot token",
-            )
-
-    private val logLevel: String
-            by option(
-                "-l",
-                "--level",
-                help = "Set logging level"
-            ).default("INFO")
-
-    override fun run() {
-        LogBackManager.setLevel(Level.toLevel(logLevel))
+            override fun run() {
+                forceRenewLangResources = forceRenewLang
+                ignoreUpdate = ignore
+                noOnline = offline
+                autoDeferInteractionReplies = autoDefer
+                token = tokenOpt
+                logLevel = logLevelOpt
+            }
+        }
+        command.main(args.toList())
     }
 }

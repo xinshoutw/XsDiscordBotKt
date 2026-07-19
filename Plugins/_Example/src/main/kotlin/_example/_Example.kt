@@ -1,23 +1,18 @@
 package tw.xinshou.discord.plugin._example
 
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.plugin._example.Event.pluginDirectory
 
 
 internal object _Example {
-    private var messageCreator = MessageCreator(
-        pluginDirectory,
-        DiscordLocale.CHINESE_TAIWAN
-    )
+    private lateinit var messageTemplate: MessageTemplate
 
-    internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirectory,
-            DiscordLocale.CHINESE_TAIWAN
+    internal fun init() {
+        messageTemplate = MessageTemplate(
+            langDir = Event.pluginContext.pluginDirectory.resolve("lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         )
     }
 
@@ -25,20 +20,17 @@ internal object _Example {
         val option1 = event.getOption("option1")!!.asString
         val option2 = event.getOption("option2")?.asString
 
-        Placeholder.get(event).putAll(
+        val substitutor = Substitutor().putAll(
             "_Example@option1" to option1,
-            "_Example@option2" to (option2 ?: "none")
+            "_Example@option2" to (option2 ?: "none"),
         )
 
         event.hook.editOriginal(
-            MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
-                    "example",
-                    event.userLocale,
-                    Placeholder.get(event)
-                ).build(),
-            )
+            messageTemplate.buildEdit(
+                "example",
+                event.userLocale,
+                substitutor,
+            ).build()
         ).queue()
     }
 }
-

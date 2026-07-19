@@ -1,10 +1,10 @@
 package tw.xinshou.discord.plugin._example.command
 
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import tw.xinshou.discord.core.localizations.StringLocalizer
 
 private object Keys {
     const val BASE = "example"
@@ -18,16 +18,16 @@ private object Keys {
     const val OPT2_DESC = "$OPT2.description"
 }
 
-internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
+internal fun guildCommands(localizer: Localizer): List<CommandData> = listOf(
     Commands.slash("example-command", "this is an example command")
-        .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
+        .setNameLocalizations(localizer[Keys.NAME].toMap())
+        .setDescriptionLocalizations(localizer[Keys.DESCRIPTION].toMap())
         .addOptions(
             OptionData(OptionType.STRING, "option1", "this is an example option", true)
-                .setNameLocalizations(localizer.getLocaleData(Keys.OPT1_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.OPT1_DESC)),
+                .setNameLocalizations(localizer[Keys.OPT1_NAME].toMap())
+                .setDescriptionLocalizations(localizer[Keys.OPT1_DESC].toMap()),
             OptionData(OptionType.INTEGER, "option2", "this is an example option", false)
-                .setNameLocalizations(localizer.getLocaleData(Keys.OPT2_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.OPT2_DESC))
+                .setNameLocalizations(localizer[Keys.OPT2_NAME].toMap())
+                .setDescriptionLocalizations(localizer[Keys.OPT2_DESC].toMap()),
         )
 )

@@ -1,61 +1,58 @@
 package tw.xinshou.discord.plugin.botinfo
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.botinfo.command.CmdFileSerializer
 import tw.xinshou.discord.plugin.botinfo.command.globalCommands
 import tw.xinshou.discord.plugin.botinfo.config.ConfigSerializer
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
 
-    override fun load() {
-        super.load()
+object Event : Plugin {
+    override lateinit var config: PluginConfig
 
-        if (!config.enabled) {
+    internal lateinit var pluginContext: PluginContext
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginConfig: ConfigSerializer
+
+    override fun PluginContext.onLoad() {
+        pluginContext = this
+
+        pluginConfig = ConfigLoader.load(
+            file = pluginDirectory.resolve("config.yaml"),
+            default = "/config.yaml",
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("BotInfo is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        fileGetter.export("lang/", pluginDirectory)
+
+        localizer = Localizer(
+            langDir = pluginDirectory.resolve("lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
-    }
-
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("BotInfo is disabled.")
-            return
-        }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
         )
 
-        BotInfo.reload()
+        BotInfo.init()
     }
 
-    override fun globalCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            globalCommands(localizer)
+    override fun PluginContext.onReload() {
+        onLoad()
+        BotInfo.init()
+    }
+
+    override fun commands(): List<CommandHandler> {
+        if (!pluginConfig.enabled) return emptyList()
+        return globalCommands(localizer).map { data ->
+            slashCommand(data, isGlobal = true) { event ->
+                BotInfo.onSlashCommandInteraction(event)
+            }
         }
-    }
-
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkCommandString(event, "bot-info")) return
-        BotInfo.onSlashCommandInteraction(event)
     }
 }

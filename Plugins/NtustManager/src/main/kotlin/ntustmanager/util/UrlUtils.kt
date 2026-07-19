@@ -12,13 +12,9 @@ object UrlUtils {
 
     /**
      * Extracts paragraph ID from href attribute
-     * Examples:
-     * - "https://student.ntust.edu.tw/p/406-1053-139292,r1436.php?Lang=zh-tw" -> "406-1053-139292,r1436"
-     * - "https://www.academic.ntust.edu.tw/p/406-1048-138746,r1413.php?Lang=zh-tw" -> "406-1048-138746,r1413"
      */
     fun extractParagraphId(href: String): String? {
         return try {
-            // Look for pattern: /p/PARAGRAPH_ID.php
             val regex = """/p/([^.]+)\.php""".toRegex()
             val matchResult = regex.find(href)
             matchResult?.groupValues?.get(1)
@@ -30,9 +26,6 @@ object UrlUtils {
 
     /**
      * Extracts domain from a complete URL
-     * Examples:
-     * - "https://student.ntust.edu.tw/p/403-1053-1436-1.php" -> "student.ntust.edu.tw"
-     * - "https://www.academic.ntust.edu.tw/p/403-1048-1413-1.php" -> "www.academic.ntust.edu.tw"
      */
     fun extractDomainFromBaseUrl(url: String): String {
         return try {
@@ -47,12 +40,9 @@ object UrlUtils {
 
     /**
      * Validates URL type and determines if content should be processed
-     * @param url The URL to validate
-     * @return UrlType indicating how the URL should be handled
      */
     fun validateUrlType(url: String): UrlType {
         return when {
-            // NTUST announcement pattern: ^https://**.ntust.edu.tw/p/[0-9\-]+\.php$
             url.matches("""^https://.*\.ntust\.edu\.tw/p/[0-9\-,r]+\.php.*$""".toRegex()) -> UrlType.NTUST_ANNOUNCEMENT
             url.startsWith("/") -> UrlType.RELATIVE_PATH
             else -> UrlType.THIRD_PARTY
@@ -61,22 +51,17 @@ object UrlUtils {
 
     /**
      * Constructs complete URL based on href type
-     * @param href The href attribute from HTML
-     * @param baseUrl The base URL to use for relative paths
-     * @return Complete URL
      */
     fun constructCompleteUrl(href: String, baseUrl: String): String {
         return when {
-            href.startsWith("https://") -> href // Already complete URL
-            href.startsWith("/") -> "https://${extractDomainFromBaseUrl(baseUrl)}$href" // Relative path
-            else -> href // Third-party or other format
+            href.startsWith("https://") -> href
+            href.startsWith("/") -> "https://${extractDomainFromBaseUrl(baseUrl)}$href"
+            else -> href
         }
     }
 
     /**
      * Creates AnnouncementData for non-NTUST URLs with null content
-     * @param link The announcement link
-     * @return AnnouncementData with null content
      */
     fun createExternalLinkData(link: AnnouncementLink): AnnouncementData {
         return AnnouncementData(

@@ -1,13 +1,15 @@
 package tw.xinshou.discord.plugin.welcomebyeguild
 
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withGuild
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.placeholder.withCommand
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.core.builtin.placeholder.Substitutor
-import java.time.Instant
 
 internal object WelcomeByeGuildSubstitutorFactory {
     private const val NONE = "-"
@@ -19,13 +21,18 @@ internal object WelcomeByeGuildSubstitutorFactory {
         selectedChannel: TextChannel? = null,
         oldChannelId: Long = 0L,
     ): Substitutor {
-        val substitutor = Placeholder.get(event)
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(guild)
+            .withCommand(event)
 
-        Placeholder.putGuild(substitutor, guild, prefix = "wbg@")
-        Placeholder.putUser(substitutor, event.user, prefix = "wbg@")
-        event.member?.let { Placeholder.putMember(substitutor, it, prefix = "wbg@") }
-        Placeholder.putEvent(substitutor, eventType = "command", prefix = "wbg@")
-        Placeholder.putTextChannel(
+        // WBG-prefixed guild
+        putGuild(substitutor, guild, prefix = "wbg@")
+        putUser(substitutor, event.user, prefix = "wbg@")
+        event.member?.let { putMember(substitutor, it, prefix = "wbg@") }
+        putEvent(substitutor, eventType = "command", prefix = "wbg@")
+        putTextChannel(
             substitutor,
             channel = selectedChannel,
             prefix = "wbg@",
@@ -51,29 +58,73 @@ internal object WelcomeByeGuildSubstitutorFactory {
         member: Member?,
         eventType: String,
     ): Substitutor {
-        val substitutor = member?.let { Placeholder.get(it) } ?: Placeholder.get(user)
+        val substitutor = Substitutor()
+            .withUser(user)
+            .withMember(member)
+            .withGuild(guild)
 
-        Placeholder.putGuild(substitutor, guild, prefix = "wbg@")
-        Placeholder.putUser(substitutor, user, prefix = "wbg@")
-        member?.let { Placeholder.putMember(substitutor, it, prefix = "wbg@") }
-        Placeholder.putEvent(substitutor, eventType = eventType, prefix = "wbg@")
+        putGuild(substitutor, guild, prefix = "wbg@")
+        putUser(substitutor, user, prefix = "wbg@")
+        member?.let { putMember(substitutor, it, prefix = "wbg@") }
+        putEvent(substitutor, eventType = eventType, prefix = "wbg@")
 
         applyBoundChannels(substitutor, guild, setting)
         return substitutor
+    }
+
+    private fun putGuild(substitutor: Substitutor, guild: Guild, prefix: String) {
+        substitutor.putAll(
+            "${prefix}guild_id" to guild.id,
+            "${prefix}guild_name" to guild.name,
+            "${prefix}guild_member_count" to guild.memberCount.toString(),
+        )
+    }
+
+    private fun putUser(substitutor: Substitutor, user: User, prefix: String) {
+        substitutor.putAll(
+            "${prefix}user_id" to user.id,
+            "${prefix}user_name" to user.name,
+            "${prefix}user_mention" to user.asMention,
+        )
+    }
+
+    private fun putMember(substitutor: Substitutor, member: Member, prefix: String) {
+        substitutor.putAll(
+            "${prefix}member_id" to member.id,
+            "${prefix}member_display_name" to member.effectiveName,
+        )
+    }
+
+    private fun putEvent(substitutor: Substitutor, eventType: String, prefix: String) {
+        substitutor.put("${prefix}event_type", eventType)
+    }
+
+    private fun putTextChannel(
+        substitutor: Substitutor,
+        channel: TextChannel?,
+        prefix: String,
+        baseKey: String,
+        noneValue: String,
+    ) {
+        substitutor.putAll(
+            "${prefix}${baseKey}_id" to (channel?.id ?: noneValue),
+            "${prefix}${baseKey}_name" to (channel?.name ?: noneValue),
+            "${prefix}${baseKey}_mention" to (channel?.asMention ?: noneValue),
+        )
     }
 
     private fun applyBoundChannels(substitutor: Substitutor, guild: Guild, setting: GuildSetting) {
         val welcomeChannel = guild.getTextChannelById(setting.welcomeChannelId)
         val byeChannel = guild.getTextChannelById(setting.byeChannelId)
 
-        Placeholder.putTextChannel(
+        putTextChannel(
             substitutor,
             channel = welcomeChannel,
             prefix = "wbg@",
             baseKey = "welcome_channel",
             noneValue = NONE,
         )
-        Placeholder.putTextChannel(
+        putTextChannel(
             substitutor,
             channel = byeChannel,
             prefix = "wbg@",
@@ -95,7 +146,7 @@ internal object WelcomeByeGuildSubstitutorFactory {
     private fun applyOldChannel(substitutor: Substitutor, guild: Guild, oldChannelId: Long) {
         val oldChannel = if (oldChannelId == 0L) null else guild.getTextChannelById(oldChannelId)
 
-        Placeholder.putTextChannel(
+        putTextChannel(
             substitutor,
             channel = oldChannel,
             prefix = "wbg@",

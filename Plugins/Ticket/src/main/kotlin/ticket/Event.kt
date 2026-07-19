@@ -1,89 +1,68 @@
 package tw.xinshou.discord.plugin.ticket
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.ComponentHandler
+import tw.xinshou.discord.core.command.componentHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.ticket.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.ticket.command.commandNameSet
 import tw.xinshou.discord.plugin.ticket.command.guildCommands
 import tw.xinshou.discord.plugin.ticket.config.ConfigSerializer
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+object Event : ListenerAdapter(), Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var localizer: Localizer
+    internal lateinit var pluginDirectory: File
+    internal val logger get() = org.slf4j.LoggerFactory.getLogger(this::class.java)
 
-    override fun load() {
-        super.load()
+    override fun PluginContext.onLoad() {
+        this@Event.pluginDirectory = pluginDirectory
+        pluginConfig = ConfigLoader.load(File(pluginDirectory, "config.yaml"), "/config.yaml")
 
-        if (!config.enabled) {
+        if (!pluginConfig.enabled) {
             logger.warn("Ticket is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
         )
     }
 
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("Ticket is disabled.")
-            return
-        }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
-
+    override fun PluginContext.onReload() {
+        onLoad()
+        if (!pluginConfig.enabled) return
         Ticket.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(localizer)
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
-        Ticket.onSlashCommandInteraction(event)
-    }
+    override fun components(): List<ComponentHandler> {
+        val prefix = config.componentPrefix
+        if (prefix.isBlank()) return emptyList()
 
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Ticket.onButtonInteraction(event)
-    }
-
-    override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        Ticket.onEntitySelectInteraction(event)
-    }
-
-    override fun onModalInteraction(event: ModalInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkModalIdPrefix(event, componentPrefix)) return
-        Ticket.onModalInteraction(event)
+        return listOf(
+            componentHandler(prefix) {
+                onButton = { event -> Ticket.onButtonInteraction(event) }
+                onEntitySelect = { event -> Ticket.onEntitySelectInteraction(event) }
+                onModal = { event -> Ticket.onModalInteraction(event) }
+            }
+        )
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         Ticket.onGuildLeave(event)
     }
 }

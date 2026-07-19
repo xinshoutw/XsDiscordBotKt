@@ -1,19 +1,18 @@
 package tw.xinshou.discord.plugin.economy.storage
 
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.util.GuildJsonFile
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.User
-import tw.xinshou.discord.core.builtin.placeholder.Substitutor
-import tw.xinshou.discord.core.json.JsonGuildFileManager
 import tw.xinshou.discord.plugin.economy.Economy.Type
-import tw.xinshou.discord.plugin.economy.Event.config
+import tw.xinshou.discord.plugin.economy.Event.pluginConfig
+import tw.xinshou.discord.plugin.economy.Event.pluginDirectory
 import tw.xinshou.discord.plugin.economy.UserData
 import tw.xinshou.discord.plugin.economy.json.DataContainer
 import tw.xinshou.discord.plugin.economy.json.JsonDataClass
+import java.io.File
 import kotlin.math.min
 
-/**
- * Manages user data and rankings via a JSON file system.
- */
 internal object JsonImpl : IStorage {
     private data class GuildData(
         val userData: MutableMap<Long, UserData> = HashMap(),
@@ -22,18 +21,18 @@ internal object JsonImpl : IStorage {
     )
 
     private val guildDataMap: MutableMap<Long, GuildData> = HashMap()
-    lateinit var jsonGuildFileManager: JsonGuildFileManager<JsonDataClass>
-
-    /**
-     * Initializes the JSON file by loading existing users or creating new entries.
-     */
+    lateinit var jsonGuildFileManager: GuildJsonFile<JsonDataClass>
 
     override fun init() {
         guildDataMap.clear()
-        jsonGuildFileManager.mapper.forEach { (guildId, manager) ->
+
+        val dataFolder = File(pluginDirectory, "data")
+        dataFolder.listFiles()?.filter { it.isFile && it.extension == "json" }?.forEach { file ->
+            val guildId = file.nameWithoutExtension.toLongOrNull() ?: return@forEach
             val guildData = GuildData()
 
-            manager.data.forEach { (key, data) ->
+            val jsonFile = jsonGuildFileManager[guildId]
+            jsonFile.data.forEach { (key, data) ->
                 val userId = key.toLongOrNull() ?: return@forEach
                 val userData = UserData(userId, data)
                 guildData.userData[userId] = userData
@@ -48,39 +47,21 @@ internal object JsonImpl : IStorage {
         sortCostBoard()
     }
 
-    /**
-     * Queries the economic data of a specific user.
-     * Initializes the user data if not present.
-     *
-     * @param user The user to query.
-     * @return UserData for the requested user.
-     */
     override fun query(guildId: Long, user: User): UserData {
         initUserData(guildId, user)
         return getGuildData(guildId).userData[user.idLong]!!
     }
 
-    /**
-     * Updates the stored data for a specific user.
-     *
-     * @param data The user data to update.
-     */
     override fun update(guildId: Long, data: UserData) {
         update(guildId, data.id, data.data)
     }
 
-    /**
-     * Sorts the leaderboard based on money.
-     */
     override fun sortMoneyBoard() {
         guildDataMap.values.forEach { guildData ->
             guildData.moneyBoard.sortByDescending { it.data.money }
         }
     }
 
-    /**
-     * Sorts the leaderboard based on cost.
-     */
     override fun sortCostBoard() {
         guildDataMap.values.forEach { guildData ->
             guildData.costBoard.sortByDescending { it.data.cost }
@@ -88,11 +69,8 @@ internal object JsonImpl : IStorage {
     }
 
     override fun getEmbedBuilder(
-        guildId: Long,
-        type: Type,
-        embedBuilder: EmbedBuilder,
-        descriptionTemplate: String,
-        substitutor: Substitutor
+        guildId: Long, type: Type, embedBuilder: EmbedBuilder,
+        descriptionTemplate: String, substitutor: Substitutor
     ): EmbedBuilder {
         val guildData = getGuildData(guildId)
         val board = when (type) {
@@ -100,31 +78,23 @@ internal object JsonImpl : IStorage {
             Type.Cost -> guildData.costBoard
         }
 
-        val count = min(board.size, config.boardUserShowLimit)
+        val count = min(board.size, pluginConfig.boardUserShowLimit)
 
         return embedBuilder.apply {
             setDescription("")
-
             for (i in 1..count) {
                 val userData = board[i - 1]
                 appendDescription(
-                    substitutor
-                        .putAll(
-                            "index" to "$i",
-                            "name_mention" to "<@${userData.id}>",
-                            "economy_board" to "${if (type == Type.Money) userData.data.money else userData.data.cost}",
-                        ).parse(descriptionTemplate)
+                    substitutor.putAll(
+                        "index" to "$i",
+                        "name_mention" to "<@${userData.id}>",
+                        "economy_board" to "${if (type == Type.Money) userData.data.money else userData.data.cost}",
+                    ).parse(descriptionTemplate)
                 )
             }
         }
     }
 
-
-    /**
-     * Initializes user data if it does not exist in the system.
-     *
-     * @param user The user for whom data needs to be initialized.
-     */
     private fun initUserData(guildId: Long, user: User) {
         val guildData = getGuildData(guildId)
         val id = user.idLong
@@ -140,12 +110,6 @@ internal object JsonImpl : IStorage {
         }
     }
 
-    /**
-     * Updates the JSON file with the latest user money and cost data.
-     *
-     * @param userId The ID of the user to update.
-     * @param data The updated DataContainer.
-     */
     private fun update(guildId: Long, userId: Long, data: DataContainer) {
         val manager = jsonGuildFileManager[guildId]
         manager.data[userId.toString()] = data

@@ -1,15 +1,15 @@
 package tw.xinshou.discord.plugin.logger.voice.json
 
-import com.squareup.moshi.Json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-// {"858672865816346634":{"allow_mode":false,"allow":[],"block":[]}}
+@Serializable
 internal data class DataContainer(
-    @param:Json(name = "allow_mode")
+    @SerialName("allow_mode")
     var allowMode: Boolean,
 
     var allow: MutableSet<Long>,
     var block: MutableSet<Long>,
 )
-
 
 internal typealias JsonDataClass = MutableMap<String, DataContainer>

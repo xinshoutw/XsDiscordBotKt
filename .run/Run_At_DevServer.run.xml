@@ -2,7 +2,7 @@
   <configuration default="false" name="Run_At_DevServer" type="JetRunConfigurationType">
     <option name="MAIN_CLASS_NAME" value="tw.xinshou.discord.core.MainKt" />
     <module name="XsDiscordBotKt.Core.main" />
-      <option name="PROGRAM_PARAMETERS" value="--ignore-update --level DEBUG --force-renew-lang-resources"/>
+    <option name="PROGRAM_PARAMETERS" value="--ignore-update --log-level DEBUG --force-renew-lang-resources" />
     <shortenClasspath name="MANIFEST" />
     <option name="WORKING_DIRECTORY" value="./DevServer" />
     <method v="2">

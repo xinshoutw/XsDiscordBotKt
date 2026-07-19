@@ -60,14 +60,17 @@ dependencies {
 
     compileOnly(libs.annotations)
     api(libs.jda)
+    api(libs.jda.ktx)
     api(libs.logback.classic)
     api(libs.kaml)
     api(libs.commons.io)
     api(libs.commons.text)
-    api(libs.mongodb.driver.kotlin.sync)
-    api(libs.moshi.kotlin)
+    api(libs.mongodb.driver.kotlin.coroutine)
+    api(libs.bson.kotlinx)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.json)
+    api(libs.koin.core)
+    api(libs.koin.logger.slf4j)
 
     implementation(libs.jdave.api)
     implementation(libs.jdave.native.linux.x64)
@@ -81,7 +84,6 @@ dependencies {
     implementation(libs.clikt)
     implementation(libs.jansi)
     implementation(libs.jsoup)
-    implementation(libs.kotlin.reflect)
 }
 
 try {

@@ -1,62 +1,57 @@
 package tw.xinshou.discord.plugin.simplecommand
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.simplecommand.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.simplecommand.command.commandStringSet
 import tw.xinshou.discord.plugin.simplecommand.command.guildCommands
 import tw.xinshou.discord.plugin.simplecommand.config.ConfigSerializer
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var localizer: StringLocalizer<CmdFileSerializer>
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
 
-    override fun load() {
-        super.load()
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var localizer: Localizer
+    internal lateinit var messageTemplate: MessageTemplate
+    private lateinit var ctx: PluginContext
 
-        if (!config.enabled) {
+    override fun PluginContext.onLoad() {
+        ctx = this
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("SimpleCommand is disabled.")
             return
         }
 
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
+        )
+
+        messageTemplate = MessageTemplate(
+            langDir = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
         )
     }
 
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
-            logger.warn("SimpleCommand is disabled.")
-            return
+    override fun PluginContext.onReload() {
+        onLoad()
+        if (pluginConfig.enabled) {
+            SimpleCommand.reload()
         }
-
-        localizer = StringLocalizer(
-            pluginDirFile = pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-        )
-
-        SimpleCommand.reload()
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
-        SimpleCommand.onSlashCommandInteraction(event)
-    }
-
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(localizer)
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!this::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(localizer)
     }
 }

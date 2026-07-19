@@ -1,131 +1,107 @@
 package tw.xinshou.discord.plugin.logger.chat
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.ComponentHandler
+import tw.xinshou.discord.core.command.componentHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.logger.chat.JsonManager.dataMap
-import tw.xinshou.discord.plugin.logger.chat.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.logger.chat.command.PlaceholderSerializer
 import tw.xinshou.discord.plugin.logger.chat.command.guildCommands
 import tw.xinshou.discord.plugin.logger.chat.config.ConfigSerializer
+import java.io.File
 
+object Event : ListenerAdapter(), Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var registerLocalizer: Localizer
+    internal lateinit var placeholderLocalizer: Localizer
+    internal lateinit var pluginDirectory: File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private lateinit var registerLocalizer: StringLocalizer<CmdFileSerializer>
-    internal lateinit var placeholderLocalizer: StringLocalizer<PlaceholderSerializer>
+    override fun PluginContext.onLoad() {
+        this@Event.pluginDirectory = pluginDirectory
 
-    override fun load() {
-        super.load()
+        pluginConfig = ConfigLoader.load(
+            File(pluginDirectory, "config.yaml"),
+            "/config.yaml"
+        )
 
-        if (!config.enabled) {
+        if (!pluginConfig.enabled) {
             logger.warn("ChatLogger is disabled.")
             return
         }
 
-        registerLocalizer = StringLocalizer(
-            pluginDirectory,
+        registerLocalizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-            fileName = "register.yaml"
         )
 
-        placeholderLocalizer = StringLocalizer(
-            pluginDirectory,
+        placeholderLocalizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = PlaceholderSerializer::class,
-            fileName = "placeholder.yaml"
         )
     }
 
-    override fun unload() {
+    override fun PluginContext.onUnload() {
         DbManager.disconnect()
-        dataMap.clear()
-
+        JsonManager.dataMap.clear()
         logger.info("ChatLogger unloaded.")
     }
 
-    override fun reload() {
-        super.reload()
+    override fun PluginContext.onReload() {
+        onUnload()
+        onLoad()
 
-        if (!config.enabled) {
-            logger.warn("ChatLogger is disabled.")
-            return
-        }
-
-        registerLocalizer = StringLocalizer(
-            pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = CmdFileSerializer::class,
-            fileName = "register.yaml"
-        )
-
-        placeholderLocalizer = StringLocalizer(
-            pluginDirectory,
-            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            clazzSerializer = PlaceholderSerializer::class,
-            fileName = "placeholder.yaml"
-        )
+        if (!pluginConfig.enabled) return
 
         ChatLogger.reload()
     }
 
-
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(registerLocalizer)
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(registerLocalizer)
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkCommandString(event, "chat-logger setting")) return
-        ChatLogger.onSlashCommandInteraction(event)
+    override fun components(): List<ComponentHandler> {
+        val prefix = config.componentPrefix
+        if (prefix.isBlank()) return emptyList()
+
+        return listOf(
+            componentHandler(prefix) {
+                onButton = { event -> ChatLogger.onButtonInteraction(event) }
+                onEntitySelect = { event -> ChatLogger.onEntitySelectInteraction(event) }
+            }
+        )
     }
 
-    override fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        ChatLogger.onEntitySelectInteraction(event)
-    }
-
-    override fun onButtonInteraction(event: ButtonInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkComponentIdPrefix(event, componentPrefix)) return
-        ChatLogger.onButtonInteraction(event)
-    }
-
+    // Raw JDA events for message tracking
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if (!config.enabled) return
-        if (!event.isFromGuild || event.author == jdaBot.selfUser) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
+        if (!event.isFromGuild || event.author.isBot) return
         ChatLogger.onMessageReceived(event)
     }
 
     override fun onMessageUpdate(event: MessageUpdateEvent) {
-        if (!config.enabled) return
-        if (!event.isFromGuild || event.author == jdaBot.selfUser) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
+        if (!event.isFromGuild || event.author.isBot) return
         ChatLogger.onMessageUpdate(event)
     }
 
     override fun onMessageDelete(event: MessageDeleteEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         if (!event.isFromGuild) return
         ChatLogger.onMessageDelete(event)
     }
 
     override fun onGuildLeave(event: GuildLeaveEvent) {
-        if (!config.enabled) return
+        if (!::pluginConfig.isInitialized || !pluginConfig.enabled) return
         ChatLogger.onGuildLeave(event)
     }
 }

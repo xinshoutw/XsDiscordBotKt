@@ -2,7 +2,6 @@ package tw.xinshou.discord.plugin.logger.voice.command
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import tw.xinshou.discord.core.localizations.LocalTemplate
 
 @Serializable
 internal data class CmdFileSerializer(
@@ -17,7 +16,13 @@ internal data class CmdFileSerializer(
     ) {
         @Serializable
         internal data class SubCommands(
-            val setting: LocalTemplate.NameDescriptionString,
+            val setting: NameDescriptionString,
         )
     }
 }
+
+@Serializable
+internal data class NameDescriptionString(
+    val name: String,
+    val description: String,
+)

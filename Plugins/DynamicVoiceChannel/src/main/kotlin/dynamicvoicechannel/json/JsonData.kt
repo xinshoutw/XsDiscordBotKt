@@ -1,5 +1,8 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel.json
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class DataContainer(
     val categoryId: Long,
     val defaultName: String,
@@ -9,12 +12,9 @@ data class DataContainer(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
-
         other as DataContainer
-
         if (categoryId != other.categoryId) return false
         if (defaultName != other.defaultName) return false
-
         return true
     }
 
@@ -24,6 +24,5 @@ data class DataContainer(
         return result
     }
 }
-
 
 typealias JsonDataClass = MutableList<DataContainer>

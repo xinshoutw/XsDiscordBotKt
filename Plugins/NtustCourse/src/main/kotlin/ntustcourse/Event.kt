@@ -1,22 +1,30 @@
 package tw.xinshou.discord.plugin.ntustcourse
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.ntustcourse.command.commandStringSet
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import tw.xinshou.discord.plugin.ntustcourse.command.guildCommands
 import tw.xinshou.discord.plugin.ntustcourse.config.ConfigSerializer
+import java.io.File
 
 /**
- * Main class for the RentSystem plugin managing configurations, commands, and rental operations.
+ * Main class for the NtustCourse plugin managing configurations, commands, and course monitoring.
  */
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
 
-    override fun load() {
-        super.load()
+    internal lateinit var pluginConfig: ConfigSerializer
+    private lateinit var ctx: PluginContext
 
-        if (!config.enabled) {
+    override fun PluginContext.onLoad() {
+        ctx = this
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("NtustCourse is disabled.")
             return
         }
@@ -25,38 +33,32 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         logger.info("NtustCourse loaded.")
     }
 
-    override fun unload() {
-        if (this::config.isInitialized && config.enabled) {
+    override fun PluginContext.onUnload() {
+        if (this@Event::pluginConfig.isInitialized && pluginConfig.enabled) {
             NtustCourse.stop()
         }
-        super.unload()
         logger.info("NtustCourse unloaded.")
     }
 
-    override fun reload() {
-        super.reload()
-
-        if (!config.enabled) {
+    override fun PluginContext.onReload() {
+        if (this@Event::pluginConfig.isInitialized && pluginConfig.enabled) {
             NtustCourse.stop()
+        }
+
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("NtustCourse is disabled.")
             return
         }
 
-        NtustCourse.stop()
         NtustCourse.start()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands
-        }
-    }
-
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandStringSet)) return
-        NtustCourse.onSlashCommandInteraction(event)
+    override fun commands(): List<CommandHandler> {
+        if (!this::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands
     }
 }

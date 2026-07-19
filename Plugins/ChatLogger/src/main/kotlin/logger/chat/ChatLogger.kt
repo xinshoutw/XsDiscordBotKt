@@ -1,5 +1,12 @@
 package tw.xinshou.discord.plugin.logger.chat
 
+import tw.xinshou.discord.core.i18n.MessageTemplate
+import tw.xinshou.discord.core.placeholder.Substitutor
+import tw.xinshou.discord.core.placeholder.withCommand
+import tw.xinshou.discord.core.placeholder.withGuild
+import tw.xinshou.discord.core.placeholder.withMember
+import tw.xinshou.discord.core.placeholder.withUser
+import tw.xinshou.discord.core.util.ComponentId
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Message
@@ -15,75 +22,70 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.utils.messages.MessageEditData
-import tw.xinshou.discord.core.builtin.messagecreator.v2.MessageCreator
-import tw.xinshou.discord.core.builtin.placeholder.Placeholder
-import tw.xinshou.discord.core.builtin.placeholder.Substitutor
-import tw.xinshou.discord.core.util.ComponentIdManager
-import tw.xinshou.discord.core.util.FieldType
-import tw.xinshou.discord.plugin.logger.chat.Event.componentPrefix
 import tw.xinshou.discord.plugin.logger.chat.Event.config
 import tw.xinshou.discord.plugin.logger.chat.Event.placeholderLocalizer
+import tw.xinshou.discord.plugin.logger.chat.Event.pluginConfig
 import tw.xinshou.discord.plugin.logger.chat.Event.pluginDirectory
 import tw.xinshou.discord.plugin.logger.chat.JsonManager.dataMap
+import java.io.File
 import java.util.stream.Collectors
 
 
 internal object ChatLogger {
-    private val componentIdManager = ComponentIdManager(
-        prefix = componentPrefix,
+    private val componentId = ComponentId(
+        prefix = config.componentPrefix,
         idKeys = mapOf(
-            "action" to FieldType.STRING,
+            "action" to ComponentId.FieldType.STRING,
         )
     )
 
-    private var messageCreator = MessageCreator(
-        pluginDirFile = pluginDirectory,
+    private var messageTemplate = MessageTemplate(
+        langDir = File(pluginDirectory, "lang"),
         defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        componentIdManager = componentIdManager,
+        componentIdPrefix = config.componentPrefix,
     )
 
     internal fun reload() {
-        messageCreator = MessageCreator(
-            pluginDirFile = pluginDirectory,
+        messageTemplate = MessageTemplate(
+            langDir = File(pluginDirectory, "lang"),
             defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-            componentIdManager = componentIdManager,
+            componentIdPrefix = config.componentPrefix,
         )
     }
 
-    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) = event.hook.editOriginal(
-        getSettingMenu(
-            dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
-            event.userLocale,
-            Placeholder.get(event)
-        )
-    ).queue()
+    fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+            .withCommand(event)
+
+        event.hook.editOriginal(
+            getSettingMenu(
+                dataMap.computeIfAbsent(event.channelIdLong) { ChannelData(event.guild!!) },
+                event.userLocale,
+                substitutor
+            )
+        ).queue()
+    }
 
     fun onButtonInteraction(event: ButtonInteractionEvent) {
-        val idMap = componentIdManager.parse(event.componentId)
+        val idMap = componentId.parse(event.componentId)
         when (idMap["action"]) {
             "toggle_btn" -> onToggleButton(event)
-            "modify_allow_btn" -> createSelButton(
-                event = event,
-                key = "modify-allow",
-            )
-
-            "modify_block_btn" -> createSelButton(
-                event = event,
-                key = "modify-block",
-            )
-
+            "modify_allow_btn" -> createSelButton(event, "modify-allow")
+            "modify_block_btn" -> createSelButton(event, "modify-block")
             "delete_btn" -> onDeleteButton(event)
         }
     }
 
     fun onEntitySelectInteraction(event: EntitySelectInteractionEvent) {
-        // update
         val guild = event.guild!!
         val channelIds = event.values
             .stream()
             .map { obj: IMentionable -> obj.idLong }
             .collect(Collectors.toSet())
-        val idMap = componentIdManager.parse(event.componentId)
+        val idMap = componentId.parse(event.componentId)
         val channelData = when (idMap["action"]) {
             "modify_allow_menu" -> {
                 JsonManager.addAllowChannels(
@@ -101,17 +103,17 @@ internal object ChatLogger {
                 )
             }
 
-            else -> throw Exception("Unknown key ${event.componentId.removePrefix(componentPrefix)}")
+            else -> throw Exception("Unknown key ${event.componentId.removePrefix(config.componentPrefix)}")
         }
 
-        // reply
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
         event.deferEdit().flatMap {
             event.hook.editOriginal(
-                getSettingMenu(
-                    channelData,
-                    event.userLocale,
-                    Placeholder.get(event)
-                )
+                getSettingMenu(channelData, event.userLocale, substitutor)
             )
         }.queue()
     }
@@ -146,26 +148,25 @@ internal object ChatLogger {
             )
 
             if (listenChannelIds.isEmpty()) return
-            val substitutor = (event.member?.let { Placeholder.get(it) } ?: Placeholder.globalSubstitutor).putAll(
-                "cl_msg_after_url" to event.message.jumpUrl,
-                "cl_channel_mention" to channel.asMention,
-                "cl_change_count" to updateCount.toString(),
-                "cl_msg_before" to oldMessage,
-                "cl_msg_after" to newMessage
-            )
-
-            channel.asStandardGuildChannel().parentCategory?.let { category ->
-                substitutor.put(
-                    "cl_category_mention" to category.asMention,
+            val substitutor = Substitutor().apply {
+                event.member?.let {
+                    withUser(it.user)
+                    withMember(it)
+                }
+                putAll(
+                    "cl_msg_after_url" to event.message.jumpUrl,
+                    "cl_channel_mention" to channel.asMention,
+                    "cl_change_count" to updateCount.toString(),
+                    "cl_msg_before" to oldMessage,
+                    "cl_msg_after" to newMessage
                 )
             }
 
-            sendListenChannel(
-                "on-msg-update",
-                event.guild,
-                listenChannelIds,
-                substitutor
-            )
+            channel.asStandardGuildChannel().parentCategory?.let { category ->
+                substitutor.put("cl_category_mention", category.asMention)
+            }
+
+            sendListenChannel("on-msg-update", event.guild, listenChannelIds, substitutor)
         } catch (_: MessageNotFound) {
             return
         }
@@ -188,36 +189,31 @@ internal object ChatLogger {
             if (listenChannelIds.isEmpty()) return
 
             event.guild.retrieveMemberById(userId).queue { member ->
-                val substitutor = Placeholder.get(member).putAll(
-                    "cl_channel_mention" to channel.asMention,
-                    "cl_change_count" to updateCount.toString(),
-                    "cl_msg_before" to oldMessage,
-                )
+                val substitutor = Substitutor()
+                    .withUser(member.user)
+                    .withMember(member)
+                    .putAll(
+                        "cl_channel_mention" to channel.asMention,
+                        "cl_change_count" to updateCount.toString(),
+                        "cl_msg_before" to oldMessage,
+                    )
 
                 channel.asStandardGuildChannel().parentCategory?.let { category ->
-                    substitutor.put(
-                        "cl_category_mention" to category.asMention,
-                    )
+                    substitutor.put("cl_category_mention", category.asMention)
                 }
 
-                sendListenChannel(
-                    "on-msg-delete",
-                    event.guild,
-                    listenChannelIds,
-                    substitutor
-                )
+                sendListenChannel("on-msg-delete", event.guild, listenChannelIds, substitutor)
             }
         } catch (_: MessageNotFound) {
             return
         } catch (e: ErrorResponseException) {
             when (e.errorCode) {
-                // Unknown Member
                 10007 -> {
                     sendListenChannel(
                         "on-msg-delete",
                         event.guild,
                         listenChannelIds,
-                        Placeholder.globalSubstitutor
+                        Substitutor()
                     )
                     return
                 }
@@ -226,58 +222,57 @@ internal object ChatLogger {
     }
 
 
-    fun createSelButton(event: ButtonInteractionEvent, key: String) {
+    private fun createSelButton(event: ButtonInteractionEvent, key: String) {
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
         event.editMessage(
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
-                    key,
-                    event.userLocale,
-                    Placeholder.get(event)
-                ).build()
+                messageTemplate.buildCreate(key, event.userLocale, substitutor).build()
             )
         ).queue()
     }
 
     fun onGuildLeave(event: GuildLeaveEvent) {
-        if (config.logAll) return
+        if (pluginConfig.logAll) return
         DbManager.deleteDatabase(event.guild.id)
     }
 
 
     private fun onToggleButton(event: ButtonInteractionEvent) {
-        // update
         val channelData = JsonManager.toggle(event.guild!!, event.channel.idLong)
 
-        // reply
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
         event.deferEdit().flatMap {
             event.hook.editOriginal(
-                getSettingMenu(
-                    channelData,
-                    event.userLocale,
-                    Placeholder.get(event)
-                )
+                getSettingMenu(channelData, event.userLocale, substitutor)
             )
         }.queue()
     }
 
     private fun onDeleteButton(event: ButtonInteractionEvent) {
-        // update
         JsonManager.delete(event.guild!!.idLong, event.channel.idLong)
 
-        // reply
+        val substitutor = Substitutor()
+            .withUser(event.user)
+            .withMember(event.member)
+            .withGuild(event.guild)
+
         event.editMessage(
             MessageEditData.fromCreateData(
-                messageCreator.getCreateBuilder(
-                    "delete",
-                    event.userLocale,
-                    Placeholder.get(event)
-                ).build()
+                messageTemplate.buildCreate("delete", event.userLocale, substitutor).build()
             )
         ).queue()
     }
 
     private fun sendListenChannel(key: String, guild: Guild, listenChannelId: List<Long>, substitutor: Substitutor) {
-        val message = messageCreator.getCreateBuilder(key, guild.locale, substitutor).build()
+        val message = messageTemplate.buildCreate(key, guild.locale, substitutor).build()
 
         listenChannelId.forEach {
             val listenChannel = guild.getGuildChannelById(it)
@@ -297,11 +292,9 @@ internal object ChatLogger {
 
     private fun getMessageContent(message: Message): String {
         if (message.embeds.isEmpty()) {
-            // It's a default message
             return message.contentRaw
         }
 
-        // It's an embed message
         return StringBuilder().apply {
             for (embed in message.embeds) {
                 append(embed.author?.let { "${it.name}\n" } ?: "")
@@ -366,17 +359,13 @@ internal object ChatLogger {
         }
 
         return MessageEditData.fromCreateData(
-            messageCreator.getCreateBuilder(
-                "chat-logger@setting",
-                locale,
-                substitutor
-            ).build()
+            messageTemplate.buildCreate("chat-logger@setting", locale, substitutor).build()
         )
     }
 
 
     private fun isListenable(channelId: Long): Boolean {
-        return config.logAll ||
+        return pluginConfig.logAll ||
                 DbManager.isChannelInTableCache(channelId)
     }
 }

@@ -1,9 +1,10 @@
 package tw.xinshou.discord.plugin.ntustmanager
 
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import org.koin.java.KoinJavaComponent.getKoin
 import org.slf4j.LoggerFactory
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
 import tw.xinshou.discord.plugin.ntustmanager.announcement.*
 import tw.xinshou.discord.plugin.ntustmanager.service.GeminiApiService
 
@@ -18,7 +19,8 @@ object NtustManager {
     // Core components
     private lateinit var cacheManager: AnnouncementCacheManager
     private lateinit var scheduler: AnnouncementScheduler
-    private val guild = jdaBot.getGuildById(1407404369753931826L)!!
+    private val jda: JDA by lazy { getKoin().get() }
+    private val guild by lazy { jda.getGuildById(1407404369753931826L)!! }
     private val STUDENT_DORMITORY_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_DORMITORY.id)!! }
     private val STUDENT_MAIN_OFFICE_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_MAIN_OFFICE.id)!! }
     private val STUDENT_AID_CHANNEL by lazy { guild.getNewsChannelById(AnnouncementChannelId.STUDENT_AID.id)!! }
@@ -42,25 +44,6 @@ object NtustManager {
     init {
         logger.info("NtustManager initialized")
         initializeComponents()
-
-        // delete all messages in the announcement channels
-        // This is a one-time cleanup operation, uncomment if needed
-//        STUDENT_DORMITORY_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        STUDENT_AID_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        STUDENT_GUIDANCE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        STUDENT_ACTIVITY_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        STUDENT_RESOURCE_ROOM_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        ACADEMIC_MAIN_OFFICE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        ACADEMIC_GRADUATE_EDUCATION_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        ACADEMIC_REGISTRATION_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        ACADEMIC_COURSE_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        ACADEMIC_COMPREHENSIVE_BUSINESS_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_RECRUITMENT_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_EXEMPTION_REWARD_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_HONOR_LIST_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_FRESHMAN_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_ENGLISH_WORDS_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
-//        LANGUAGE_CENTER_EXTERNAL_CHANNEL.iterableHistory.queue { it.forEach { msg -> msg.delete().queue() } }
     }
 
     /**
@@ -80,7 +63,7 @@ object NtustManager {
         cacheManager.initializeCache()
 
         // Initialize Gemini API service
-        val geminiApiService = GeminiApiService(Event.config)
+        val geminiApiService = GeminiApiService(Event.pluginConfig)
 
         // Validate Gemini API configuration
         if (!geminiApiService.validateConfiguration()) {
@@ -97,10 +80,6 @@ object NtustManager {
     /**
      * Splits content into segments that don't exceed the maximum length,
      * breaking at newlines when possible to maintain readability.
-     *
-     * @param content The content to split
-     * @param maxLength The maximum length per segment (default 2000 for Discord)
-     * @return List of content segments
      */
     private fun splitContentIntoSegments(content: String, maxLength: Int = 1950): List<String> {
         if (content.length <= maxLength) {
@@ -111,29 +90,23 @@ object NtustManager {
         var remainingContent = content
 
         while (remainingContent.length > maxLength) {
-            // Find the last newline before the maxLength limit
             val cutPoint = remainingContent.lastIndexOf('\n', maxLength)
 
             val segmentEnd = if (cutPoint > 0) {
-                // Split at the newline
                 cutPoint
             } else {
-                // No newline found, split at maxLength (fallback)
                 maxLength
             }
 
-            // Add the segment
             segments.add(remainingContent.substring(0, segmentEnd))
 
-            // Update remaining content (skip the newline if we split at one)
             remainingContent = if (cutPoint > 0 && segmentEnd < remainingContent.length) {
-                remainingContent.substring(segmentEnd + 1) // Skip the newline
+                remainingContent.substring(segmentEnd + 1)
             } else {
                 remainingContent.substring(segmentEnd)
             }
         }
 
-        // Add the remaining content if any
         if (remainingContent.isNotEmpty()) {
             segments.add(remainingContent)
         }
@@ -142,39 +115,28 @@ object NtustManager {
     }
 
     /**
-     * Creates Discord messages from announcement data, splitting content if necessary
-     * to ensure no message exceeds 2000 characters.
-     *
-     * @param announcement The announcement data to create messages from
-     * @return List of Discord messages ready to send
+     * Creates Discord messages from announcement data, splitting content if necessary.
      */
     private fun createDiscordMessages(announcement: AnnouncementData): List<MessageCreateData> {
-        val header = "＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿"
+        val header = "\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F\uFF3F"
         if (announcement.content == null) {
-            // For null content, just send header + URL
             val messageContent = "$header\n# [${announcement.link.title}](${announcement.link.url.trim()})"
             return listOf(MessageCreateBuilder().setContent(messageContent).build())
         }
 
-        // For content announcements, check if we need to split
         val fullContent = announcement.content.trim()
         if (fullContent.length <= 1990 - header.length) {
-            // Content fits in one message
             return listOf(MessageCreateBuilder().setContent("$header\n${fullContent}").build())
         }
 
-        // Content is too long, need to split
         val messages = mutableListOf<MessageCreateData>()
 
-        // First message: header + beginning of content
         val availableSpaceForContent = 1980
         val contentSegments = splitContentIntoSegments(announcement.content.trim(), availableSpaceForContent)
 
-        // First message with header
         val firstMessageContent = contentSegments[0]
         messages.add(MessageCreateBuilder().setContent("$header\n$firstMessageContent").build())
 
-        // Subsequent messages with remaining content segments
         for (i in 1 until contentSegments.size) {
             messages.add(MessageCreateBuilder().setContent(contentSegments[i]).build())
         }
@@ -183,15 +145,11 @@ object NtustManager {
     }
 
     /**
-     * Handles a new announcement - this is the core function that remains in NtustManager
-     * This is where user-defined announcement processing logic should be implemented
-     *
-     * @param announcement The new announcement data to process
+     * Handles a new announcement.
      */
     private fun handleNewAnnouncement(announcement: AnnouncementData) {
         logger.info("New announcement: ${announcement.title} (${announcement.link.type})")
 
-        // Log announcement details
         logger.debug("Announcement details:")
         logger.debug("  Type: {}", announcement.link.type)
         logger.debug("  URL: ${announcement.link.url}")
@@ -200,11 +158,9 @@ object NtustManager {
         logger.debug("  Content Length: ${announcement.content?.length ?: 0} characters")
         logger.debug("  Fetched Timestamp: ${announcement.fetchedTimestamp}")
 
-        // Create messages with content splitting if necessary
         val messages = createDiscordMessages(announcement)
         logger.debug("Created ${messages.size} message(s) for announcement")
 
-        // Send all messages to the appropriate channel
         val targetChannel = when (announcement.link.type) {
             AnnouncementType.STUDENT_MAIN_OFFICE -> STUDENT_MAIN_OFFICE_CHANNEL
             AnnouncementType.STUDENT_DORMITORY -> STUDENT_DORMITORY_CHANNEL
@@ -226,7 +182,6 @@ object NtustManager {
             AnnouncementType.LANGUAGE_CENTER_ACTIVITY -> LANGUAGE_CENTER_ACTIVITY_CHANNEL
         }
 
-        // Send each message sequentially
         messages.forEachIndexed { index, message ->
             targetChannel.sendMessage(message).queue { success ->
                 logger.debug("Successfully sent message {}/{} for {}", index + 1, messages.size, announcement.link.type)
@@ -238,7 +193,6 @@ object NtustManager {
 
     /**
      * Gets all current announcement lists
-     * @return Map of announcement types to their current announcement lists
      */
     fun getAllCurrentAnnouncementLists(): Map<AnnouncementType, List<AnnouncementLink>> {
         return if (::cacheManager.isInitialized) {
@@ -249,7 +203,7 @@ object NtustManager {
     }
 
     /**
-     * Triggers a manual check of all announcements (for testing or immediate updates)
+     * Triggers a manual check of all announcements
      */
     suspend fun triggerManualCheck() {
         if (::scheduler.isInitialized) {

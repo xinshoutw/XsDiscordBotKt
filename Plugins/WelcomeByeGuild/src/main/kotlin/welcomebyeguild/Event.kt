@@ -1,34 +1,56 @@
 package tw.xinshou.discord.plugin.welcomebyeguild
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.config.ConfigLoader
+import tw.xinshou.discord.core.i18n.Localizer
+import tw.xinshou.discord.core.plugin.Plugin
+import tw.xinshou.discord.core.plugin.PluginConfig
+import tw.xinshou.discord.core.plugin.PluginContext
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.DiscordLocale
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-import tw.xinshou.discord.core.plugin.PluginEventConfigure
-import tw.xinshou.discord.core.util.GlobalUtil
-import tw.xinshou.discord.plugin.welcomebyeguild.command.CmdFileSerializer
-import tw.xinshou.discord.plugin.welcomebyeguild.command.commandNameSet
 import tw.xinshou.discord.plugin.welcomebyeguild.command.guildCommands
 import tw.xinshou.discord.plugin.welcomebyeguild.config.ConfigSerializer
-import java.util.concurrent.atomic.AtomicReference
+import java.io.File
 
-object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.serializer()) {
-    private fun createLocalizer(): StringLocalizer<CmdFileSerializer> = StringLocalizer(
-        pluginDirFile = pluginDirectory,
-        defaultLocale = DiscordLocale.CHINESE_TAIWAN,
-        clazzSerializer = CmdFileSerializer::class,
-    )
+object Event : Plugin {
+    override var config: PluginConfig = PluginConfig(name = "", main = "", coreApi = "", version = "")
 
-    private val localizerRef = AtomicReference<StringLocalizer<CmdFileSerializer>?>(null)
+    internal lateinit var pluginConfig: ConfigSerializer
+    internal lateinit var pluginDirectory: File
+    internal lateinit var localizer: Localizer
 
-    override fun load() {
-        super.load()
-        localizerRef.set(createLocalizer())
+    private val jdaListener = object : ListenerAdapter() {
+        override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
+            if (!pluginConfig.enabled) return
+            WelcomeByeGuild.onGuildMemberJoin(event)
+        }
 
-        if (!config.enabled) {
+        override fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
+            if (!pluginConfig.enabled) return
+            WelcomeByeGuild.onGuildMemberRemove(event)
+        }
+
+        override fun onGuildLeave(event: GuildLeaveEvent) {
+            if (!pluginConfig.enabled) return
+            WelcomeByeGuild.onGuildLeave(event)
+        }
+    }
+
+    override fun PluginContext.onLoad() {
+        this@Event.pluginDirectory = pluginDirectory
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
+
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("WelcomeByeGuild is disabled.")
             return
         }
@@ -36,11 +58,17 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         WelcomeByeGuild.load()
     }
 
-    override fun reload() {
-        super.reload()
-        localizerRef.set(createLocalizer())
+    override fun PluginContext.onReload() {
+        pluginConfig = ConfigLoader.load<ConfigSerializer>(
+            File(pluginDirectory, "config.yaml"), "/config.yaml"
+        )
 
-        if (!config.enabled) {
+        localizer = Localizer(
+            langDir = File(pluginDirectory, "lang"),
+            defaultLocale = DiscordLocale.CHINESE_TAIWAN,
+        )
+
+        if (!pluginConfig.enabled) {
             logger.warn("WelcomeByeGuild is disabled.")
             return
         }
@@ -48,34 +76,10 @@ object Event : PluginEventConfigure<ConfigSerializer>(true, ConfigSerializer.ser
         WelcomeByeGuild.reload()
     }
 
-    override fun guildCommands(): Array<CommandData> {
-        return if (!config.enabled) {
-            emptyArray()
-        } else {
-            guildCommands(
-                localizerRef.get() ?: createLocalizer().also(localizerRef::set)
-            )
-        }
+    override fun commands(): List<CommandHandler> {
+        if (!this::pluginConfig.isInitialized || !pluginConfig.enabled) return emptyList()
+        return guildCommands(localizer)
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!config.enabled) return
-        if (GlobalUtil.checkSlashCommand(event, commandNameSet)) return
-        WelcomeByeGuild.onSlashCommandInteraction(event)
-    }
-
-    override fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
-        if (!config.enabled) return
-        WelcomeByeGuild.onGuildMemberJoin(event)
-    }
-
-    override fun onGuildMemberRemove(event: GuildMemberRemoveEvent) {
-        if (!config.enabled) return
-        WelcomeByeGuild.onGuildMemberRemove(event)
-    }
-
-    override fun onGuildLeave(event: GuildLeaveEvent) {
-        if (!config.enabled) return
-        WelcomeByeGuild.onGuildLeave(event)
-    }
+    override fun listeners(): List<Any> = listOf(jdaListener)
 }

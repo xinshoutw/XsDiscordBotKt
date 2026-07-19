@@ -1,26 +1,37 @@
 package tw.xinshou.discord.plugin.autorole
 
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
-import tw.xinshou.discord.plugin.autorole.Event.config
 
 object AutoRole {
-    private var trackedGuildIds: Set<Long> = config.guilds.map { it.guildId }.toSet()
-    private var addRoles: Map<Long, List<Role>> = config.guilds.associate {
-        (it.guildId) to (it.roleIds.mapNotNull { roleId -> jdaBot.getRoleById(roleId) })
+    private var trackedGuildIds: Set<Long> = emptySet()
+    private var addRoles: Map<Long, List<Role>> = emptyMap()
+    private var initialized = false
+
+    internal fun init(jda: JDA) {
+        val guilds = Event.pluginConfig.guilds
+        trackedGuildIds = guilds.map { it.guildId }.toSet()
+        addRoles = guilds.associate { guild ->
+            guild.guildId to guild.roleIds.mapNotNull { roleId -> jda.getRoleById(roleId) }
+        }
+        initialized = true
     }
 
     internal fun reload() {
-        trackedGuildIds = config.guilds.map { it.guildId }.toSet()
-        addRoles = config.guilds.associate {
-            (it.guildId) to (it.roleIds.mapNotNull { roleId -> jdaBot.getRoleById(roleId) })
-        }
+        initialized = false
     }
 
     fun onGuildMemberJoin(event: GuildMemberJoinEvent) {
+        if (!initialized) {
+            init(event.jda)
+        }
+
         if (event.guild.idLong !in trackedGuildIds) return
 
-        event.guild.modifyMemberRoles(event.member, addRoles.getValue(event.guild.idLong)).queue()
+        val roles = addRoles[event.guild.idLong] ?: return
+        if (roles.isNotEmpty()) {
+            event.guild.modifyMemberRoles(event.member, roles).queue()
+        }
     }
 }

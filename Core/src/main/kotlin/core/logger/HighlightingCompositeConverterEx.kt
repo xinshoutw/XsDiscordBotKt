@@ -2,16 +2,18 @@ package tw.xinshou.discord.core.logger
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.pattern.color.ANSIConstants
-import ch.qos.logback.core.pattern.color.ForegroundCompositeConverterBase
+import ch.qos.logback.core.pattern.CompositeConverter
 
-
-internal class HighlightingCompositeConverter : ForegroundCompositeConverterBase<ILoggingEvent>() {
-    override fun getForegroundColorCode(event: ILoggingEvent): String = when (event.level) {
-        Level.ERROR -> ANSIConstants.BOLD + ANSIConstants.RED_FG // default
-        Level.WARN -> ANSIConstants.YELLOW_FG
-        Level.INFO -> ANSIConstants.BLUE_FG
-        Level.DEBUG -> ANSIConstants.BOLD + ANSIConstants.CYAN_FG
-        else -> ANSIConstants.DEFAULT_FG
+class HighlightingCompositeConverterEx : CompositeConverter<ILoggingEvent>() {
+    override fun transform(event: ILoggingEvent, input: String): String {
+        val color = when (event.level.toInt()) {
+            Level.ERROR_INT -> Color.BOLD + Color.RED
+            Level.WARN_INT -> Color.YELLOW
+            Level.INFO_INT -> Color.BLUE
+            Level.DEBUG_INT -> Color.BOLD + Color.CYAN
+            Level.TRACE_INT -> Color.DIM + Color.WHITE
+            else -> Color.WHITE
+        }
+        return "$color$input${Color.RESET}"
     }
 }

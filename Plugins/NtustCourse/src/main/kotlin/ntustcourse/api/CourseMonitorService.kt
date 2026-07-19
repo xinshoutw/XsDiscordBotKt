@@ -9,15 +9,15 @@ class CourseMonitorService {
     private var job: Job? = null
 
     /**
-     * 註冊訂閱
-     * @param courseNo 指定課程代碼，若為 "ALL" 則訂閱所有課程
+     * Register a subscription.
+     * @param courseNo The course number, or "ALL" to subscribe to all courses.
      */
     fun subscribe(courseNo: String, callback: (CourseEvent) -> Unit) {
         subscribers.computeIfAbsent(courseNo) { mutableListOf() }.add(callback)
     }
 
     /**
-     * 開始監控
+     * Start monitoring.
      */
     fun start(semester: String = "1142") {
         if (job != null && job!!.isActive) return
@@ -32,24 +32,23 @@ class CourseMonitorService {
                 }
 
                 val elapsedTime = System.currentTimeMillis() - startTime
-                val delayTime = (1500L - elapsedTime).coerceAtLeast(100L) // 至少休眠 100ms
+                val delayTime = (1500L - elapsedTime).coerceAtLeast(100L)
                 delay(delayTime)
             }
         }
     }
 
     /**
-     * 停止監控
+     * Stop monitoring.
      */
     fun stop() {
         job?.cancel()
     }
 
     /**
-     * 比對邏輯與觸發通知
+     * Comparison logic and trigger notifications.
      */
     private fun processUpdates(newList: List<Course>) {
-        // 將 List 轉為 Map 以便快速查找 (Key: CourseNo)
         val currentMap = newList.associateBy { it.id }
 
         currentMap.forEach { (id, newCourse) ->
@@ -68,7 +67,7 @@ class CourseMonitorService {
     }
 
     /**
-     * 發送通知給對應的訂閱者
+     * Send notifications to corresponding subscribers.
      */
     private fun notifySubscribers(courseId: String, event: CourseEvent) {
         subscribers[courseId]?.forEach { it.invoke(event) }

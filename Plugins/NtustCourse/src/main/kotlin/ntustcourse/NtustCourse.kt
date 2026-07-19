@@ -1,21 +1,17 @@
 package tw.xinshou.discord.plugin.ntustcourse
 
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
-import tw.xinshou.discord.core.base.BotLoader.jdaBot
-import tw.xinshou.discord.core.mongodb.CacheDbManager
-import tw.xinshou.discord.core.mongodb.ICacheDb
-import tw.xinshou.discord.core.mongodb.getTyped
 import tw.xinshou.discord.plugin.ntustcourse.api.CourseEvent
 import tw.xinshou.discord.plugin.ntustcourse.api.CourseMonitorService
+import org.koin.java.KoinJavaComponent.getKoin
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object NtustCourse {
     // courseId[channelId[userId]]
-    private val cacheDbManager: CacheDbManager = CacheDbManager(Event.pluginName)
-    private val recordCache: ICacheDb = cacheDbManager.getCollection("generated_cache", memoryCache = true)
     private val userRecordMap = ConcurrentHashMap<String, HashMap<Long, MutableList<String>>>()
     private val monitorService = CourseMonitorService()
 
@@ -23,10 +19,9 @@ object NtustCourse {
         monitorService.start()
         monitorService.subscribe("ALL") { processEvent(it) }
 
-        val loadedData = recordCache.getTyped<HashMap<String, HashMap<Long, MutableList<String>>>>("user_record_map")
-        if (loadedData != null) {
-            userRecordMap.putAll(loadedData)
-        }
+        // TODO: Migrate MongoDB cache access to v4 DatabaseProvider pattern
+        // The old CacheDbManager/ICacheDb API no longer exists.
+        // For now, userRecordMap starts empty each restart.
     }
 
     fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
@@ -62,7 +57,6 @@ object NtustCourse {
         userRecordMap.getOrPut(courseId) { hashMapOf() }
             .getOrPut(event.channelIdLong) { mutableListOf() }
             .add(userId)
-        recordCache.set("user_record_map", userRecordMap)
         event.hook.editOriginal("You have registered this course.").queue()
     }
 
@@ -71,7 +65,6 @@ object NtustCourse {
         val userId = event.user.id
 
         userRecordMap[courseId]?.remove(event.channelIdLong)?.remove(userId)
-        recordCache.set("user_record_map", userRecordMap)
         event.hook.editOriginal("You have unregistered this course.").queue()
     }
 
@@ -99,13 +92,15 @@ object NtustCourse {
         val targetTime = LocalDateTime.of(2025, 12, 26, 9, 0)
         if (now.isBefore(targetTime)) return
 
+        val jda: JDA = getKoin().get()
+
         when (event) {
             is CourseEvent.Available -> {
                 val courseId = event.course.id
                 val channelMap = userRecordMap[courseId] ?: return
 
                 for ((channelId, userIdList) in channelMap) {
-                    val channel = jdaBot.getGuildChannelById(channelId) as TextChannel? ?: continue
+                    val channel = jda.getGuildChannelById(channelId) as TextChannel? ?: continue
                     val userMention = userIdList.joinToString(" ") { "<@$it>" }
                     channel.sendMessage(
                         MessageCreateBuilder()
@@ -124,7 +119,7 @@ object NtustCourse {
                 val channelMap = userRecordMap[courseId] ?: return
 
                 for ((channelId, userIdList) in channelMap) {
-                    val channel = jdaBot.getGuildChannelById(channelId) as TextChannel? ?: continue
+                    val channel = jda.getGuildChannelById(channelId) as TextChannel? ?: continue
                     channel.sendMessage(
                         MessageCreateBuilder()
                             .mentionUsers(userIdList)

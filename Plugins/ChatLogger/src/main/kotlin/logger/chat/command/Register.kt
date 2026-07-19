@@ -1,12 +1,13 @@
 package tw.xinshou.discord.plugin.logger.chat.command
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-
+import tw.xinshou.discord.plugin.logger.chat.ChatLogger
 
 private object Keys {
     const val BASE = "chatLogger"
@@ -19,15 +20,16 @@ private object Keys {
     const val SUB_SETTING_DESC = "$SUB_SETTING.description"
 }
 
-internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
-    Commands.slash("chat-logger", "commands about chat logger")
-        .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
-        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-
-        .addSubcommands(
-            SubcommandData("setting", "set chat log in this channel")
-                .setNameLocalizations(localizer.getLocaleData(Keys.SUB_SETTING_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.SUB_SETTING_DESC))
-        )
+internal fun guildCommands(localizer: Localizer): List<CommandHandler> = listOf(
+    slashCommand(
+        data = Commands.slash("chat-logger", "commands about chat logger")
+            .setNameLocalizations(localizer[Keys.NAME].toMap())
+            .setDescriptionLocalizations(localizer[Keys.DESCRIPTION].toMap())
+            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+            .addSubcommands(
+                SubcommandData("setting", "set chat log in this channel")
+                    .setNameLocalizations(localizer[Keys.SUB_SETTING_NAME].toMap())
+                    .setDescriptionLocalizations(localizer[Keys.SUB_SETTING_DESC].toMap())
+            ),
+    ) { event -> ChatLogger.onSlashCommandInteraction(event) }
 )

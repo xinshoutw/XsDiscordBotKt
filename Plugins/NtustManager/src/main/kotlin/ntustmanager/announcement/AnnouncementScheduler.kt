@@ -18,105 +18,93 @@ class AnnouncementScheduler(
 ) {
     private val logger = LoggerFactory.getLogger(AnnouncementScheduler::class.java)
 
-    // Configuration constants
-    private val cycleTimeSeconds = Event.config.fetchInterval // 1 hour = 3600 seconds
+    private val cycleTimeSeconds = Event.pluginConfig.fetchInterval
     private val maxConcurrentRequests = 5
 
-    // Scheduler for periodic execution
     private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(2)
 
-    // Coroutine scope for concurrent processing
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // Mapping of announcement types to their URLs
     private val announcementUrls = mapOf(
-        // 學務處
         AnnouncementType.STUDENT_DORMITORY to AnnouncementLink(
-            AnnouncementType.STUDENT_DORMITORY, "https://student.ntust.edu.tw/p/403-1053-1436-1.php", "學生宿舍公告"
+            AnnouncementType.STUDENT_DORMITORY, "https://student.ntust.edu.tw/p/403-1053-1436-1.php", "\u5B78\u751F\u5BBF\u820D\u516C\u544A"
         ),
         AnnouncementType.STUDENT_AID to AnnouncementLink(
-            AnnouncementType.STUDENT_AID, "https://student.ntust.edu.tw/p/403-1053-1437-1.php", "助學措施"
+            AnnouncementType.STUDENT_AID, "https://student.ntust.edu.tw/p/403-1053-1437-1.php", "\u52A9\u5B78\u63AA\u65BD"
         ),
         AnnouncementType.STUDENT_GUIDANCE to AnnouncementLink(
-            AnnouncementType.STUDENT_GUIDANCE, "https://student.ntust.edu.tw/p/403-1053-1439-1.php", "生輔組"
+            AnnouncementType.STUDENT_GUIDANCE, "https://student.ntust.edu.tw/p/403-1053-1439-1.php", "\u751F\u8F14\u7D44"
         ),
         AnnouncementType.STUDENT_ACTIVITY to AnnouncementLink(
-            AnnouncementType.STUDENT_ACTIVITY, "https://student.ntust.edu.tw/p/403-1053-1440-1.php", "活動組"
+            AnnouncementType.STUDENT_ACTIVITY, "https://student.ntust.edu.tw/p/403-1053-1440-1.php", "\u6D3B\u52D5\u7D44"
         ),
         AnnouncementType.STUDENT_RESOURCE_ROOM to AnnouncementLink(
-            AnnouncementType.STUDENT_RESOURCE_ROOM, "https://student.ntust.edu.tw/p/412-1053-8272.php", "資源教室"
+            AnnouncementType.STUDENT_RESOURCE_ROOM, "https://student.ntust.edu.tw/p/412-1053-8272.php", "\u8CC7\u6E90\u6559\u5BA4"
         ),
         AnnouncementType.STUDENT_MAIN_OFFICE to AnnouncementLink(
-            AnnouncementType.STUDENT_MAIN_OFFICE, "https://student.ntust.edu.tw/p/403-1053-1435-1.php", "學務處本部公告"
+            AnnouncementType.STUDENT_MAIN_OFFICE, "https://student.ntust.edu.tw/p/403-1053-1435-1.php", "\u5B78\u52D9\u8655\u672C\u90E8\u516C\u544A"
         ),
-
-        // 教務處
         AnnouncementType.ACADEMIC_MAIN_OFFICE to AnnouncementLink(
             AnnouncementType.ACADEMIC_MAIN_OFFICE,
             "https://www.academic.ntust.edu.tw/p/403-1048-1413-1.php",
-            "處本部公告"
+            "\u8655\u672C\u90E8\u516C\u544A"
         ),
         AnnouncementType.ACADEMIC_GRADUATE_EDUCATION to AnnouncementLink(
             AnnouncementType.ACADEMIC_GRADUATE_EDUCATION,
             "https://www.academic.ntust.edu.tw/p/403-1048-1414-1.php",
-            "研教組公告"
+            "\u7814\u6559\u7D44\u516C\u544A"
         ),
         AnnouncementType.ACADEMIC_REGISTRATION to AnnouncementLink(
             AnnouncementType.ACADEMIC_REGISTRATION,
             "https://www.academic.ntust.edu.tw/p/403-1048-1415-1.php",
-            "註冊組公告"
+            "\u8A3B\u518A\u7D44\u516C\u544A"
         ),
         AnnouncementType.ACADEMIC_COURSE to AnnouncementLink(
             AnnouncementType.ACADEMIC_COURSE, "https://www.academic.ntust.edu.tw/p/403-1048-1416-1.php",
-            "課務組公告"
+            "\u8AB2\u52D9\u7D44\u516C\u544A"
         ),
         AnnouncementType.ACADEMIC_COMPREHENSIVE_BUSINESS to AnnouncementLink(
             AnnouncementType.ACADEMIC_COMPREHENSIVE_BUSINESS,
             "https://www.academic.ntust.edu.tw/p/403-1048-1417-1.php",
-            "綜合業務組公告"
+            "\u7D9C\u5408\u696D\u52D9\u7D44\u516C\u544A"
         ),
-
-        // 語言中心
         AnnouncementType.LANGUAGE_CENTER_RECRUITMENT to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_RECRUITMENT,
             "https://lc.ntust.edu.tw/p/403-1070-1626-1.php",
-            "語言中心徵才公告"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u5FB5\u624D\u516C\u544A"
         ),
         AnnouncementType.LANGUAGE_CENTER_EXEMPTION_REWARD to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_EXEMPTION_REWARD,
             "https://lc.ntust.edu.tw/p/403-1070-1627-1.php",
-            "語言中心抵免與獎勵公告"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u62B5\u514D\u8207\u734E\u52F5\u516C\u544A"
         ),
         AnnouncementType.LANGUAGE_CENTER_HONOR_LIST to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_HONOR_LIST,
             "https://lc.ntust.edu.tw/p/403-1070-1051-1.php",
-            "語言中心榮譽榜單"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u69AE\u8B7D\u699C\u55AE"
         ),
         AnnouncementType.LANGUAGE_CENTER_FRESHMAN to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_FRESHMAN,
             "https://lc.ntust.edu.tw/p/403-1070-1628-1.php",
-            "語言中心新生相關公告"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u65B0\u751F\u76F8\u95DC\u516C\u544A"
         ),
         AnnouncementType.LANGUAGE_CENTER_ENGLISH_WORDS to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_ENGLISH_WORDS,
             "https://lc.ntust.edu.tw/p/403-1070-1828-1.php",
-            "語言中心英文單字"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u82F1\u6587\u55AE\u5B57"
         ),
         AnnouncementType.LANGUAGE_CENTER_EXTERNAL to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_EXTERNAL,
             "https://lc.ntust.edu.tw/p/403-1070-1829-1.php",
-            "語言中心校外公告"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u6821\u5916\u516C\u544A"
         ),
         AnnouncementType.LANGUAGE_CENTER_ACTIVITY to AnnouncementLink(
             AnnouncementType.LANGUAGE_CENTER_ACTIVITY,
             "https://lc.ntust.edu.tw/p/403-1070-1050-1.php",
-            "語言中心活動公告"
+            "\u8A9E\u8A00\u4E2D\u5FC3\u6D3B\u52D5\u516C\u544A"
         )
     )
 
-    /**
-     * Starts the periodic scheduler for checking announcements
-     */
     fun startScheduler() {
         scheduler.scheduleAtFixedRate({
             try {
@@ -131,9 +119,6 @@ class AnnouncementScheduler(
         logger.info("Scheduler started with ${cycleTimeSeconds}s interval")
     }
 
-    /**
-     * Checks all announcement sources for updates
-     */
     private suspend fun checkAllAnnouncements() {
         logger.debug("Starting announcement check cycle")
 
@@ -152,9 +137,6 @@ class AnnouncementScheduler(
         }.awaitAll()
     }
 
-    /**
-     * Checks for updates in a specific announcement board by comparing full announcement lists
-     */
     private suspend fun checkAnnouncementUpdates(link: AnnouncementLink) {
         val boardData = AnnouncementParser.boardParser(link)
         if (boardData.isEmpty()) {
@@ -162,7 +144,6 @@ class AnnouncementScheduler(
             return
         }
 
-        // Filter out announcements with empty or missing content
         val validBoardData = filterValidAnnouncements(boardData)
 
         if (validBoardData.size < boardData.size) {
@@ -179,25 +160,19 @@ class AnnouncementScheduler(
             return
         }
 
-        // Compare current announcement list with new filtered data
         val changes = cacheManager.compareAnnouncementLists(link.type, validBoardData)
 
-        // Handle removed announcements
         if (changes.removed.isNotEmpty()) {
             logger.info("Removed announcements detected for ${link.type}: ${changes.removed.size} announcements")
-            // Remove announcements from cache
             cacheManager.removeAnnouncementsFromCache(link.type, changes.removed)
             logger.debug("Removed announcements from cache for {}", link.type)
         }
 
-        // Handle new announcements
         if (changes.added.isNotEmpty()) {
             logger.info("New announcements detected for ${link.type}: ${changes.added.size} announcements")
-            // Process each new announcement by calling the handler
             processNewAnnouncements(changes.added)
         }
 
-        // Update the current announcement list in cache with only valid announcements
         cacheManager.updateCurrentAnnouncementList(link.type, validBoardData)
 
         if (changes.added.isEmpty() && changes.removed.isEmpty()) {
@@ -207,13 +182,8 @@ class AnnouncementScheduler(
         }
     }
 
-    /**
-     * Filters announcements to include only those with valid basic structure
-     * This method performs lightweight validation without making API calls
-     */
     private fun filterValidAnnouncements(announcements: List<AnnouncementLink>): List<AnnouncementLink> {
         return announcements.filter { announcement ->
-            // Perform basic validation without API calls
             val hasValidTitle = announcement.title.isNotBlank()
             val hasValidUrl = announcement.url.isNotBlank()
 
@@ -227,10 +197,6 @@ class AnnouncementScheduler(
         }
     }
 
-    /**
-     * Processes new announcements by parsing their content
-     * Only makes API calls for truly new announcements
-     */
     private suspend fun processNewAnnouncements(announcements: List<AnnouncementLink>) {
         announcements.forEach { link ->
             try {
@@ -241,10 +207,8 @@ class AnnouncementScheduler(
                     return@forEach
                 }
 
-                // Save to cache
                 cacheManager.saveAnnouncementData(announcementData)
 
-                // Trigger the callback for new announcement handling
                 onNewAnnouncement(announcementData)
 
                 logger.debug("Successfully processed new announcement: ${link.title}")
@@ -255,9 +219,6 @@ class AnnouncementScheduler(
         }
     }
 
-    /**
-     * Stops the scheduler and cleans up resources
-     */
     fun shutdown() {
         try {
             scheduler.shutdown()
@@ -271,10 +232,6 @@ class AnnouncementScheduler(
         }
     }
 
-    /**
-     * Gets scheduler statistics
-     * @return Map containing scheduler statistics
-     */
     fun getSchedulerStats(): Map<String, Any> {
         return mapOf(
             "cycleTimeSeconds" to cycleTimeSeconds,
@@ -285,9 +242,6 @@ class AnnouncementScheduler(
         )
     }
 
-    /**
-     * Triggers a manual check of all announcements (for testing or immediate updates)
-     */
     suspend fun triggerManualCheck() {
         logger.info("Manual announcement check triggered")
         checkAllAnnouncements()

@@ -1,14 +1,15 @@
 package tw.xinshou.discord.plugin.dynamicvoicechannel.command
 
+import tw.xinshou.discord.core.command.CommandHandler
+import tw.xinshou.discord.core.command.slashCommand
+import tw.xinshou.discord.core.i18n.Localizer
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import tw.xinshou.discord.core.localizations.StringLocalizer
-
+import tw.xinshou.discord.plugin.dynamicvoicechannel.DynamicVoiceChannel
 
 private object Keys {
     const val BASE = "dynamicvc"
@@ -36,55 +37,35 @@ private object Keys {
     const val SUB_UNBIND_OPT_CHANNEL_DESC = "$SUB_UNBIND_OPTIONS.channel.description"
 }
 
-internal val commandStringSet: Set<String> = setOf(
-    "dynamic-voice-channel bind",
-    "dynamic-voice-channel unbind",
+internal fun guildCommands(localizer: Localizer): List<CommandHandler> = listOf(
+    slashCommand(
+        data = Commands.slash("dynamic-voice-channel", "commands about dynamic voice channel")
+            .setNameLocalizations(localizer[Keys.NAME].toMap())
+            .setDescriptionLocalizations(localizer[Keys.DESCRIPTION].toMap())
+            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+            .addSubcommands(
+                SubcommandData("bind", "bind a voice channel")
+                    .setNameLocalizations(localizer[Keys.SUB_BIND_NAME].toMap())
+                    .setDescriptionLocalizations(localizer[Keys.SUB_BIND_DESC].toMap())
+                    .addOptions(
+                        OptionData(OptionType.CHANNEL, "channel", "voice channel to bind", true)
+                            .setNameLocalizations(localizer[Keys.SUB_BIND_OPT_CHANNEL_NAME].toMap())
+                            .setDescriptionLocalizations(localizer[Keys.SUB_BIND_OPT_CHANNEL_DESC].toMap()),
+                        OptionData(OptionType.STRING, "format-name-1", "format name 1", true)
+                            .setNameLocalizations(localizer[Keys.SUB_BIND_OPT_FMT1_NAME].toMap())
+                            .setDescriptionLocalizations(localizer[Keys.SUB_BIND_OPT_FMT1_DESC].toMap()),
+                        OptionData(OptionType.STRING, "format-name-2", "format name 2", true)
+                            .setNameLocalizations(localizer[Keys.SUB_BIND_OPT_FMT2_NAME].toMap())
+                            .setDescriptionLocalizations(localizer[Keys.SUB_BIND_OPT_FMT2_DESC].toMap()),
+                    ),
+                SubcommandData("unbind", "unbind a voice channel")
+                    .setNameLocalizations(localizer[Keys.SUB_UNBIND_NAME].toMap())
+                    .setDescriptionLocalizations(localizer[Keys.SUB_UNBIND_DESC].toMap())
+                    .addOptions(
+                        OptionData(OptionType.CHANNEL, "channel", "voice channel to unbind", true)
+                            .setNameLocalizations(localizer[Keys.SUB_UNBIND_OPT_CHANNEL_NAME].toMap())
+                            .setDescriptionLocalizations(localizer[Keys.SUB_UNBIND_OPT_CHANNEL_DESC].toMap()),
+                    ),
+            ),
+    ) { event -> DynamicVoiceChannel.onSlashCommandInteraction(event) }
 )
-
-internal fun guildCommands(localizer: StringLocalizer<CmdFileSerializer>): Array<CommandData> = arrayOf(
-    Commands.slash("dynamic-voice-channel", "commands about dynamic voice channel")
-        .setNameLocalizations(localizer.getLocaleData(Keys.NAME))
-        .setDescriptionLocalizations(localizer.getLocaleData(Keys.DESCRIPTION))
-        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-        .addSubcommands(
-            SubcommandData("bind", "bind a voice channel")
-                .setNameLocalizations(localizer.getLocaleData(Keys.SUB_BIND_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.SUB_BIND_DESC))
-                .addOptions(
-                    OptionData(OptionType.CHANNEL, "channel", "voice channel to bind", true)
-                        .setNameLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_CHANNEL_NAME)
-                        )
-                        .setDescriptionLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_CHANNEL_DESC)
-                        ),
-                    OptionData(OptionType.STRING, "format-name-1", "format name 1", true)
-                        .setNameLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_FMT1_NAME)
-                        )
-                        .setDescriptionLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_FMT1_DESC)
-                        ),
-                    OptionData(OptionType.STRING, "format-name-2", "format name 2", true)
-                        .setNameLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_FMT2_NAME)
-                        )
-                        .setDescriptionLocalizations(
-                            localizer.getLocaleData(Keys.SUB_BIND_OPT_FMT2_DESC)
-                        ),
-                ),
-            SubcommandData("unbind", "unbind a voice channel")
-                .setNameLocalizations(localizer.getLocaleData(Keys.SUB_UNBIND_NAME))
-                .setDescriptionLocalizations(localizer.getLocaleData(Keys.SUB_UNBIND_DESC))
-                .addOptions(
-                    OptionData(OptionType.CHANNEL, "channel", "voice channel to unbind", true)
-                        .setNameLocalizations(
-                            localizer.getLocaleData(Keys.SUB_UNBIND_OPT_CHANNEL_NAME)
-                        )
-                        .setDescriptionLocalizations(
-                            localizer.getLocaleData(Keys.SUB_UNBIND_OPT_CHANNEL_DESC)
-                        ),
-                ),
-        )
-)
-
