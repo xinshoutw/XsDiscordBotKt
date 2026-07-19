@@ -1,5 +1,6 @@
 Server/
 DevServer/
+DevServer.bak/
 MainServer/
 .gradle/
 build/
