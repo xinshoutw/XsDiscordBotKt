@@ -1,8 +1,12 @@
+<div align="center">
+
 # XsDiscordBotKt
 
 ![Version](https://img.shields.io/badge/version-4.0.*-blue?style=for-the-badge&logo=github)
 ![License](https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge&logo=apache)
 ![Java](https://img.shields.io/badge/Java-21+-orange?style=for-the-badge&logo=openjdk)
+
+</div>
 
 以 Kotlin 撰寫的模組化 Discord 機器人框架，基於 [JDA](https://github.com/discord-jda/JDA)。
 
